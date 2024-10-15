@@ -5,6 +5,8 @@
 ## Group ID: 27
 
 ## Members
+![image](https://github.com/user-attachments/assets/4015c860-ebb2-462a-b214-5353b5d52ac5)
+
 ### Poon Chin Hung (Leader)
  - chpoonal@connect.ust.hk
  - [jackyyp (github.com)](https://github.com/jackyyp)
