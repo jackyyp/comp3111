@@ -1,3 +1,6 @@
+![image](https://github.com/user-attachments/assets/4015c860-ebb2-462a-b214-5353b5d52ac5)
+![image](https://github.com/user-attachments/assets/26dede19-dab8-4825-89ac-b95e06ca60ff)
+![image](https://github.com/user-attachments/assets/10284ab2-233d-48cd-9252-1f13c0cfcbc3)
 
 
 # COMP3111 Project
@@ -5,7 +8,8 @@
 ## Group ID: 27
 
 ## Members
-![image](https://github.com/user-attachments/assets/4015c860-ebb2-462a-b214-5353b5d52ac5)
+
+
 
 ### Poon Chin Hung (Leader)
  - chpoonal@connect.ust.hk
