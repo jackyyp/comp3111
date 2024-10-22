@@ -15,7 +15,7 @@
  - chpoonal@connect.ust.hk
  - [jackyyp (github.com)](https://github.com/jackyyp)
  - In charge of Task 3
- - Working branch: dev/jacky
+ - Working branch: dev/jackyyp
 
 Temporary stuff for Lab5 below
 ![image](https://github.com/user-attachments/assets/4015c860-ebb2-462a-b214-5353b5d52ac5)
