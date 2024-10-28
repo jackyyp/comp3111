@@ -17,12 +17,6 @@
  - In charge of Task 3
  - Working branch: dev/jackyyp
 
-Temporary stuff for Lab5 below
-![image](https://github.com/user-attachments/assets/4015c860-ebb2-462a-b214-5353b5d52ac5)
-![image](https://github.com/user-attachments/assets/702399ac-bb68-41d8-931d-55e3f8922650)
-![image](https://github.com/user-attachments/assets/045989a5-fb04-4bd7-bfeb-2b5b675b5535)
-![image](https://github.com/user-attachments/assets/26dede19-dab8-4825-89ac-b95e06ca60ff)
-![image](https://github.com/user-attachments/assets/10284ab2-233d-48cd-9252-1f13c0cfcbc3)
 
 
 
