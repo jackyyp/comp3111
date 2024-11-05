@@ -47,7 +47,7 @@ public class StudentRegisterController implements Initializable {
         String password = passwordTxt.getText();
         String confirmPassword = confirmPasswordTxt.getText();
 
-        if (username.isEmpty() || name.isEmpty() || gender == null || age.isEmpty() || department.isEmpty() || password.isEmpty() || !password.equals(confirmPassword)) {
+        if (username.isEmpty() || name.isEmpty() || gender == null || Integer.parseInt(age)<0 ||age.isEmpty() || department.isEmpty() || password.isEmpty() || !password.equals(confirmPassword)) {
             errorMessageLbl.setText("Error: Please check your inputs."); // Update error message
             errorMessageLbl.setVisible(true);
             return;
