@@ -1,12 +1,14 @@
 package comp3111.examsystem.controller;
 
 import comp3111.examsystem.database.DatabaseConnection;
+import javafx.animation.PauseTransition;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.net.URL;
 import java.sql.Connection;
@@ -38,6 +40,12 @@ public class StudentRegisterController implements Initializable {
     }
 
     @FXML
+    public void close(ActionEvent e) {
+        // Close the registration window
+        ((Stage) ((Button) e.getSource()).getScene().getWindow()).close();
+    }
+
+    @FXML
     public void register(ActionEvent e) {
         String username = usernameTxt.getText();
         String name = nameTxt.getText();
@@ -47,8 +55,8 @@ public class StudentRegisterController implements Initializable {
         String password = passwordTxt.getText();
         String confirmPassword = confirmPasswordTxt.getText();
 
-        if (username.isEmpty() || name.isEmpty() || gender == null || Integer.parseInt(age)<0 ||age.isEmpty() || department.isEmpty() || password.isEmpty() || !password.equals(confirmPassword)) {
-            errorMessageLbl.setText("Error: Please check your inputs."); // Update error message
+        if (username.isEmpty() || name.isEmpty() || gender == null || Integer.parseInt(age) < 0 || age.isEmpty() || department.isEmpty() || password.isEmpty() || !password.equals(confirmPassword)) {
+            errorMessageLbl.setText("Error: Please check your inputs.");
             errorMessageLbl.setVisible(true);
             return;
         }
@@ -61,15 +69,20 @@ public class StudentRegisterController implements Initializable {
             pstmt.setString(1, username);
             pstmt.setString(2, name);
             pstmt.setString(3, gender);
-            pstmt.setString(4, age);
+            pstmt.setInt(4, Integer.parseInt(age));
             pstmt.setString(5, department);
             pstmt.setString(6, password);
             int rowsAffected = pstmt.executeUpdate();
 
             if (rowsAffected > 0) {
-                System.out.println("User registered successfully");
-                // Close the registration window
-                ((Stage) ((Button) e.getSource()).getScene().getWindow()).close();
+                errorMessageLbl.setText("Registration successful!");
+                errorMessageLbl.setStyle("-fx-text-fill: green;");
+                errorMessageLbl.setVisible(true);
+
+                // Pause for 1 second then close the window
+                PauseTransition pause = new PauseTransition(Duration.seconds(1));
+                pause.setOnFinished(event -> ((Stage) ((Button) e.getSource()).getScene().getWindow()).close());
+                pause.play();
             } else {
                 errorMessageLbl.setText("Failed to register user.");
                 errorMessageLbl.setVisible(true);
@@ -80,11 +93,5 @@ public class StudentRegisterController implements Initializable {
             errorMessageLbl.setText("Error connecting to the database.");
             errorMessageLbl.setVisible(true);
         }
-    }
-
-    @FXML
-    public void close(ActionEvent e) {
-        // Close the registration window
-        ((Stage) ((Button) e.getSource()).getScene().getWindow()).close();
     }
 }

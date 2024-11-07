@@ -1,13 +1,433 @@
 package comp3111.examsystem.controller;
 
+import comp3111.examsystem.Main;
+import comp3111.examsystem.database.DatabaseConnection;
+import comp3111.examsystem.model.StudentControllerModel;
+import javafx.animation.Animation;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.application.Platform;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.scene.control.Label;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+import javafx.util.Duration;
+import javafx.scene.control.Alert.AlertType;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 public class StudentExamPageController {
     @FXML
     private Label examNameLabel;
 
+    @FXML
+    private Label questionNumberLabel;
+
+    @FXML
+    private Label countdownLabel;
+
+    @FXML
+    private VBox questionsContainer;
+
+    @FXML
+    private Button previousButton;
+
+    @FXML
+    private Button nextButton;
+
+    @FXML
+    private Button submitButton;
+
+    @FXML
+    private ListView<String> questionListView;
+
+    private List<Question> questions = new ArrayList<>();
+    private List<VBox> questionBoxes = new ArrayList<>();
+    private int currentQuestionIndex = 0;
+    private Alert confirmationAlert;
+
+    private Timeline timeline;
+    private long timeRemainingSeconds;
+
+    private long timeAllowedSeconds;
+    private StudentControllerModel dataModel;
+
+    public void setDataModel(StudentControllerModel dataModel) {
+        this.dataModel = dataModel;
+        System.out.println("Current Username: " + dataModel.getUsername());
+        System.out.println("Current Exam ID: " + dataModel.getExamId());
+    }
+
     public void setExamName(String examName) {
         examNameLabel.setText(examName);
+    }
+
+    public void loadQuestions(int examId) {
+        System.out.println("Fetching questions for exam ID: " + examId);
+
+        // Fetch the exam details including time limit
+        String examSql = "SELECT time_limit FROM exam WHERE id = ?";
+        String questionSql = "SELECT q.id, q.text, q.option_a, q.option_b, q.option_c, q.option_d, q.is_single_choice, q.answer, q.score " +
+                "FROM question q JOIN exam_question_link eql ON q.id = eql.question_id " +
+                "WHERE eql.exam_id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection()) {
+
+            // Fetch the time limit for the exam
+            PreparedStatement examStmt = conn.prepareStatement(examSql);
+            examStmt.setInt(1, examId);
+            ResultSet examRs = examStmt.executeQuery();
+            if (examRs.next()) {
+                timeAllowedSeconds = examRs.getLong("time_limit");
+                timeRemainingSeconds = timeAllowedSeconds;
+            }
+
+            // Fetch the questions for the exam
+            PreparedStatement pstmt = conn.prepareStatement(questionSql);
+            pstmt.setInt(1, examId);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String questionText = rs.getString("text");
+                String optionA = rs.getString("option_a");
+                String optionB = rs.getString("option_b");
+                String optionC = rs.getString("option_c");
+                String optionD = rs.getString("option_d");
+                boolean isSingleChoice = rs.getBoolean("is_single_choice");
+                String answer = rs.getString("answer");
+                int score = rs.getInt("score");
+
+                System.out.println("Question: " + questionText);
+                System.out.println("Options: A) " + optionA + " B) " + optionB + " C) " + optionC + " D) " + optionD);
+
+                VBox questionBox = new VBox();
+                questionBox.setSpacing(5);
+
+                Label questionLabel = new Label(questionText);
+
+                if (isSingleChoice) {
+                    ToggleGroup group = new ToggleGroup();
+                    RadioButton optionAButton = new RadioButton("A: " + optionA);
+                    optionAButton.setUserData("A");
+                    optionAButton.setToggleGroup(group);
+                    RadioButton optionBButton = new RadioButton("B: " + optionB);
+                    optionBButton.setUserData("B");
+                    optionBButton.setToggleGroup(group);
+                    RadioButton optionCButton = new RadioButton("C: " + optionC);
+                    optionCButton.setUserData("C");
+                    optionCButton.setToggleGroup(group);
+                    RadioButton optionDButton = new RadioButton("D: " + optionD);
+                    optionDButton.setUserData("D");
+                    optionDButton.setToggleGroup(group);
+
+                    questionBox.getChildren().addAll(questionLabel, optionAButton, optionBButton, optionCButton, optionDButton);
+
+                    questions.add(new Question(id, questionBox, group, answer, score, true));
+                } else {
+                    CheckBox optionACheckBox = new CheckBox("A: " + optionA);
+                    optionACheckBox.setUserData("A");
+                    CheckBox optionBCheckBox = new CheckBox("B: " + optionB);
+                    optionBCheckBox.setUserData("B");
+                    CheckBox optionCCheckBox = new CheckBox("C: " + optionC);
+                    optionCCheckBox.setUserData("C");
+                    CheckBox optionDCheckBox = new CheckBox("D: " + optionD);
+                    optionDCheckBox.setUserData("D");
+
+                    questionBox.getChildren().addAll(questionLabel, optionACheckBox, optionBCheckBox, optionCCheckBox, optionDCheckBox);
+
+                    questions.add(new Question(id, questionBox, optionACheckBox, optionBCheckBox, optionCCheckBox, optionDCheckBox, answer, score, false));
+                }
+
+                questionBoxes.add(questionBox);
+            }
+
+            if (!questionBoxes.isEmpty()) {
+                questionsContainer.getChildren().setAll(questionBoxes.get(0));
+                updateQuestionNumber();
+            }
+
+            updateNavigationButtons();
+            // Populate the ListView with question numbers and text
+            questionListView.setItems(FXCollections.observableArrayList(getQuestionListItems()));
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        // Start the countdown timer
+        timeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
+            timeRemainingSeconds--;
+            countdownLabel.setText("Time Remaining: " + formatTime(timeRemainingSeconds));
+
+            if (timeRemainingSeconds <= 10) {
+                countdownLabel.setStyle("-fx-text-fill: red;");
+            } else {
+                countdownLabel.setStyle("-fx-text-fill: black;");
+            }
+
+            if (timeRemainingSeconds <= 0) {
+                timeline.stop();
+
+                // Close the confirmation alert if it is showing
+                if (confirmationAlert != null && confirmationAlert.isShowing()) {
+                    confirmationAlert.hide();
+                }
+
+                submitExam(false); // Auto-submit without confirmation when time is up
+            }
+        }));
+        timeline.setCycleCount(Animation.INDEFINITE);
+        timeline.play();
+
+
+    }
+
+    private List<String> getQuestionListItems() {
+        List<String> items = new ArrayList<>();
+        for (int i = 0; i < questions.size(); i++) {
+            items.add("Question " + (i + 1) + ": " + questions.get(i).getText());
+        }
+        return items;
+    }
+
+    private String formatTime(long seconds) {
+        long hours = seconds / 3600;
+        long minutes = (seconds % 3600) / 60;
+        long remainingSeconds = seconds % 60;
+        return String.format("%02d:%02d:%02d", hours, minutes, remainingSeconds);
+    }
+
+    @FXML
+    private void showPreviousQuestion() {
+        if (currentQuestionIndex > 0) {
+            currentQuestionIndex--;
+            questionsContainer.getChildren().setAll(questionBoxes.get(currentQuestionIndex));
+            updateQuestionNumber();
+            updateNavigationButtons();
+        }
+    }
+
+    @FXML
+    private void showNextQuestion() {
+        if (currentQuestionIndex < questionBoxes.size() - 1) {
+            currentQuestionIndex++;
+            questionsContainer.getChildren().setAll(questionBoxes.get(currentQuestionIndex));
+            updateQuestionNumber();
+            updateNavigationButtons();
+        }
+    }
+
+    private void updateNavigationButtons() {
+        previousButton.setDisable(currentQuestionIndex == 0);
+        nextButton.setDisable(currentQuestionIndex == questionBoxes.size() - 1);
+    }
+
+    private void updateQuestionNumber() {
+        questionNumberLabel.setText("Question " + (currentQuestionIndex + 1) + " of " + questionBoxes.size());
+    }
+
+    @FXML
+    private void submitExam() {
+        submitExam(true); // Call submitExam with true indicating confirmation is needed
+    }
+
+    private void submitExam(boolean requireConfirmation) {
+        Stage stage = (Stage) examNameLabel.getScene().getWindow();
+
+        if (requireConfirmation) {
+            confirmationAlert = new Alert(AlertType.CONFIRMATION);
+            confirmationAlert.setTitle("Confirm Submission");
+            confirmationAlert.setHeaderText("Are you sure you want to submit the exam?");
+            confirmationAlert.setContentText("Once submitted, you cannot change your answers.");
+
+            // Show the confirmation dialog and wait for user response
+            Platform.runLater(() -> {
+                confirmationAlert.showAndWait().ifPresent(response -> {
+                    if (response == ButtonType.OK) {
+                        proceedWithSubmission(stage);
+                    }
+                });
+            });
+        } else {
+            proceedWithSubmission(stage);
+        }
+    }
+
+    private void proceedWithSubmission(Stage stage) {
+        timeline.stop();
+        int totalScore = 0;
+        int correctAnswers = 0;
+
+        for (Question question : questions) {
+            String submittedAnswer = question.getSubmittedAnswer();
+            String correctAnswer = question.getCorrectAnswer();
+            System.out.println("Submitted Answer: " + submittedAnswer);
+            System.out.println("Correct Answer: " + correctAnswer);
+
+            if (question.isCorrectlyAnswered()) {
+                correctAnswers++;
+                totalScore += question.getScore();
+            }
+        }
+        long timeSpent = timeAllowedSeconds - timeRemainingSeconds;
+        int totalQuestions = questions.size();
+        double precision = ((double) correctAnswers / totalQuestions) * 100;
+
+        int finalCorrectAnswers = correctAnswers;
+        int finalTotalScore = totalScore;
+
+        saveGradeToDatabase(dataModel.getUsername(), dataModel.getExamId(), totalScore, (int) timeSpent);
+
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Exam Submitted");
+            alert.setHeaderText(null);
+            alert.setContentText(String.format("Time spent is: %d\nYou got %d/%d correct.\nPrecision is %.2f%%\nYour total score is: %d",
+                    timeSpent, finalCorrectAnswers, totalQuestions, precision, finalTotalScore));
+
+            alert.setOnCloseRequest(event -> loadStudentMainPage(stage));
+            alert.showAndWait().ifPresent(alertResponse -> loadStudentMainPage(stage));
+        });
+    }
+
+    private void saveGradeToDatabase(String studentId, int examId, int score, int timeSpent) {
+        String sql = "INSERT INTO grade (student_id, exam_id, score, time_spent) VALUES (?, ?, ?, ?)";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, studentId);
+            pstmt.setInt(2, examId);
+            pstmt.setInt(3, score);
+            pstmt.setInt(4, timeSpent);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private void loadStudentMainPage(Stage stage) {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("StudentMainUI.fxml"));
+            fxmlLoader.setControllerFactory(param -> {
+                StudentMainController controller = new StudentMainController();
+                controller.setDataModel(dataModel); // Pass the dataModel to the new controller
+                return controller;
+            });
+            Scene scene = new Scene(fxmlLoader.load());
+            stage.setScene(scene);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private void loadStudentMainPage() {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("StudentMainUI.fxml"));
+            Stage stage = (Stage) examNameLabel.getScene().getWindow(); // Get the current stage
+            Scene scene = new Scene(fxmlLoader.load());
+            System.out.println(stage);
+            stage.setScene(scene);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private static class Question {
+        private final int id;
+        private final VBox questionBox;
+        private final ToggleGroup group;
+        private final CheckBox optionACheckBox;
+        private final CheckBox optionBCheckBox;
+        private final CheckBox optionCCheckBox;
+        private final CheckBox optionDCheckBox;
+        private final String correctAnswer;
+        private final int score;
+        private final boolean isSingleChoice;
+
+        public Question(int id, VBox questionBox, ToggleGroup group, String correctAnswer, int score, boolean isSingleChoice) {
+            this.id = id;
+            this.questionBox = questionBox;
+            this.group = group;
+            this.optionACheckBox = null;
+            this.optionBCheckBox = null;
+            this.optionCCheckBox = null;
+            this.optionDCheckBox = null;
+            this.correctAnswer = correctAnswer;
+            this.score = score;
+            this.isSingleChoice = isSingleChoice;
+        }
+
+        public Question(int id, VBox questionBox, CheckBox optionACheckBox, CheckBox optionBCheckBox, CheckBox optionCCheckBox, CheckBox optionDCheckBox, String correctAnswer, int score, boolean isSingleChoice) {
+            this.id = id;
+            this.questionBox = questionBox;
+            this.group = null;
+            this.optionACheckBox = optionACheckBox;
+            this.optionBCheckBox = optionBCheckBox;
+            this.optionCCheckBox = optionCCheckBox;
+            this.optionDCheckBox = optionDCheckBox;
+            this.correctAnswer = correctAnswer;
+            this.score = score;
+            this.isSingleChoice = isSingleChoice;
+        }
+
+        public String getText() {
+            Label questionLabel = (Label) questionBox.getChildren().get(0);
+            return questionLabel.getText();
+        }
+
+        public boolean isCorrectlyAnswered() {
+            String submittedAnswer = getSubmittedAnswer();
+            return submittedAnswer.equalsIgnoreCase(correctAnswer);
+        }
+
+        public String getSubmittedAnswer() {
+            StringBuilder submittedAnswers = new StringBuilder();
+            if (isSingleChoice) {
+                if (group != null && group.getSelectedToggle() != null) {
+                    RadioButton selectedButton = (RadioButton) group.getSelectedToggle();
+                    submittedAnswers.append(selectedButton.getUserData().toString());
+                }
+            } else {
+                if (optionACheckBox.isSelected()) submittedAnswers.append("A");
+                if (optionBCheckBox.isSelected()) submittedAnswers.append("B");
+                if (optionCCheckBox.isSelected()) submittedAnswers.append("C");
+                if (optionDCheckBox.isSelected()) submittedAnswers.append("D");
+            }
+            return submittedAnswers.toString();
+        }
+
+        public String getCorrectAnswer() {
+            return correctAnswer;
+        }
+
+        public int getScore() {
+            return score;
+        }
+    }
+
+    @FXML
+    private void jumpToQuestion() {
+        int selectedIndex = questionListView.getSelectionModel().getSelectedIndex();
+        if (selectedIndex >= 0 && selectedIndex < questionBoxes.size()) {
+            currentQuestionIndex = selectedIndex;
+            questionsContainer.getChildren().setAll(questionBoxes.get(currentQuestionIndex));
+            updateQuestionNumber();
+            updateNavigationButtons();
+        }
     }
 }

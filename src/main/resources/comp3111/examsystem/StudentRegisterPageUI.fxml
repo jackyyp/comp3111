@@ -4,7 +4,6 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
-
 <VBox alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity"
       style="-fx-background-repeat: stretch;-fx-background-position: center center;" minHeight="-Infinity"
       minWidth="-Infinity" prefHeight="600" prefWidth="600" spacing="20.0" xmlns="http://javafx.com/javafx/8"
