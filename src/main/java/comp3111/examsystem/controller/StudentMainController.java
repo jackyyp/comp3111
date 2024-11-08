@@ -3,13 +3,16 @@ package comp3111.examsystem.controller;
 import comp3111.examsystem.Main;
 import comp3111.examsystem.database.DatabaseConnection;
 import comp3111.examsystem.model.StudentControllerModel;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Scene;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -39,14 +42,19 @@ public class StudentMainController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         loadExams();
+
+
     }
 
     private void loadExams() {
-        String sql = "SELECT e.id, e.name " +
+        String sql = "SELECT e.id, e.name, e.course " +
                 "FROM exam e " +
                 "JOIN exam_question_link eql ON e.id = eql.exam_id " +
                 "LEFT JOIN grade g ON e.id = g.exam_id AND g.student_id = ? " +
-                "WHERE g.exam_id IS NULL";
+                "WHERE g.exam_id IS NULL AND e.is_published = 1 " +
+                "ORDER BY e.name ASC";
+
+        System.out.println("Executing SQL: " + sql);
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -54,14 +62,20 @@ public class StudentMainController implements Initializable {
             pstmt.setString(1, dataModel.getUsername()); // Set the student ID for filtering
             ResultSet rs = pstmt.executeQuery();
 
+            System.out.println("Query Results:");
             Set<String> addedExamNames = new HashSet<>();
             while (rs.next()) {
+                String courseName = rs.getString("course");
                 String examName = rs.getString("name");
                 int examId = rs.getInt("id");
-                if (!addedExamNames.contains(examName)) {
-                    examCombox.getItems().add(examName);
-                    examMap.put(examName, examId); // Store the exam ID for each exam name
-                    addedExamNames.add(examName); // Mark this exam name as added
+                String displayName = courseName + " | " + examName;
+
+                System.out.println("Exam ID: " + examId + ", Course: " + courseName + ", Exam: " + examName);
+
+                if (!addedExamNames.contains(displayName)) {
+                    examCombox.getItems().add(displayName);
+                    examMap.put(displayName, examId); // Store the exam ID for each exam name
+                    addedExamNames.add(displayName); // Mark this exam name as added
                 }
             }
 
@@ -75,6 +89,7 @@ public class StudentMainController implements Initializable {
             e.printStackTrace();
         }
     }
+
 
     @FXML
     public void openExamUI(ActionEvent event) {
@@ -125,11 +140,58 @@ public class StudentMainController implements Initializable {
 
     @FXML
     public void openGradeStatistic() {
-        // Implement the method to open the Grade Statistic page
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("StudentGradeStatisticUI.fxml"));
+            fxmlLoader.setControllerFactory(param -> {
+                StudentGradeStatisticController controller = new StudentGradeStatisticController();
+                controller.setDataModel(dataModel); // Pass the dataModel to the new controller
+                return controller;
+            });
+            Scene scene = new Scene(fxmlLoader.load());
+
+            Stage stage = new Stage();
+            stage.setTitle("Grade Statistics");
+            stage.setScene(scene);
+            stage.initModality(Modality.APPLICATION_MODAL); // Set the stage as modal
+            stage.showAndWait(); // Show the stage and wait for it to be closed before returning to the main page
+
+            // Optionally close the current stage
+            // Stage currentStage = (Stage) errorLabel.getScene().getWindow();
+            // currentStage.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
+
 
     @FXML
     public void exit() {
         System.exit(0);
     }
+
+    @FXML
+    public void logout(ActionEvent event) {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("LoginUI.fxml"));
+            Scene scene = new Scene(fxmlLoader.load());
+
+            Stage stage;
+            if (event.getSource() instanceof javafx.scene.Node) {
+                stage = (Stage) ((javafx.scene.Node) event.getSource()).getScene().getWindow();
+            } else {
+                // Get the stage using another method if the event source is not a Node, e.g., from a menu item
+                stage = (Stage) examCombox.getScene().getWindow();
+            }
+
+            stage.setScene(scene);
+            stage.setTitle("Login");
+            stage.show();
+
+            // Reset the close request handler if it was set previously
+            stage.setOnCloseRequest(null);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 }

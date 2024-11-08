@@ -30,7 +30,6 @@ public class StudentLoginController implements Initializable {
     @FXML
     private Label errorMessageLbl;
 
-    private StudentControllerModel dataModel;
 
     public void initialize(URL location, ResourceBundle resources) {
     }
@@ -62,6 +61,7 @@ public class StudentLoginController implements Initializable {
                     controller.setDataModel(dataModel);
                     return controller;
                 });
+
 
                 Stage stage = new Stage();
                 stage.setTitle("Hi " + username + ", Welcome to HKUST Examination System");

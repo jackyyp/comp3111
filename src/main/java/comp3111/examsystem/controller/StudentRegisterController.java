@@ -55,11 +55,18 @@ public class StudentRegisterController implements Initializable {
         String password = passwordTxt.getText();
         String confirmPassword = confirmPasswordTxt.getText();
 
-        if (username.isEmpty() || name.isEmpty() || gender == null || Integer.parseInt(age) < 0 || age.isEmpty() || department.isEmpty() || password.isEmpty() || !password.equals(confirmPassword)) {
+        try {
+            if (username.isEmpty() || name.isEmpty() || gender == null || age.isEmpty() || Integer.parseInt(age) < 0 || department.isEmpty() || password.isEmpty() || !password.equals(confirmPassword)) {
+                errorMessageLbl.setText("Error: Please check your inputs.");
+                errorMessageLbl.setVisible(true);
+                return;
+            }
+        } catch (NumberFormatException exception) {
             errorMessageLbl.setText("Error: Please check your inputs.");
-            errorMessageLbl.setVisible(true);
+                errorMessageLbl.setVisible(true);
             return;
         }
+
 
         String sql = "INSERT INTO student (username, name, gender, age, department, password) VALUES (?, ?, ?, ?, ?, ?)";
 

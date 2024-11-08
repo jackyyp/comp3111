@@ -1,0 +1,179 @@
+package comp3111.examsystem.controller;
+
+import comp3111.examsystem.database.DatabaseConnection;
+import comp3111.examsystem.model.StudentControllerModel;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.chart.BarChart;
+import javafx.scene.chart.CategoryAxis;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+import java.net.URL;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.ResourceBundle;
+
+public class StudentGradeStatisticController implements Initializable {
+
+    @FXML
+    private ComboBox<String> courseComboBox;
+
+    @FXML
+    private TableView<Grade> gradeTable;
+
+    @FXML
+    private TableColumn<Grade, String> courseColumn;
+
+    @FXML
+    private TableColumn<Grade, String> examColumn;
+
+    @FXML
+    private TableColumn<Grade, Integer> scoreColumn;
+
+    @FXML
+    private TableColumn<Grade, Integer> fullScoreColumn;
+
+    @FXML
+    private TableColumn<Grade, Integer> timeColumn;
+
+    @FXML
+    private BarChart<String, Number> gradeChart;
+    @FXML
+    private CategoryAxis xAxis;
+    @FXML
+    private NumberAxis yAxis;
+    private StudentControllerModel dataModel;
+
+    public void setDataModel(StudentControllerModel dataModel) {
+        this.dataModel = dataModel;
+        System.out.println("Current Username: " + dataModel.getUsername());
+    }
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        loadCourses();
+        courseComboBox.setOnAction(this::filterGrades);
+
+        courseColumn.setCellValueFactory(new PropertyValueFactory<>("course"));
+        examColumn.setCellValueFactory(new PropertyValueFactory<>("exam"));
+        scoreColumn.setCellValueFactory(new PropertyValueFactory<>("score"));
+        fullScoreColumn.setCellValueFactory(new PropertyValueFactory<>("fullScore"));
+        timeColumn.setCellValueFactory(new PropertyValueFactory<>("time"));
+
+        loadGradesFromDatabase();
+    }
+
+    private void loadCourses() {
+        String sql = "SELECT DISTINCT course FROM exam e " +
+                "JOIN grade g ON e.id = g.exam_id " +
+                "WHERE g.student_id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, dataModel.getUsername()); // Set the student ID for filtering
+            ResultSet rs = pstmt.executeQuery();
+
+            courseComboBox.getItems().add("All Courses");
+            while (rs.next()) {
+                String course = rs.getString("course");
+                courseComboBox.getItems().add(course);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadGradesFromDatabase() {
+        loadGradesFromDatabase(null);
+    }
+
+    private void loadGradesFromDatabase(String courseFilter) {
+        String sql = "SELECT e.course, e.name AS exam, g.score, " +
+                "(SELECT SUM(q.score) FROM question q JOIN exam_question_link eql ON q.id = eql.question_id WHERE eql.exam_id = e.id) AS full_score, " +
+                "g.time_spent " +
+                "FROM grade g " +
+                "JOIN exam e ON g.exam_id = e.id " +
+                "WHERE g.student_id = ? ";
+
+        if (courseFilter != null && !courseFilter.equals("All Courses")) {
+            sql += " AND e.course = ? ORDER BY e.course ASC, e.name ASC";
+        } else {
+            sql += " ORDER BY e.course ASC, e.name ASC";
+        }
+
+        System.out.println("Executing SQL: " + sql);
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, dataModel.getUsername()); // Set the student ID for filtering
+            if (courseFilter != null && !courseFilter.equals("All Courses")) {
+                pstmt.setString(2, courseFilter); // Set the course filter
+            }
+
+            ResultSet rs = pstmt.executeQuery();
+
+            System.out.println("Query Results:");
+            gradeTable.getItems().clear();
+            gradeChart.getData().clear();
+
+            XYChart.Series<String, Number> series = new XYChart.Series<>();
+            series.setName("Grades");
+
+            while (rs.next()) {
+                String course = rs.getString("course");
+                String exam = rs.getString("exam");
+                int score = rs.getInt("score");
+                int fullScore = rs.getInt("full_score");
+                int time = rs.getInt("time_spent");
+
+                System.out.println("Course: " + course + ", Exam: " + exam + ", Score: " + score + ", Full Score: " + fullScore + ", Time Spent: " + time);
+
+                gradeTable.getItems().add(new Grade(course, exam, score, fullScore, time));
+
+                // Use a combined label for course and exam for proper alignment
+                XYChart.Data<String, Number> data = new XYChart.Data<>(course + " | " + exam, score);
+                System.out.println("Adding to BarChart: Category = " + course + " | " + exam + ", Score = " + score);
+                series.getData().add(data);
+            }
+
+            gradeChart.getData().add(series);
+            System.out.println("BarChart Data: " + gradeChart.getData());
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    @FXML
+    public void filterGrades(ActionEvent event) {
+        String selectedCourse = courseComboBox.getSelectionModel().getSelectedItem();
+        loadGradesFromDatabase(selectedCourse);
+    }
+
+
+    @Data
+    @AllArgsConstructor
+    public static class Grade {
+        private String course;
+        private String exam;
+        private int score;
+        private int fullScore;
+        private int time;
+    }
+}

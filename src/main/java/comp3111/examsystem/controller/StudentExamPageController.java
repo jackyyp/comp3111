@@ -56,7 +56,6 @@ public class StudentExamPageController {
     private List<VBox> questionBoxes = new ArrayList<>();
     private int currentQuestionIndex = 0;
     private Alert confirmationAlert;
-
     private Timeline timeline;
     private long timeRemainingSeconds;
 
@@ -73,14 +72,25 @@ public class StudentExamPageController {
         examNameLabel.setText(examName);
     }
 
+    public void initialize() { // Disable the close button
+        Platform.runLater(() -> {
+            Stage stage = (Stage) examNameLabel.getScene().getWindow();
+            if (stage != null) {
+                stage.setOnCloseRequest(event -> { // Show a dialog if someone tries to close the window
+                    event.consume(); // Prevents the window from closing
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION, "Closing is disabled during the exam.", ButtonType.OK);
+                    alert.showAndWait();
+                });
+            }
+        });
+    }
+
     public void loadQuestions(int examId) {
         System.out.println("Fetching questions for exam ID: " + examId);
 
         // Fetch the exam details including time limit
         String examSql = "SELECT time_limit FROM exam WHERE id = ?";
-        String questionSql = "SELECT q.id, q.text, q.option_a, q.option_b, q.option_c, q.option_d, q.is_single_choice, q.answer, q.score " +
-                "FROM question q JOIN exam_question_link eql ON q.id = eql.question_id " +
-                "WHERE eql.exam_id = ?";
+        String questionSql = "SELECT q.id, q.text, q.option_a, q.option_b, q.option_c, q.option_d, q.is_single_choice, q.answer, q.score " + "FROM question q JOIN exam_question_link eql ON q.id = eql.question_id " + "WHERE eql.exam_id = ?";
 
         try (Connection conn = DatabaseConnection.getConnection()) {
 
@@ -294,19 +304,20 @@ public class StudentExamPageController {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Exam Submitted");
             alert.setHeaderText(null);
-            alert.setContentText(String.format("Time spent is: %d\nYou got %d/%d correct.\nPrecision is %.2f%%\nYour total score is: %d",
-                    timeSpent, finalCorrectAnswers, totalQuestions, precision, finalTotalScore));
+            alert.setContentText(String.format("Time spent is: %d\nYou got %d/%d correct.\nPrecision is %.2f%%\nYour total score is: %d", timeSpent, finalCorrectAnswers, totalQuestions, precision, finalTotalScore));
 
             alert.setOnCloseRequest(event -> loadStudentMainPage(stage));
             alert.showAndWait().ifPresent(alertResponse -> loadStudentMainPage(stage));
         });
+        if (stage != null) {
+            stage.setOnCloseRequest(null); // re-enable the close button
+        }
     }
 
     private void saveGradeToDatabase(String studentId, int examId, int score, int timeSpent) {
         String sql = "INSERT INTO grade (student_id, exam_id, score, time_spent) VALUES (?, ?, ?, ?)";
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, studentId);
             pstmt.setInt(2, examId);
             pstmt.setInt(3, score);
