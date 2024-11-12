@@ -3,6 +3,7 @@ module comp3111.examsystem {
     requires javafx.fxml;
     requires java.desktop;
     requires java.sql;
+    requires lombok;
 
 
     opens comp3111.examsystem to javafx.fxml;

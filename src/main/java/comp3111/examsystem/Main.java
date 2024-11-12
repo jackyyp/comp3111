@@ -1,5 +1,6 @@
 package comp3111.examsystem;
 
+import comp3111.examsystem.model.StudentControllerModel;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -16,7 +17,7 @@ public class Main extends Application {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public static void main(String[] args) {
 		launch(args);
 		System.out.println("test");

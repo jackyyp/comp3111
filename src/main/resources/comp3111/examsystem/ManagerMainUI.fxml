@@ -35,7 +35,7 @@
                                     </padding>
                                 </Label>
                                 <ComboBox fx:id="examCombox" prefHeight="23.0" prefWidth="200.0" />
-                                <Button mnemonicParsing="false" onAction="#openExamUI" text="Start">
+                                <Button defaultButton="true" mnemonicParsing="false" onAction="#openExamUI" text="Start">
                                     <font>
                                         <Font size="15.0" />
                                     </font>
