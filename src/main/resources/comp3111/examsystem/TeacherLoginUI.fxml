@@ -39,5 +39,6 @@
                 <Button mnemonicParsing="false" onAction="#login" text="Login" />
             </children>
         </HBox>
+        <Label fx:id="errorMessageLbl" text="Error: Please check your inputs." visible="false" style="-fx-text-fill: red;" />
     </children>
 </VBox>
