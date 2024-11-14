@@ -81,7 +81,6 @@
         </padding>
         <children>
             <Button mnemonicParsing="false" text="Delete" onAction="#deleteStudent" />
-            <Button mnemonicParsing="false" text="Refresh" onAction="#refreshStudents" />
             <Button mnemonicParsing="false" text="Add" onAction="#addStudent" />
             <Button mnemonicParsing="false" text="Update" onAction="#updateStudent" />
         </children>
