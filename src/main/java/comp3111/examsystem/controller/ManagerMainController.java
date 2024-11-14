@@ -45,11 +45,33 @@ public class ManagerMainController implements Initializable {
     }
 
     @FXML
-    public void openTeacherManageUI() {
+    public void openTeacherManageUI(ActionEvent event) {
+        closeCurrentStage(event);
+        try {
+            Stage stage = new Stage();
+            FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("TeacherManagementUI.fxml"));
+            Scene scene = new Scene(fxmlLoader.load());
+            stage.setTitle("Teacher Management");
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
-    public void openCourseManageUI() {
+    public void openCourseManageUI(ActionEvent event) {
+        closeCurrentStage(event);
+        try {
+            Stage stage = new Stage();
+            FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("CourseManagementUI.fxml"));
+            Scene scene = new Scene(fxmlLoader.load());
+            stage.setTitle("Course Management");
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
