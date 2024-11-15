@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.collections.FXCollections?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+<?import java.lang.String?>
+
+<AnchorPane xmlns:fx="http://javafx.com/fxml" fx:controller="comp3111.examsystem.controller.TeacherQuestionController">
+    <children>
+        <VBox spacing="10">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10"/>
+            </padding>
+            <children>
+                <HBox spacing="10">
+                    <children>
+                        <Label text="Question:"/>
+                        <TextField fx:id="questionField" HBox.hgrow="ALWAYS"/>
+                        <Label text="Type:"/>
+                        <ComboBox fx:id="typeComboBox">
+                            <items>
+                                <FXCollections fx:factory="observableArrayList">
+                                    <String fx:value="Single"/>
+                                    <String fx:value="Multiple"/>
+                                </FXCollections>
+                            </items>
+                        </ComboBox>
+                        <Label text="Score:"/>
+                        <TextField fx:id="scoreField" prefWidth="50"/>
+                        <Button text="Reset" onAction="#handleReset"/>
+                        <Button text="Filter" onAction="#handleFilter"/>
+                    </children>
+                </HBox>
+                <HBox spacing="10" VBox.vgrow="ALWAYS">
+                    <children>
+                        <TableView fx:id="questionTable" HBox.hgrow="ALWAYS">
+                            <columns>
+                                <TableColumn text="Question" fx:id="questionColumn" prefWidth="200"/>
+                                <TableColumn text="Option A" fx:id="optionAColumn"/>
+                                <TableColumn text="Option B" fx:id="optionBColumn"/>
+                                <TableColumn text="Option C" fx:id="optionCColumn"/>
+                                <TableColumn text="Option D" fx:id="optionDColumn"/>
+                                <TableColumn text="Answer" fx:id="answerColumn"/>
+                                <TableColumn text="Type" fx:id="typeColumn"/>
+                                <TableColumn text="Score" fx:id="scoreColumn"/>
+                            </columns>
+                        </TableView>
+                        <VBox spacing="5">
+                            <children>
+                                <Label text="Question:"/>
+                                <TextField fx:id="editQuestionField"/>
+                                <Label text="Option A:"/>
+                                <TextField fx:id="editOptionAField"/>
+                                <Label text="Option B:"/>
+                                <TextField fx:id="editOptionBField"/>
+                                <Label text="Option C:"/>
+                                <TextField fx:id="editOptionCField"/>
+                                <Label text="Option D:"/>
+                                <TextField fx:id="editOptionDField"/>
+                                <Label text="Answer:"/>
+                                <TextField fx:id="editAnswerField"/>
+                                <Label text="Type:"/>
+                                <ComboBox fx:id="editTypeComboBox">
+                                    <items>
+                                        <FXCollections fx:factory="observableArrayList">
+                                            <String fx:value="Single"/>
+                                            <String fx:value="Multiple"/>
+                                        </FXCollections>
+                                    </items>
+                                </ComboBox>
+                                <Label text="Score:"/>
+                                <TextField fx:id="editScoreField" prefWidth="50"/>
+                            </children>
+                        </VBox>
+                    </children>
+                </HBox>
+                <HBox spacing="10" alignment="CENTER_RIGHT">
+                    <children>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="Delete" onAction="#handleDelete"/>
+                        <Button text="Refresh" onAction="#handleRefresh"/>
+                        <Button text="Add" onAction="#handleAdd"/>
+                        <Button text="Update" onAction="#handleUpdate"/>
+                    </children>
+                </HBox>
+                <Label fx:id="errorLabel" text=""/>
+            </children>
+        </VBox>
+    </children>
+</AnchorPane>
+
+

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.collections.FXCollections?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.*?>
+<?import java.lang.String?>
+
+<AnchorPane xmlns:fx="http://javafx.com/fxml" fx:controller="comp3111.examsystem.controller.TeacherExamManageController">
+<children>
+    <VBox spacing="10">
+        <padding>
+            <Insets top="10" right="10" bottom="10" left="10"/>
+        </padding>
+        <children>
+            <HBox spacing="10">
+                <children>
+                    <HBox spacing="10">
+                        <children>
+                            <Label text="Exam name:"/>
+                            <TextField fx:id="examField" HBox.hgrow="NEVER"/>
+                            <Label text="Course ID:"/>
+                            <TextField fx:id="courseField" prefWidth="50"/>
+                            <Label text="Published:"/>
+                            <ComboBox fx:id="publishedComboBox">
+                                <items>
+                                    <FXCollections fx:factory="observableArrayList">
+                                        <String fx:value="Yes"/>
+                                        <String fx:value="No"/>
+                                    </FXCollections>
+                                </items>
+                            </ComboBox>
+                            <Button text="Reset" onAction="#handleResetExam"/>
+                            <Button text="Filter" onAction="#handleFilterExam"/>
+                        </children>
+                    </HBox>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <HBox alignment="CENTER_RIGHT" spacing="10">
+                        <children>
+                            <Label text="Question text:"/>
+                            <TextField fx:id="questionField" HBox.hgrow="NEVER"/>
+                            <Label text="Type:"/>
+                            <ComboBox fx:id="typeComboBox">
+                                <items>
+                                    <FXCollections fx:factory="observableArrayList">
+                                        <String fx:value="Single"/>
+                                        <String fx:value="Multiple"/>
+                                    </FXCollections>
+                                </items>
+                            </ComboBox>
+                            <Label text="Score:"/>
+                            <TextField fx:id="scoreField" prefWidth="50"/>
+                            <Button text="Reset" onAction="#handleResetQuestion"/>
+                            <Button text="Filter" onAction="#handleFilterQuestion"/>
+                        </children>
+                    </HBox>
+                </children>
+            </HBox>
+            <HBox spacing="10" VBox.vgrow="ALWAYS">
+                <children>
+                    <VBox spacing="5" HBox.hgrow="ALWAYS">
+                        <children>
+                            <TableView fx:id="examTable" VBox.vgrow="ALWAYS">
+                                <columns>
+                                    <TableColumn text="ID" fx:id="examIdColumn"/>
+                                    <TableColumn text="Name" fx:id="examNameColumn"/>
+                                    <TableColumn text="Published" fx:id="examPublishedColumn"/>
+                                    <TableColumn text="Time Limit" fx:id="examTimeLimitColumn"/>
+                                    <TableColumn text="Course" fx:id="examCourseColumn"/>
+                                </columns>
+                            </TableView>
+                        </children>
+                    </VBox>
+                    <VBox spacing="5" HBox.hgrow="ALWAYS">
+                        <children>
+                            <TableView fx:id="examQuestionTable" VBox.vgrow="ALWAYS">
+                                <columns>
+                                    <TableColumn fx:id="examQuestionIdColumn" text="Question ID"/>
+                                    <TableColumn text="Question in exam" fx:id="examQuestionTextColumn"/>
+                                    <TableColumn text="type" fx:id="examQuestionTypeColumn"/>
+                                    <TableColumn text="score" fx:id="examQuestionScoreColumn"/>
+                                </columns>
+                            </TableView>
+                            <HBox spacing="10">
+                                <Button text="Delete from left" onAction="#handleDeleteFromExam"/>
+                                <Button text="Add to left" onAction="#handleAddToExam"/>
+                            </HBox>
+                        </children>
+                    </VBox>
+                    <VBox spacing="5" HBox.hgrow="ALWAYS">
+                        <children>
+                            <TableView fx:id="questionTable" VBox.vgrow="ALWAYS">
+                                <columns>
+                                    <TableColumn text="ID" fx:id="questionIdColumn"/>
+                                    <TableColumn text="Text" fx:id="questionTextColumn"/>
+                                    <TableColumn text="Option A" fx:id="questionOptionAColumn"/>
+                                    <TableColumn text="Option B" fx:id="questionOptionBColumn"/>
+                                    <TableColumn text="Option C" fx:id="questionOptionCColumn"/>
+                                    <TableColumn text="Option D" fx:id="questionOptionDColumn"/>
+                                    <TableColumn text="Answer" fx:id="questionAnswerColumn"/>
+                                    <TableColumn text="Type" fx:id="questionTypeColumn"/>
+                                    <TableColumn text="Score" fx:id="questionScoreColumn"/>
+                                </columns>
+                            </TableView>
+                            <Label text="Exam name:"/>
+                            <TextField fx:id="examnameField" HBox.hgrow="ALWAYS"/>
+                            <Label text="Time limit:"/>
+                            <TextField fx:id="timelimitField" HBox.hgrow="ALWAYS"/>
+                            <HBox spacing="10" VBox.vgrow="ALWAYS">
+                                <Label text="Course ID:"/>
+                                <TextField fx:id="editcourseField" prefWidth="50"/>
+                                <Label text="Published:"/>
+                                <ComboBox fx:id="editpublishedComboBox">
+                                    <items>
+                                        <FXCollections fx:factory="observableArrayList">
+                                            <String fx:value="Yes"/>
+                                            <String fx:value="No"/>
+                                        </FXCollections>
+                                    </items>
+                                </ComboBox>
+                            </HBox>
+                        </children>
+                    </VBox>
+                </children>
+            </HBox>
+                <HBox spacing="10" alignment="CENTER_RIGHT">
+                    <children>
+                        <Region HBox.hgrow="ALWAYS"/>
+                        <Button text="Add" onAction="#handleAddExam"/>
+                        <Button text="Delete" onAction="#handleDeleteExam"/>
+                        <Button text="Update" onAction="#handleUpdateExam"/>
+                        <Button text="Refresh" onAction="#handleRefresh"/>
+                    </children>
+                </HBox>
+            <Label fx:id="errorLabel" text=""/>
+        </children>
+    </VBox>
+</children>
+</AnchorPane>
