@@ -10,7 +10,7 @@ public class Question {
     // Getters and setters for all properties
     // Getters and setters
     private int id;
-    private String question;
+    private String text;
     private String optionA;
     private String optionB;
     private String optionC;
@@ -21,7 +21,7 @@ public class Question {
 
     public Question(int id, String question, String optionA, String optionB, String optionC, String optionD, String answer, String type, int score) {
         this.id=id;
-        this.question = question;
+        this.text = question;
         this.optionA = optionA;
         this.optionB = optionB;
         this.optionC = optionC;
@@ -29,6 +29,9 @@ public class Question {
         this.answer = answer;
         this.type = type;
         this.score = score;
+    }
+    public String getQuestion() {
+        return text;
     }
 
 }

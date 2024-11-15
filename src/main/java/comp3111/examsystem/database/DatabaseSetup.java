@@ -49,6 +49,6 @@ public class DatabaseSetup {
     }
 
     public static void main(String[] args) {
-        DBTeacherSetup();
+        DBSetup();
     }
 }

@@ -134,7 +134,15 @@ public class TeacherQuestionController implements Initializable {
         // Implement filter logic here
         String question = questionField.getText();
         String type = typeComboBox.getValue();
-        int score = scoreField.getText().isEmpty() ? -1 : Integer.parseInt(scoreField.getText());
+        int score;
+        try {
+            score = scoreField.getText().isEmpty() ? -1 : Integer.parseInt(scoreField.getText());
+        } catch (NumberFormatException e) {
+            // Show an error message or handle the invalid number appropriately
+            errorLabel.setText("Score must be a valid integer.");
+            errorLabel.setStyle("-fx-text-fill: red;");
+            return;
+        }
 
         String sql = "SELECT * FROM question WHERE text LIKE ? AND (is_single_choice = ? OR ? IS NULL) AND (score = ? OR ? = -1)";
 
@@ -178,7 +186,7 @@ public class TeacherQuestionController implements Initializable {
             errorLabel.setStyle("-fx-text-fill: red;");
             return;
         }
-        String prev_question= selectedQuestion.getQuestion();
+        String prev_question= selectedQuestion.getText();
         String prev_option_a= selectedQuestion.getOptionA();
         String prev_option_b= selectedQuestion.getOptionB();
         String prev_option_c= selectedQuestion.getOptionC();
@@ -287,7 +295,7 @@ public class TeacherQuestionController implements Initializable {
 
                     int affectedRows = pstmt.executeUpdate();
                     if (affectedRows > 0) {
-                        selectedQuestion.setQuestion(updatedQuestion);
+                        selectedQuestion.setText(updatedQuestion);
                         selectedQuestion.setOptionA(updatedOptionA);
                         selectedQuestion.setOptionB(updatedOptionB);
                         selectedQuestion.setOptionC(updatedOptionC);
@@ -433,7 +441,6 @@ public class TeacherQuestionController implements Initializable {
             errorLabel.setStyle("-fx-text-fill: red;");
         }
     }
-
 
     @FXML
     public void handleDelete(ActionEvent event) {

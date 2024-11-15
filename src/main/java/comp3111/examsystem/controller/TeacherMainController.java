@@ -42,7 +42,7 @@ public class TeacherMainController implements Initializable {
     @FXML
     public void openExamManageUI() throws IOException {
         try {
-            FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("TeacherExamManageUI.fxml"));
+            FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("ExamManagement.fxml"));
             Scene scene = new Scene(fxmlLoader.load());
             Stage stage = new Stage();
             stage.setTitle("Exam Management");
