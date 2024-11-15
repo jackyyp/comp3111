@@ -61,7 +61,7 @@
                     <Label text="Age:" />
                     <TextField fx:id="ageField" />
                     <Label text="Position:" />
-                    <TextField fx:id="positionField" />
+                    <ComboBox fx:id="positionComboBox" />
                     <Label text="Department:" />
                     <TextField fx:id="departmentField" />
                     <Label text="Password:" />

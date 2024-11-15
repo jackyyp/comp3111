@@ -37,9 +37,9 @@ public class TeacherManagementController {
     @FXML
     private TableColumn<Teacher, Integer> ageColumn;
     @FXML
-    private TextField usernameField, nameField, ageField, positionField, departmentField, passwordField;
+    private TextField usernameField, nameField, ageField,  departmentField, passwordField;
     @FXML
-    private ComboBox<String> genderComboBox;
+    private ComboBox<String> genderComboBox, positionComboBox;
     @FXML
     private Label errorMessageLbl;
 
@@ -74,6 +74,7 @@ public class TeacherManagementController {
         genderColumn.setCellValueFactory(new PropertyValueFactory<>("gender"));
         ageColumn.setCellValueFactory(new PropertyValueFactory<>("age"));
         positionColumn.setCellValueFactory(new PropertyValueFactory<>("position"));
+        positionComboBox.setItems(FXCollections.observableArrayList("Junior", "Senior", "Parttime"));
         departmentColumn.setCellValueFactory(new PropertyValueFactory<>("department"));
         passwordColumn.setCellValueFactory(new PropertyValueFactory<>("password"));
 
@@ -182,12 +183,12 @@ public class TeacherManagementController {
         String name = nameField.getText();
         String age = ageField.getText();
         String gender = genderComboBox.getValue();
-        String position = positionField.getText();
+        String position = positionComboBox.getValue();
         String department = departmentField.getText();
         String password = passwordField.getText();
 
         try {
-            if (username.isEmpty() || name.isEmpty() || gender == null || age.isEmpty() || Integer.parseInt(age) < 0 || position.isEmpty() || department.isEmpty() || password.isEmpty()) {
+            if (username.isEmpty() || name.isEmpty() || gender == null || age.isEmpty() || Integer.parseInt(age) < 0 || position == null || department.isEmpty() || password.isEmpty()) {
                 errorMessageLbl.setText("Error: Please check your inputs.");
                 errorMessageLbl.setStyle("-fx-text-fill: red;");
                 errorMessageLbl.setVisible(true);
@@ -263,7 +264,7 @@ public class TeacherManagementController {
             String name = nameField.getText();
             String age = ageField.getText();
             String gender = genderComboBox.getValue();
-            String position = positionField.getText();
+            String position = positionComboBox.getValue();
             String department = departmentField.getText();
             String password = passwordField.getText();
 
@@ -386,6 +387,7 @@ public class TeacherManagementController {
                 String gender = rs.getString("gender");
                 int age = rs.getInt("age");
                 String position = rs.getString("position");
+                System.out.println(position);
                 String department = rs.getString("department");
                 String password = rs.getString("password");
 
