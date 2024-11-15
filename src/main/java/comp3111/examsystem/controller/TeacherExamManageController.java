@@ -236,6 +236,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 public class TeacherExamManageController {
     @FXML
@@ -309,6 +310,17 @@ public class TeacherExamManageController {
         loadExams();
         loadQuestions();
 
+
+        // Add listener to update currentExamId when a new exam is selected
+        examTable.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                currentExamId = newValue.getId();
+                loadExamQuestions(currentExamId);
+            }
+        });
+
+        // Enable multiple selection for the question table
+        questionTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
         // Add listener to update currentExamId when a new exam is selected
         examTable.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
@@ -492,6 +504,8 @@ public class TeacherExamManageController {
         }
     }
 
+
+
     @FXML
     private void handleAddExam() {
         String examName = examnameField.getText();
@@ -514,8 +528,28 @@ public class TeacherExamManageController {
             return;
         }
 
-        String sql = "INSERT INTO exam (name, course, is_published, time_limit) VALUES (?, ?, ?, ?)";
+        String checkSql = "SELECT COUNT(*) FROM exam WHERE name = ? AND course = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
 
+            checkStmt.setString(1, examName);
+            checkStmt.setString(2, courseId);
+
+            ResultSet rs = checkStmt.executeQuery();
+            if (rs.next() && rs.getInt(1) > 0) {
+                errorLabel.setText("The exam already exists.");
+                errorLabel.setStyle("-fx-text-fill: red;");
+                return;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            errorLabel.setText("Database error: " + e.getMessage());
+            errorLabel.setStyle("-fx-text-fill: red;");
+            return;
+        }
+
+        String sql = "INSERT INTO exam (name, course, is_published, time_limit) VALUES (?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -541,6 +575,145 @@ public class TeacherExamManageController {
         }
     }
 
+
+
+
+    /*@FXML
+    private void handleAddExam() {
+        String examName = examnameField.getText();
+        String courseId = editcourseField.getText();
+        String published = editpublishedComboBox.getValue();
+        String timeLimitText = timelimitField.getText();
+        ObservableList<Question> selectedQuestions = questionTable.getSelectionModel().getSelectedItems();
+
+        if (examName.isEmpty() || courseId.isEmpty() || published == null || timeLimitText.isEmpty()) {
+            errorLabel.setText("All fields must be filled out.");
+            errorLabel.setStyle("-fx-text-fill: red;");
+            return;
+        }
+
+        if (selectedQuestions == null || selectedQuestions.isEmpty()) {
+            errorLabel.setText("No questions selected for the exam.");
+            errorLabel.setStyle("-fx-text-fill: red;");
+            return;
+        }
+
+        int timeLimit;
+        try {
+            timeLimit = Integer.parseInt(timeLimitText);
+        } catch (NumberFormatException e) {
+            errorLabel.setText("Time limit must be a valid integer.");
+            errorLabel.setStyle("-fx-text-fill: red;");
+            return;
+        }
+
+        String sql = "INSERT INTO exam (name, course, is_published, time_limit) VALUES (?, ?, ?, ?)";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            pstmt.setString(1, examName);
+            pstmt.setString(2, courseId);
+            pstmt.setBoolean(3, "Yes".equals(published));
+            pstmt.setInt(4, timeLimit);
+
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows > 0) {
+                ResultSet generatedKeys = pstmt.getGeneratedKeys();
+                if (generatedKeys.next()) {
+                    int examId = generatedKeys.getInt(1);
+
+                    String insertQuestionSql = "INSERT INTO exam_question_link (exam_id, question_id) VALUES (?, ?)";
+                    try (PreparedStatement insertQuestionStmt = conn.prepareStatement(insertQuestionSql)) {
+                        for (Question question : selectedQuestions) {
+                            insertQuestionStmt.setInt(1, examId);
+                            insertQuestionStmt.setInt(2, question.getId());
+                            insertQuestionStmt.addBatch();
+                        }
+                        insertQuestionStmt.executeBatch();
+                    }
+
+                    errorLabel.setText("Exam added successfully.");
+                    errorLabel.setStyle("-fx-text-fill: green;");
+                    loadExams();
+                }
+            } else {
+                errorLabel.setText("Failed to add the exam.");
+                errorLabel.setStyle("-fx-text-fill: red;");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            errorLabel.setText("Database error: " + e.getMessage());
+            errorLabel.setStyle("-fx-text-fill: red;");
+        }
+    }*/
+
+
+
+
+    /*@FXML
+    private void handleUpdateExam() {
+        Exam selectedExam = examTable.getSelectionModel().getSelectedItem();
+
+        if (selectedExam == null) {
+            errorLabel.setText("Please select an exam to update.");
+            errorLabel.setStyle("-fx-text-fill: red;");
+            return;
+        }
+
+        String examName = examnameField.getText();
+        String prev_examName = selectedExam.getName();
+        String courseId = editcourseField.getText();
+        String published = editpublishedComboBox.getValue();
+        String timeLimitText = timelimitField.getText();
+        int prev_timeLimit = selectedExam.getTimeLimit();
+
+        if (examName.isEmpty() && courseId.isEmpty() && published == null && timeLimitText.isEmpty()) {
+            errorLabel.setText("some fields must be filled out.");
+            errorLabel.setStyle("-fx-text-fill: red;");
+            return;
+        }
+        examName = examName.isEmpty() ? prev_examName : examName;
+        published = published == null ? (selectedExam.isPublished() ? "Yes" : "No") : published;
+        courseId = courseId.isEmpty() ? selectedExam.getCourse() : courseId;
+        int timeLimit;
+        try {
+            timeLimit = timelimitField.getText().isEmpty() ? prev_timeLimit : Integer.parseInt(timelimitField.getText());
+        } catch (NumberFormatException e) {
+            errorLabel.setText("Time limit must be a valid integer.");
+            errorLabel.setStyle("-fx-text-fill: red;");
+            return;
+        }
+
+        String sql = "UPDATE exam SET name = ?, course = ?, is_published = ?, time_limit = ? WHERE id = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, examName);
+            pstmt.setString(2, courseId);
+            pstmt.setBoolean(3, "Yes".equals(published));
+            pstmt.setInt(4, timeLimit);
+            pstmt.setInt(5, selectedExam.getId());
+
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows > 0) {
+                errorLabel.setText("Exam updated successfully.");
+                errorLabel.setStyle("-fx-text-fill: green;");
+                loadExams();
+            } else {
+                errorLabel.setText("Failed to update the exam.");
+                errorLabel.setStyle("-fx-text-fill: red;");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            errorLabel.setText("Database error: " + e.getMessage());
+            errorLabel.setStyle("-fx-text-fill: red;");
+        }
+    }*/
+
     @FXML
     private void handleUpdateExam() {
         Exam selectedExam = examTable.getSelectionModel().getSelectedItem();
@@ -552,26 +725,52 @@ public class TeacherExamManageController {
         }
 
         String examName = examnameField.getText();
+        String prev_examName = selectedExam.getName();
         String courseId = editcourseField.getText();
         String published = editpublishedComboBox.getValue();
         String timeLimitText = timelimitField.getText();
+        int prev_timeLimit = selectedExam.getTimeLimit();
 
         if (examName.isEmpty() && courseId.isEmpty() && published == null && timeLimitText.isEmpty()) {
-            errorLabel.setText("All fields must be filled out.");
+            errorLabel.setText("Some fields must be filled out.");
             errorLabel.setStyle("-fx-text-fill: red;");
             return;
         }
+        examName = examName.isEmpty() ? prev_examName : examName;
+        published = published == null ? (selectedExam.isPublished() ? "Yes" : "No") : published;
+        courseId = courseId.isEmpty() ? selectedExam.getCourse() : courseId;
         int timeLimit;
         try {
-            timeLimit = Integer.parseInt(timeLimitText);
+            timeLimit = timelimitField.getText().isEmpty() ? prev_timeLimit : Integer.parseInt(timelimitField.getText());
         } catch (NumberFormatException e) {
             errorLabel.setText("Time limit must be a valid integer.");
             errorLabel.setStyle("-fx-text-fill: red;");
             return;
         }
 
-        String sql = "UPDATE exam SET name = ?, course = ?, is_published = ?, time_limit = ? WHERE id = ?";
+        String checkSql = "SELECT COUNT(*) FROM exam WHERE name = ? AND course = ? AND id != ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
 
+            checkStmt.setString(1, examName);
+            checkStmt.setString(2, courseId);
+            checkStmt.setInt(3, selectedExam.getId());
+
+            ResultSet rs = checkStmt.executeQuery();
+            if (rs.next() && rs.getInt(1) > 0) {
+                errorLabel.setText("Updating the exam will result in a duplicate entry.");
+                errorLabel.setStyle("-fx-text-fill: red;");
+                return;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            errorLabel.setText("Database error: " + e.getMessage());
+            errorLabel.setStyle("-fx-text-fill: red;");
+            return;
+        }
+
+        String sql = "UPDATE exam SET name = ?, course = ?, is_published = ?, time_limit = ? WHERE id = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -667,14 +866,32 @@ public class TeacherExamManageController {
     private void handleAddToExam() {
         Question selectedQuestion = questionTable.getSelectionModel().getSelectedItem();
         if (selectedQuestion != null) {
+            String checkSql = "SELECT COUNT(*) FROM exam_question_link WHERE exam_id = ? AND question_id = ?";
+            String insertSql = "INSERT INTO exam_question_link (exam_id, question_id) VALUES (?, ?)";
+
             try (Connection conn = DatabaseConnection.getConnection();
-                 PreparedStatement pstmt = conn.prepareStatement("INSERT INTO exam_question_link (exam_id, question_id) VALUES (?, ?)")) {
-                pstmt.setInt(1, currentExamId);
-                pstmt.setInt(2, selectedQuestion.getId());
-                pstmt.executeUpdate();
+                 PreparedStatement checkStmt = conn.prepareStatement(checkSql);
+                 PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
+
+                // Check if the question already exists in the exam
+                checkStmt.setInt(1, currentExamId);
+                checkStmt.setInt(2, selectedQuestion.getId());
+                ResultSet rs = checkStmt.executeQuery();
+                rs.next();
+                if (rs.getInt(1) > 0) {
+                    errorLabel.setText("This question has already been added to the exam.");
+                    errorLabel.setStyle("-fx-text-fill: red;");
+                    return;
+                }
+
+                // Insert the question into the exam
+                insertStmt.setInt(1, currentExamId);
+                insertStmt.setInt(2, selectedQuestion.getId());
+                insertStmt.executeUpdate();
                 loadExamQuestions(currentExamId); // Refresh the table after adding
                 errorLabel.setText("Question added to exam successfully.");
                 errorLabel.setStyle("-fx-text-fill: green;");
+
             } catch (SQLException e) {
                 e.printStackTrace();
                 errorLabel.setText("Error adding question to exam: " + e.getMessage());

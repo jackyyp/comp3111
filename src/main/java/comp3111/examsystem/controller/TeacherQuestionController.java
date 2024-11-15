@@ -280,6 +280,27 @@ public class TeacherQuestionController implements Initializable {
                 updatedScore = Integer.parseInt(editScoreField.getText());
             }
 
+            String checkSql = "SELECT COUNT(*) FROM question WHERE text = ? AND id != ?";
+            try (Connection conn = DatabaseConnection.getConnection();
+                 PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+
+                checkStmt.setString(1, updatedQuestion);
+                checkStmt.setInt(2, selectedQuestion.getId());
+                ResultSet rs = checkStmt.executeQuery();
+                if (rs.next() && rs.getInt(1) > 0) {
+                    errorLabel.setText("The question already exists.");
+                    errorLabel.setStyle("-fx-text-fill: red;");
+                    return;
+                }
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+                errorLabel.setText("Database error: " + e.getMessage());
+                errorLabel.setStyle("-fx-text-fill: red;");
+                return;
+            }
+
+
             try (Connection conn = DatabaseConnection.getConnection()) {
                 String sql = "UPDATE question SET text = ?, option_a = ?, option_b = ?, option_c = ?, option_d = ?, answer = ?, is_single_choice = ?, score = ? WHERE id = ?";
                 try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -403,6 +424,26 @@ public class TeacherQuestionController implements Initializable {
                 errorLabel.setStyle("-fx-text-fill: red;");
                 return;
             }
+        }
+
+        // Check for duplicate question text
+        String checkSql = "SELECT COUNT(*) FROM question WHERE text = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+
+            checkStmt.setString(1, editquestion);
+            ResultSet rs = checkStmt.executeQuery();
+            if (rs.next() && rs.getInt(1) > 0) {
+                errorLabel.setText("The question already exists.");
+                errorLabel.setStyle("-fx-text-fill: red;");
+                return;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            errorLabel.setText("Database error: " + e.getMessage());
+            errorLabel.setStyle("-fx-text-fill: red;");
+            return;
         }
 
         String sql = "INSERT INTO question (text, option_a, option_b, option_c, option_d, answer, is_single_choice, score) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
