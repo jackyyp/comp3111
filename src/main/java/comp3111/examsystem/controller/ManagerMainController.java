@@ -53,7 +53,6 @@ public class ManagerMainController implements Initializable {
 
     @FXML
     public void openStudentManageUI(ActionEvent event) {
-        closeCurrentStage(event);
         try {
             Stage stage = new Stage();
             FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("StudentManagementUI.fxml"));
@@ -68,7 +67,6 @@ public class ManagerMainController implements Initializable {
 
     @FXML
     public void openTeacherManageUI(ActionEvent event) {
-        closeCurrentStage(event);
         try {
             Stage stage = new Stage();
             FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("TeacherManagementUI.fxml"));
@@ -83,7 +81,6 @@ public class ManagerMainController implements Initializable {
 
     @FXML
     public void openCourseManageUI(ActionEvent event) {
-        closeCurrentStage(event);
         try {
             Stage stage = new Stage();
             FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("CourseManagementUI.fxml"));
