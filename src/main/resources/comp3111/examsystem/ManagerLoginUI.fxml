@@ -38,5 +38,7 @@
                 <Button mnemonicParsing="false" onAction="#login" text="Login" />
             </children>
         </HBox>
+        <!-- Error message label -->
+        <Label fx:id="errorMessageLbl" style="-fx-text-fill: red;" text="Invalid credentials, please try again." visible="false" />
     </children>
 </VBox>
