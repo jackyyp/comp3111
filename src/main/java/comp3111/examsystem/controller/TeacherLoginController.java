@@ -44,7 +44,7 @@ public class TeacherLoginController implements Initializable {
         String username = usernameTxt.getText();
         String password = passwordTxt.getText();
 
-        String sql = "SELECT * FROM teachers WHERE username = ? AND password = ?";
+        String sql = "SELECT * FROM teacher WHERE username = ? AND password = ?";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {

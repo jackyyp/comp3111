@@ -556,12 +556,11 @@ public class TeacherExamManageController {
         String published = editpublishedComboBox.getValue();
         String timeLimitText = timelimitField.getText();
 
-        if (examName.isEmpty() || courseId.isEmpty() || published == null || timeLimitText.isEmpty()) {
+        if (examName.isEmpty() && courseId.isEmpty() && published == null && timeLimitText.isEmpty()) {
             errorLabel.setText("All fields must be filled out.");
             errorLabel.setStyle("-fx-text-fill: red;");
             return;
         }
-
         int timeLimit;
         try {
             timeLimit = Integer.parseInt(timeLimitText);
