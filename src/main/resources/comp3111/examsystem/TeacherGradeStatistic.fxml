@@ -59,15 +59,15 @@
       </HBox>
    </top>
    <bottom>
-      <HBox alignment="CENTER_RIGHT" prefHeight="71.0" prefWidth="960.0" BorderPane.alignment="CENTER">
-         <children>
-            <Button mnemonicParsing="false" onAction="#refresh" text="Refresh">
-               <HBox.margin>
-                  <Insets right="20.0" />
-               </HBox.margin>
-            </Button>
-         </children>
-      </HBox>
+<!--      <HBox alignment="CENTER_RIGHT" prefHeight="71.0" prefWidth="960.0" BorderPane.alignment="CENTER">-->
+<!--         <children>-->
+<!--            <Button mnemonicParsing="false" onAction="#refresh" text="Refresh">-->
+<!--               <HBox.margin>-->
+<!--                  <Insets right="20.0" />-->
+<!--               </HBox.margin>-->
+<!--            </Button>-->
+<!--         </children>-->
+<!--      </HBox>-->
    </bottom>
    <left>
       <VBox prefHeight="379.0" prefWidth="460.0" BorderPane.alignment="CENTER">

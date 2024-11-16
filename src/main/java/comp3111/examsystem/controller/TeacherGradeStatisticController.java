@@ -1,5 +1,6 @@
 package comp3111.examsystem.controller;
 
+import comp3111.examsystem.database.DatabaseConnection;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -9,33 +10,28 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
 import java.net.URL;
-import java.util.HashMap;
-import java.util.List;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 
 public class TeacherGradeStatisticController implements Initializable {
-    public static class GradeExampleClass {
-        public String getStudentName() {
-            return "student";
-        }
-        public String getCourseNum() {
-            return "comp3111";
-        }
-        public String getExamName() {
-            return "final";
-        }
-        public String getScore() {
-            return "100";
-        }
-        public String getFullScore() {
-            return "100";
-        }
-        public String getTimeSpend() {
-            return "60";
-        }
+    @Data
+    @AllArgsConstructor
+    public static class Grade {
+        private String studentName;
+        private String courseNum;
+        private String examName;
+        private int score;
+        private int fullScore;
+        private int timeSpend;
     }
 
     @FXML
@@ -45,35 +41,35 @@ public class TeacherGradeStatisticController implements Initializable {
     @FXML
     private ChoiceBox<String> studentCombox;
     @FXML
-    private TableView<GradeExampleClass> gradeTable;
+    private TableView<Grade> gradeTable;
     @FXML
-    private TableColumn<GradeExampleClass, String> studentColumn;
+    private TableColumn<Grade, String> studentColumn;
     @FXML
-    private TableColumn<GradeExampleClass, String> courseColumn;
+    private TableColumn<Grade, String> courseColumn;
     @FXML
-    private TableColumn<GradeExampleClass, String> examColumn;
+    private TableColumn<Grade, String> examColumn;
     @FXML
-    private TableColumn<GradeExampleClass, String> scoreColumn;
+    private TableColumn<Grade, Integer> scoreColumn;
     @FXML
-    private TableColumn<GradeExampleClass, String> fullScoreColumn;
+    private TableColumn<Grade, Integer> fullScoreColumn;
     @FXML
-    private TableColumn<GradeExampleClass, String> timeSpendColumn;
+    private TableColumn<Grade, Integer> timeSpendColumn;
     @FXML
-    BarChart<String, Number> barChart;
+    private BarChart<String, Number> barChart;
     @FXML
-    CategoryAxis categoryAxisBar;
+    private CategoryAxis categoryAxisBar;
     @FXML
-    NumberAxis numberAxisBar;
+    private NumberAxis numberAxisBar;
     @FXML
-    LineChart<String, Number> lineChart;
+    private LineChart<String, Number> lineChart;
     @FXML
-    CategoryAxis categoryAxisLine;
+    private CategoryAxis categoryAxisLine;
     @FXML
-    NumberAxis numberAxisLine;
+    private NumberAxis numberAxisLine;
     @FXML
-    PieChart pieChart;
+    private PieChart pieChart;
 
-    private final ObservableList<GradeExampleClass> gradeList = FXCollections.observableArrayList();
+    private final ObservableList<Grade> gradeList = FXCollections.observableArrayList();
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
@@ -86,8 +82,6 @@ public class TeacherGradeStatisticController implements Initializable {
         categoryAxisLine.setLabel("Exam");
         numberAxisLine.setLabel("Avg. Score");
 
-        gradeList.add(new GradeExampleClass());
-        gradeTable.setItems(gradeList);
         studentColumn.setCellValueFactory(new PropertyValueFactory<>("studentName"));
         courseColumn.setCellValueFactory(new PropertyValueFactory<>("courseNum"));
         examColumn.setCellValueFactory(new PropertyValueFactory<>("examName"));
@@ -95,43 +89,114 @@ public class TeacherGradeStatisticController implements Initializable {
         fullScoreColumn.setCellValueFactory(new PropertyValueFactory<>("fullScore"));
         timeSpendColumn.setCellValueFactory(new PropertyValueFactory<>("timeSpend"));
 
-        refresh();
+
+        query();
+
+        // Populate ChoiceBox elements with unique values from gradeList
+        courseCombox.getItems().setAll(gradeList.stream().map(Grade::getCourseNum).distinct().collect(Collectors.toList()));
+        examCombox.getItems().setAll(gradeList.stream().map(Grade::getExamName).distinct().collect(Collectors.toList()));
+        studentCombox.getItems().setAll(gradeList.stream().map(Grade::getStudentName).distinct().collect(Collectors.toList()));
+
         loadChart();
     }
 
-    @FXML
-    public void refresh() {
-    }
-
-    private void loadChart() {
-        XYChart.Series<String, Number> seriesBar = new XYChart.Series<>();
-        seriesBar.getData().clear();
-        barChart.getData().clear();
-        for (int i = 0;  i < 5; i++) {
-            seriesBar.getData().add(new XYChart.Data<>("COMP" + i, 50));
-        }
-        barChart.getData().add(seriesBar);
-
-        pieChart.getData().clear();
-        for (int i = 0;  i < 4; i++) {
-            pieChart.getData().add(new PieChart.Data("student" + i, 80));
-        }
-
-        XYChart.Series<String, Number> seriesLine = new XYChart.Series<>();
-        seriesLine.getData().clear();
-        lineChart.getData().clear();
-        for (int i = 0;  i < 6; i++) {
-            seriesLine.getData().add(new XYChart.Data<>("COMP3111" + "-" + "quiz" + i, 70));
-        }
-        lineChart.getData().add(seriesLine);
-
-    }
 
     @FXML
     public void reset() {
+        courseCombox.setValue(null);
+        examCombox.setValue(null);
+        studentCombox.setValue(null);
+        query();
     }
 
     @FXML
     public void query() {
+        String sql = "SELECT s.name, e.course, e.name AS exam, g.score, " +
+                "(SELECT SUM(q.score) FROM question q JOIN exam_question_link eql ON q.id = eql.question_id WHERE eql.exam_id = e.id) AS full_score, " +
+                "g.time_spent " +
+                "FROM grade g " +
+                "JOIN exam e ON g.exam_id = e.id " +
+                "JOIN student s ON s.username = g.student_id " +
+                "WHERE 1=1";
+
+        if (courseCombox.getValue() != null && !courseCombox.getValue().isEmpty()) {
+            sql += " AND e.course = ?";
+        }
+        if (examCombox.getValue() != null && !examCombox.getValue().isEmpty()) {
+            sql += " AND e.name = ?";
+        }
+        if (studentCombox.getValue() != null && !studentCombox.getValue().isEmpty()) {
+            sql += " AND s.name = ?";
+        }
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            int paramIndex = 1;
+            if (courseCombox.getValue() != null && !courseCombox.getValue().isEmpty()) {
+                pstmt.setString(paramIndex++, courseCombox.getValue());
+            }
+            if (examCombox.getValue() != null && !examCombox.getValue().isEmpty()) {
+                pstmt.setString(paramIndex++, examCombox.getValue());
+            }
+            if (studentCombox.getValue() != null && !studentCombox.getValue().isEmpty()) {
+                pstmt.setString(paramIndex++, studentCombox.getValue());
+            }
+
+            ResultSet rs = pstmt.executeQuery();
+            gradeList.clear();
+            while (rs.next()) {
+                Grade grade = new Grade(
+                        rs.getString("name"),
+                        rs.getString("course"),
+                        rs.getString("exam"),
+                        rs.getInt("score"),
+                        rs.getInt("full_score"),
+                        rs.getInt("time_spent")
+                );
+                gradeList.add(grade);
+            }
+            gradeTable.setItems(gradeList);
+            loadChart();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadChart() {
+        // X axis: courseNum, Y axis: average score
+        XYChart.Series<String, Number> seriesBar = new XYChart.Series<>();
+        barChart.getData().clear();
+
+        // Calculate average score per course
+        Map<String, Double> courseAvgScores = gradeList.stream()
+                .collect(Collectors.groupingBy(Grade::getCourseNum, Collectors.averagingInt(Grade::getScore)));
+
+        for (Map.Entry<String, Double> entry : courseAvgScores.entrySet()) {
+            seriesBar.getData().add(new XYChart.Data<>(entry.getKey(), entry.getValue()));
+        }
+        barChart.getData().add(seriesBar);
+
+        pieChart.getData().clear();
+
+        // Calculate total score per student
+        Map<String, Integer> studentTotalScores = gradeList.stream()
+                .collect(Collectors.groupingBy(Grade::getStudentName, Collectors.summingInt(Grade::getScore)));
+
+        for (Map.Entry<String, Integer> entry : studentTotalScores.entrySet()) {
+            pieChart.getData().add(new PieChart.Data(entry.getKey(), entry.getValue()));
+        }
+
+        // X axis: courseNum + "-" + examName, Y axis: average score (group by course + exam)
+        XYChart.Series<String, Number> seriesLine = new XYChart.Series<>();
+        lineChart.getData().clear();
+
+        Map<String, Double> courseExamAvgScores = gradeList.stream()
+                .collect(Collectors.groupingBy(g -> g.getCourseNum() + "-" + g.getExamName(), Collectors.averagingInt(Grade::getScore)));
+
+        for (Map.Entry<String, Double> entry : courseExamAvgScores.entrySet()) {
+            seriesLine.getData().add(new XYChart.Data<>(entry.getKey(), entry.getValue()));
+        }
+        lineChart.getData().add(seriesLine);
     }
 }
