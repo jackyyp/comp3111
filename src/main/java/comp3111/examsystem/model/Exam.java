@@ -56,4 +56,8 @@ public class Exam {
     public void setCourse(String course) {
         this.course = course;
     }
+
+    public boolean isPublished() {
+        return isPublished;
+    }
 }
