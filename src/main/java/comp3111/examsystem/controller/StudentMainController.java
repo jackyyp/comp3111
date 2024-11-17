@@ -24,28 +24,60 @@ import java.sql.SQLException;
 import java.util.*;
 
 import javafx.scene.control.Alert;
-
+/**
+ * The controller for the student main page.
+ *
+ * This controller is responsible for displaying the student's exam options and statistics.
+ *
+ * @author WANG Shao Fu
+ */
 public class StudentMainController implements Initializable {
+
+    /**
+     * The combo box for selecting the exam.
+     */
     @FXML
     private ComboBox<String> examCombox;
+
+    /**
+     * The label for displaying the error message.
+     */
     @FXML
     private Label errorLabel;
+
+    /**
+     * The data model for the student.
+     */
     private StudentControllerModel dataModel;
 
+    /**
+     * Sets the data model for the student.
+     *
+     * @param dataModel the data model for the student
+     */
     public void setDataModel(StudentControllerModel dataModel) {
         this.dataModel = dataModel;
     }
 
-    // Map to store exam names and their corresponding IDs
+    /**
+     * A map to store exam names and their corresponding IDs.
+     */
     private Map<String, Integer> examMap = new HashMap<>();
 
+    /**
+     * Initializes the controller.
+     *
+     * @param location the location of the controller
+     * @param resources the resources of the controller
+     */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         loadExams();
-
-
     }
 
+    /**
+     * Loads the exams from the database.
+     */
     private void loadExams() {
         String sql = "SELECT e.id, e.name, e.course " +
                 "FROM exam e " +
@@ -90,7 +122,11 @@ public class StudentMainController implements Initializable {
         }
     }
 
-
+    /**
+     * Opens the exam UI for the selected exam.
+     *
+     * @param event the event that triggered the open exam UI
+     */
     @FXML
     public void openExamUI(ActionEvent event) {
         String selectedExam = examCombox.getSelectionModel().getSelectedItem();
@@ -138,6 +174,9 @@ public class StudentMainController implements Initializable {
         }
     }
 
+    /**
+     * Opens the grade statistic UI.
+     */
     @FXML
     public void openGradeStatistic() {
         try {
@@ -163,12 +202,19 @@ public class StudentMainController implements Initializable {
         }
     }
 
-
+    /**
+     * Exits the application.
+     */
     @FXML
     public void exit() {
         System.exit(0);
     }
 
+    /**
+     * Logs out the user.
+     *
+     * @param event the event that triggered the logout
+     */
     @FXML
     public void logout(ActionEvent event) {
         try {
@@ -193,5 +239,4 @@ public class StudentMainController implements Initializable {
             e.printStackTrace();
         }
     }
-
 }

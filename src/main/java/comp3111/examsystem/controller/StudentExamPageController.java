@@ -16,6 +16,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.scene.control.Alert.AlertType;
+import lombok.Getter;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -27,64 +28,164 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The controller for the student exam page.
+ * <p>
+ * This controller is responsible for managing the student's exam experience, including loading questions,
+ * updating the countdown timer, and submitting the exam when completed.
+ *
+ * @author WANG Shao Fu
+ */
 public class StudentExamPageController {
-    @FXML
-    private Label examNameLabel;
 
+    /**
+     * The label displaying the exam name.
+     */
     @FXML
-    private Label questionNumberLabel;
+    Label examNameLabel;
 
+    /**
+     * The label displaying the current question number.
+     */
     @FXML
-    private Label countdownLabel;
+    Label questionNumberLabel;
 
+    /**
+     * The label displaying the countdown timer.
+     */
     @FXML
-    private VBox questionsContainer;
+    Label countdownLabel;
 
+    /**
+     * The container for the question boxes.
+     */
     @FXML
-    private Button previousButton;
+    VBox questionsContainer;
 
+    /**
+     * The button to display the previous question.
+     */
     @FXML
-    private Button nextButton;
+    Button previousButton;
 
+    /**
+     * The button to display the next question.
+     */
     @FXML
-    private Button submitButton;
+    Button nextButton;
 
+    /**
+     * The button to submit the exam.
+     */
     @FXML
-    private ListView<String> questionListView;
+    Button submitButton;
 
-    private List<Question> questions = new ArrayList<>();
-    private List<VBox> questionBoxes = new ArrayList<>();
-    private int currentQuestionIndex = 0;
-    private Alert confirmationAlert;
+    /**
+     * The list view displaying the question numbers and text.
+     */
+    @FXML
+    ListView<String> questionListView;
+
+    /**
+     * The list of questions.
+     */
+    List<Question> questions = new ArrayList<>();
+
+    /**
+     * The list of question boxes.
+     */
+    List<VBox> questionBoxes = new ArrayList<>();
+
+    /**
+     * The current question index.
+     */
+    int currentQuestionIndex = 0;
+
+    /**
+     * The confirmation alert for submitting the exam.
+     */
+    Alert confirmationAlert;
+
+    /**
+     * The timeline for the countdown timer.
+     */
     private Timeline timeline;
+
+    /**
+     * The time remaining in seconds.
+     */
     private long timeRemainingSeconds;
 
+    /**
+     * The time allowed for the exam in seconds.
+     */
     private long timeAllowedSeconds;
+
+    /**
+     * The data model for the student.
+     */
     private StudentControllerModel dataModel;
 
+    /**
+     * Sets the data model for the student.
+     *
+     * @param dataModel the data model for the student
+     */
     public void setDataModel(StudentControllerModel dataModel) {
         this.dataModel = dataModel;
         System.out.println("Current Username: " + dataModel.getUsername());
         System.out.println("Current Exam ID: " + dataModel.getExamId());
     }
 
+    /**
+     * Gets the data model for the student.
+     *
+     * @return the data model for the student
+     */
+    public StudentControllerModel getDataModel() {
+        return dataModel;
+    }
+
+    /**
+     * Sets the exam name.
+     *
+     * @param examName the exam name
+     */
     public void setExamName(String examName) {
         examNameLabel.setText(examName);
     }
 
-    public void initialize() { // Disable the close button
+    /**
+     * Gets the exam name.
+     *
+     * @return the exam name
+     */
+    public String getExamName() {
+        return examNameLabel.getText();
+    }
+
+    /**
+     * Initializes the controller.
+     */
+    public void initialize() {
+        // Disable the close button
         Platform.runLater(() -> {
             Stage stage = (Stage) examNameLabel.getScene().getWindow();
             if (stage != null) {
-                stage.setOnCloseRequest(event -> { // Show a dialog if someone tries to close the window
+                stage.setOnCloseRequest(event -> {
                     event.consume(); // Prevents the window from closing
-                    Alert alert = new Alert(Alert.AlertType.INFORMATION, "Closing is disabled during the exam.", ButtonType.OK);
+                    Alert alert = new Alert(AlertType.INFORMATION, "Closing is disabled during the exam.", ButtonType.OK);
                     alert.showAndWait();
                 });
             }
         });
     }
 
+    /**
+     * Loads the questions for the exam.
+     *
+     * @param examId the ID of the exam
+     */
     public void loadQuestions(int examId) {
         System.out.println("Fetching questions for exam ID: " + examId);
 
@@ -200,10 +301,13 @@ public class StudentExamPageController {
         }));
         timeline.setCycleCount(Animation.INDEFINITE);
         timeline.play();
-
-
     }
 
+    /**
+     * Gets the list of question list items.
+     *
+     * @return the list of question list items
+     */
     private List<String> getQuestionListItems() {
         List<String> items = new ArrayList<>();
         for (int i = 0; i < questions.size(); i++) {
@@ -212,6 +316,12 @@ public class StudentExamPageController {
         return items;
     }
 
+    /**
+     * Formats the time in seconds into a string.
+     *
+     * @param seconds the time in seconds
+     * @return the formatted time string
+     */
     private String formatTime(long seconds) {
         long hours = seconds / 3600;
         long minutes = (seconds % 3600) / 60;
@@ -219,8 +329,11 @@ public class StudentExamPageController {
         return String.format("%02d:%02d:%02d", hours, minutes, remainingSeconds);
     }
 
+    /**
+     * Shows the previous question.
+     */
     @FXML
-    private void showPreviousQuestion() {
+    void showPreviousQuestion() {
         if (currentQuestionIndex > 0) {
             currentQuestionIndex--;
             questionsContainer.getChildren().setAll(questionBoxes.get(currentQuestionIndex));
@@ -229,8 +342,11 @@ public class StudentExamPageController {
         }
     }
 
+    /**
+     * Shows the next question.
+     */
     @FXML
-    private void showNextQuestion() {
+    void showNextQuestion() {
         if (currentQuestionIndex < questionBoxes.size() - 1) {
             currentQuestionIndex++;
             questionsContainer.getChildren().setAll(questionBoxes.get(currentQuestionIndex));
@@ -239,21 +355,35 @@ public class StudentExamPageController {
         }
     }
 
+    /**
+     * Updates the navigation buttons.
+     */
     private void updateNavigationButtons() {
         previousButton.setDisable(currentQuestionIndex == 0);
         nextButton.setDisable(currentQuestionIndex == questionBoxes.size() - 1);
     }
 
+    /**
+     * Updates the question number.
+     */
     private void updateQuestionNumber() {
         questionNumberLabel.setText("Question " + (currentQuestionIndex + 1) + " of " + questionBoxes.size());
     }
 
+    /**
+     * Submits the exam.
+     */
     @FXML
-    private void submitExam() {
+    void submitExam() {
         submitExam(true); // Call submitExam with true indicating confirmation is needed
     }
 
-    private void submitExam(boolean requireConfirmation) {
+    /**
+     * Submits the exam.
+     *
+     * @param requireConfirmation whether to require confirmation
+     */
+    void submitExam(boolean requireConfirmation) {
         Stage stage = (Stage) examNameLabel.getScene().getWindow();
 
         if (requireConfirmation) {
@@ -275,6 +405,11 @@ public class StudentExamPageController {
         }
     }
 
+    /**
+     * Proceeds with the submission of the exam.
+     *
+     * @param stage the stage of the exam
+     */
     private void proceedWithSubmission(Stage stage) {
         timeline.stop();
         int totalScore = 0;
@@ -301,7 +436,7 @@ public class StudentExamPageController {
         saveGradeToDatabase(dataModel.getUsername(), dataModel.getExamId(), totalScore, (int) timeSpent);
 
         Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            Alert alert = new Alert(AlertType.INFORMATION);
             alert.setTitle("Exam Submitted");
             alert.setHeaderText(null);
             alert.setContentText(String.format("Time spent is: %d\nYou got %d/%d correct.\nPrecision is %.2f%%\nYour total score is: %d", timeSpent, finalCorrectAnswers, totalQuestions, precision, finalTotalScore));
@@ -314,6 +449,14 @@ public class StudentExamPageController {
         }
     }
 
+    /**
+     * Saves the grade to the database.
+     *
+     * @param studentId the ID of the student
+     * @param examId    the ID of the exam
+     * @param score     the score of the student
+     * @param timeSpent the time spent by the student
+     */
     private void saveGradeToDatabase(String studentId, int examId, int score, int timeSpent) {
         String sql = "INSERT INTO grade (student_id, exam_id, score, time_spent) VALUES (?, ?, ?, ?)";
 
@@ -328,7 +471,11 @@ public class StudentExamPageController {
         }
     }
 
-
+    /**
+     * Loads the student main page.
+     *
+     * @param stage the stage of the exam
+     */
     private void loadStudentMainPage(Stage stage) {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("StudentMainUI.fxml"));
@@ -344,8 +491,10 @@ public class StudentExamPageController {
         }
     }
 
-
-    private void loadStudentMainPage() {
+    /**
+     * Loads the student main page.
+     */
+    void loadStudentMainPage() {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("StudentMainUI.fxml"));
             Stage stage = (Stage) examNameLabel.getScene().getWindow(); // Get the current stage
@@ -357,7 +506,9 @@ public class StudentExamPageController {
         }
     }
 
-
+    /**
+     * A question.
+     */
     private static class Question {
         private final int id;
         private final VBox questionBox;
@@ -366,10 +517,34 @@ public class StudentExamPageController {
         private final CheckBox optionBCheckBox;
         private final CheckBox optionCCheckBox;
         private final CheckBox optionDCheckBox;
+        /**
+         * -- GETTER --
+         *  Gets the correct answer for the question.
+         *
+         * @return the correct answer for the question
+         */
+        @Getter
         private final String correctAnswer;
+        /**
+         * -- GETTER --
+         *  Gets the score for the question.
+         *
+         * @return the  score for the question
+         */
+        @Getter
         private final int score;
         private final boolean isSingleChoice;
 
+        /**
+         * Creates a question.
+         *
+         * @param id             the ID of the question
+         * @param questionBox    the box for the question
+         * @param group          the toggle group for the question
+         * @param correctAnswer  the correct answer for the question
+         * @param score          the score for the question
+         * @param isSingleChoice whether the question is single choice
+         */
         public Question(int id, VBox questionBox, ToggleGroup group, String correctAnswer, int score, boolean isSingleChoice) {
             this.id = id;
             this.questionBox = questionBox;
@@ -383,6 +558,19 @@ public class StudentExamPageController {
             this.isSingleChoice = isSingleChoice;
         }
 
+        /**
+         * Creates a question.
+         *
+         * @param id              the ID of the question
+         * @param questionBox     the box for the question
+         * @param optionACheckBox the check box for option A
+         * @param optionBCheckBox the check box for option B
+         * @param optionCCheckBox the check box for option C
+         * @param optionDCheckBox the check box for option D
+         * @param correctAnswer   the correct answer for the question
+         * @param score           the score for the question
+         * @param isSingleChoice  whether the question is single choice
+         */
         public Question(int id, VBox questionBox, CheckBox optionACheckBox, CheckBox optionBCheckBox, CheckBox optionCCheckBox, CheckBox optionDCheckBox, String correctAnswer, int score, boolean isSingleChoice) {
             this.id = id;
             this.questionBox = questionBox;
@@ -396,16 +584,31 @@ public class StudentExamPageController {
             this.isSingleChoice = isSingleChoice;
         }
 
+        /**
+         * Gets the text of the question.
+         *
+         * @return the text of the question
+         */
         public String getText() {
             Label questionLabel = (Label) questionBox.getChildren().get(0);
             return questionLabel.getText();
         }
 
+        /**
+         * Checks if the question is correctly answered.
+         *
+         * @return whether the question is correctly answered
+         */
         public boolean isCorrectlyAnswered() {
             String submittedAnswer = getSubmittedAnswer();
             return submittedAnswer.equalsIgnoreCase(correctAnswer);
         }
 
+        /**
+         * Gets the submitted answer for the question.
+         *
+         * @return the submitted answer for the question
+         */
         public String getSubmittedAnswer() {
             StringBuilder submittedAnswers = new StringBuilder();
             if (isSingleChoice) {
@@ -422,15 +625,12 @@ public class StudentExamPageController {
             return submittedAnswers.toString();
         }
 
-        public String getCorrectAnswer() {
-            return correctAnswer;
-        }
 
-        public int getScore() {
-            return score;
-        }
     }
 
+    /**
+     * Jumps to the selected question.
+     */
     @FXML
     private void jumpToQuestion() {
         int selectedIndex = questionListView.getSelectionModel().getSelectedIndex();

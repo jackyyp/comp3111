@@ -21,20 +21,47 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ResourceBundle;
-
+/**
+ * The controller for the student login page.
+ *
+ * This controller is responsible for handling the student's login and registration.
+ *
+ * @author WANG Shao Fu
+ */
 public class StudentLoginController implements Initializable {
+
+    /**
+     * The text field for the username.
+     */
     @FXML
     private TextField usernameTxt;
+
+    /**
+     * The password field for the password.
+     */
     @FXML
     private PasswordField passwordTxt;
+
+    /**
+     * The label for the error message.
+     */
     @FXML
     private Label errorMessageLbl;
 
-
+    /**
+     * Initializes the controller.
+     *
+     * @param location the location of the controller
+     * @param resources the resources of the controller
+     */
     public void initialize(URL location, ResourceBundle resources) {
     }
 
-
+    /**
+     * Handles the login button click event.
+     *
+     * @param e the event that triggered the login
+     */
     @FXML
     public void login(ActionEvent e) {
         // after login, we should load the student's information
@@ -81,6 +108,11 @@ public class StudentLoginController implements Initializable {
         }
     }
 
+    /**
+     * Handles the register button click event.
+     *
+     * @param e the event that triggered the register
+     */
     @FXML
     public void register(ActionEvent e) {
         try {
