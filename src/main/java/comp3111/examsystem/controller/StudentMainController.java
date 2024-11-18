@@ -37,18 +37,18 @@ public class StudentMainController implements Initializable {
      * The combo box for selecting the exam.
      */
     @FXML
-    private ComboBox<String> examCombox;
+    ComboBox<String> examCombox;
 
     /**
      * The label for displaying the error message.
      */
     @FXML
-    private Label errorLabel;
+    Label errorLabel;
 
     /**
      * The data model for the student.
      */
-    private StudentControllerModel dataModel;
+    StudentControllerModel dataModel;
 
     /**
      * Sets the data model for the student.
@@ -78,7 +78,7 @@ public class StudentMainController implements Initializable {
     /**
      * Loads the exams from the database.
      */
-    private void loadExams() {
+    void loadExams() {
         String sql = "SELECT e.id, e.name, e.course " +
                 "FROM exam e " +
                 "JOIN exam_question_link eql ON e.id = eql.exam_id " +

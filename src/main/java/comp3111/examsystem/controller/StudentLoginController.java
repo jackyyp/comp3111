@@ -34,19 +34,19 @@ public class StudentLoginController implements Initializable {
      * The text field for the username.
      */
     @FXML
-    private TextField usernameTxt;
+    TextField usernameTxt;
 
     /**
      * The password field for the password.
      */
     @FXML
-    private PasswordField passwordTxt;
+    PasswordField passwordTxt;
 
     /**
      * The label for the error message.
      */
     @FXML
-    private Label errorMessageLbl;
+    Label errorMessageLbl;
 
     /**
      * Initializes the controller.

@@ -28,49 +28,49 @@ public class StudentRegisterController implements Initializable {
      * The text field for the username.
      */
     @FXML
-    private TextField usernameTxt;
+    TextField usernameTxt;
 
     /**
      * The text field for the name.
      */
     @FXML
-    private TextField nameTxt;
+    TextField nameTxt;
 
     /**
      * The combo box for selecting the gender.
      */
     @FXML
-    private ComboBox<String> genderComboBox;
+    ComboBox<String> genderComboBox;
 
     /**
      * The text field for the age.
      */
     @FXML
-    private TextField ageTxt;
+    TextField ageTxt;
 
     /**
      * The text field for the department.
      */
     @FXML
-    private TextField departmentTxt;
+    TextField departmentTxt;
 
     /**
      * The password field for the password.
      */
     @FXML
-    private PasswordField passwordTxt;
+    PasswordField passwordTxt;
 
     /**
      * The password field for the confirm password.
      */
     @FXML
-    private PasswordField confirmPasswordTxt;
+    PasswordField confirmPasswordTxt;
 
     /**
      * The label for displaying the error message.
      */
     @FXML
-    private Label errorMessageLbl;
+    Label errorMessageLbl;
 
     /**
      * Initializes the controller.

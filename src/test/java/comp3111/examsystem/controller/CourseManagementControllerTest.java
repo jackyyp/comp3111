@@ -1,4 +1,4 @@
-package comp3111.examsystem;
+package comp3111.examsystem.controller;
 
 import comp3111.examsystem.controller.CourseManagementController;
 import comp3111.examsystem.controller.CourseManagementController.Course;
