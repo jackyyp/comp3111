@@ -41,14 +41,14 @@ public class StudentManagementController {
     }
 
     @FXML
-    private TextField usernameFilter;
+    public TextField usernameFilter;
     @FXML
-    private TextField nameFilter;
+    public TextField nameFilter;
     @FXML
-    private TextField departmentFilter;
+    public TextField departmentFilter;
 
     @FXML
-    private TableView<Student> studentTable;
+    public TableView<Student> studentTable;
     @FXML
     private TableColumn<Student, String> usernameColumn;
     @FXML
@@ -62,19 +62,19 @@ public class StudentManagementController {
     @FXML
     private TableColumn<Student, String> passwordColumn;
     @FXML
-    private TextField usernameField;
+    public TextField usernameField;
     @FXML
-    private TextField nameField;
+    public TextField nameField;
     @FXML
-    private TextField ageField;
+    public TextField ageField;
     @FXML
-    private ComboBox<String> genderComboBox;
+    public ComboBox<String> genderComboBox;
     @FXML
-    private TextField departmentField;
+    public TextField departmentField;
     @FXML
-    private TextField passwordField;
+    public TextField passwordField;
     @FXML
-    private Label errorMessageLbl;
+    public Label errorMessageLbl;
 
     /**
      * Initializes the controller class.
@@ -115,7 +115,7 @@ public class StudentManagementController {
      * Resets the filter fields and reloads the students from the database.
      */
     @FXML
-    private void resetFilter() {
+    public void resetFilter() {
         usernameFilter.clear();
         nameFilter.clear();
         departmentFilter.clear();
@@ -126,7 +126,7 @@ public class StudentManagementController {
      * Filters the students based on the filter fields.
      */
     @FXML
-    private void filterStudents() {
+    public void filterStudents() {
         String username = usernameFilter.getText();
         String name = nameFilter.getText();
         String department = departmentFilter.getText();
@@ -179,7 +179,7 @@ public class StudentManagementController {
      * Deletes the selected student from the database.
      */
     @FXML
-    private void deleteStudent() {
+    public void deleteStudent() {
         Student selectedStudent = studentTable.getSelectionModel().getSelectedItem();
         System.out.println(selectedStudent);
 
@@ -220,7 +220,7 @@ public class StudentManagementController {
      * Adds a new student to the database.
      */
     @FXML
-    private void addStudent() {
+    public void addStudent() {
         String username = usernameField.getText();
         String name = nameField.getText();
         String age = ageField.getText();
@@ -299,7 +299,7 @@ public class StudentManagementController {
      * Updates the selected student in the database.
      */
     @FXML
-    private void updateStudent() {
+    public void updateStudent() {
         Student selectedStudent = studentTable.getSelectionModel().getSelectedItem();
         if (selectedStudent != null) {
             String oldUsername = selectedStudent.getUsername();

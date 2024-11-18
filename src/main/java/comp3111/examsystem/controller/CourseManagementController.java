@@ -34,15 +34,23 @@ public class CourseManagementController {
     }
 
     @FXML
-    private TextField courseIdFilter, courseNameFilter, departmentFilter;
+    public TextField courseIdFilter;
     @FXML
-    private TableView<Course> courseTable;
+    public TextField courseNameFilter;
+    @FXML
+    public TextField departmentFilter;
+    @FXML
+    public TableView<Course> courseTable;
     @FXML
     private TableColumn<Course, String> courseIdColumn, courseNameColumn, departmentColumn;
     @FXML
-    private TextField courseIdField, courseNameField, departmentField;
+    public TextField courseIdField;
     @FXML
-    private Label errorMessageLbl;
+    public TextField courseNameField;
+    @FXML
+    public TextField departmentField;
+    @FXML
+    public Label errorMessageLbl;
 
     private ObservableList<Course> courseList = FXCollections.observableArrayList();
 
@@ -72,7 +80,7 @@ public class CourseManagementController {
      * Resets the filter fields and reloads the courses from the database.
      */
     @FXML
-    private void resetFilter() {
+    public void resetFilter() {
         courseIdFilter.clear();
         courseNameFilter.clear();
         departmentFilter.clear();
@@ -83,7 +91,7 @@ public class CourseManagementController {
      * Filters the courses based on the filter fields.
      */
     @FXML
-    private void filterCourses() {
+    public void filterCourses() {
         String courseId = courseIdFilter.getText();
         String courseName = courseNameFilter.getText();
         String department = departmentFilter.getText();
@@ -133,7 +141,7 @@ public class CourseManagementController {
      * Deletes the selected course from the database.
      */
     @FXML
-    private void deleteCourse() {
+    public void deleteCourse() {
         Course selectedCourse = courseTable.getSelectionModel().getSelectedItem();
         if (selectedCourse != null) {
             String sql = "DELETE FROM course WHERE courseId = ?";
@@ -169,7 +177,7 @@ public class CourseManagementController {
      * Adds a new course to the database.
      */
     @FXML
-    private void addCourse() {
+    public void addCourse() {
         String courseId = courseIdField.getText();
         String courseName = courseNameField.getText();
         String department = departmentField.getText();
@@ -235,7 +243,7 @@ public class CourseManagementController {
      * Updates the selected course in the database.
      */
     @FXML
-    private void updateCourse() {
+    public void updateCourse() {
         Course selectedCourse = courseTable.getSelectionModel().getSelectedItem();
         if (selectedCourse != null) {
             String oldCourseId = selectedCourse.getCourseId();

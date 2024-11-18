@@ -3,6 +3,7 @@ package comp3111.examsystem.controller;
 import comp3111.examsystem.Main;
 import comp3111.examsystem.model.ManagerControllerModel;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -74,13 +75,12 @@ public class ManagerMainController implements Initializable {
 
     /**
      * Opens the Student Management UI.
+     * <p>
      *
-     * This method is called when the student management button is pressed.
-     *
-     * @param event the action event triggered by the student management button
+     * @return
      */
     @FXML
-    public void openStudentManageUI(ActionEvent event) {
+    public void openStudentManageUI() {
         try {
             Stage stage = new Stage();
             FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("StudentManagementUI.fxml"));
@@ -98,10 +98,9 @@ public class ManagerMainController implements Initializable {
      *
      * This method is called when the teacher management button is pressed.
      *
-     * @param event the action event triggered by the teacher management button
      */
     @FXML
-    public void openTeacherManageUI(ActionEvent event) {
+    public void openTeacherManageUI() {
         try {
             Stage stage = new Stage();
             FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("TeacherManagementUI.fxml"));
@@ -119,10 +118,9 @@ public class ManagerMainController implements Initializable {
      *
      * This method is called when the course management button is pressed.
      *
-     * @param event the action event triggered by the course management button
      */
     @FXML
-    public void openCourseManageUI(ActionEvent event) {
+    public void openCourseManageUI() {
         try {
             Stage stage = new Stage();
             FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("CourseManagementUI.fxml"));
@@ -135,23 +133,5 @@ public class ManagerMainController implements Initializable {
         }
     }
 
-    /**
-     * Exits the application.
-     */
-    @FXML
-    public void exit() {
-        System.exit(0);
-    }
 
-    /**
-     * Closes the current stage.
-     *
-     * @param event the action event triggered by the button
-     */
-    private void closeCurrentStage(ActionEvent event) {
-        // Get the current stage from the event
-        Stage currentStage = (Stage) ((Button) event.getSource()).getScene().getWindow();
-        // Close the current stage
-        currentStage.close();
-    }
 }

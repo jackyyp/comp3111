@@ -34,11 +34,11 @@ import java.util.ResourceBundle;
  */
 public class ManagerLoginController implements Initializable {
     @FXML
-    private TextField usernameTxt;
+    public TextField usernameTxt;
     @FXML
-    private PasswordField passwordTxt;
+    public PasswordField passwordTxt;
     @FXML
-    private Label errorMessageLbl;
+    public Label errorMessageLbl;
 
     /**
      * Initializes the controller class.
@@ -93,6 +93,7 @@ public class ManagerLoginController implements Initializable {
                 ((Stage) ((Button) e.getSource()).getScene().getWindow()).close();
                 errorMessageLbl.setVisible(false);
             } else {
+                errorMessageLbl.setText("Invalid credentials, please try again.");
                 errorMessageLbl.setVisible(true);
             }
         } catch (SQLException | IOException ex) {

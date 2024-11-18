@@ -38,19 +38,33 @@ public class TeacherManagementController {
     }
 
     @FXML
-    private TextField usernameFilter, nameFilter, departmentFilter;
+    public TextField usernameFilter;
     @FXML
-    private TableView<Teacher> teacherTable;
+    public TextField nameFilter;
+    @FXML
+    public TextField departmentFilter;
+    @FXML
+    public TableView<Teacher> teacherTable;
     @FXML
     private TableColumn<Teacher, String> usernameColumn, nameColumn, genderColumn, positionColumn, departmentColumn, passwordColumn;
     @FXML
     private TableColumn<Teacher, Integer> ageColumn;
     @FXML
-    private TextField usernameField, nameField, ageField, departmentField, passwordField;
+    public TextField usernameField;
     @FXML
-    private ComboBox<String> genderComboBox, positionComboBox;
+    public TextField nameField;
     @FXML
-    private Label errorMessageLbl;
+    public TextField ageField;
+    @FXML
+    public TextField departmentField;
+    @FXML
+    public TextField passwordField;
+    @FXML
+    public ComboBox<String> genderComboBox;
+    @FXML
+    public ComboBox<String> positionComboBox;
+    @FXML
+    public Label errorMessageLbl;
 
     private ObservableList<Teacher> teacherList = FXCollections.observableArrayList();
 
@@ -98,7 +112,7 @@ public class TeacherManagementController {
      * Resets the filter fields and reloads the teachers from the database.
      */
     @FXML
-    private void resetFilter() {
+    public void resetFilter() {
         usernameFilter.clear();
         nameFilter.clear();
         departmentFilter.clear();
@@ -109,7 +123,7 @@ public class TeacherManagementController {
      * Filters the teachers based on the filter fields.
      */
     @FXML
-    private void filterTeachers() {
+    public void filterTeachers() {
         String username = usernameFilter.getText();
         String name = nameFilter.getText();
         String department = departmentFilter.getText();
@@ -163,7 +177,7 @@ public class TeacherManagementController {
      * Deletes the selected teacher from the database.
      */
     @FXML
-    private void deleteTeacher() {
+    public void deleteTeacher() {
         Teacher selectedTeacher = teacherTable.getSelectionModel().getSelectedItem();
         if (selectedTeacher != null) {
             String sql = "DELETE FROM teacher WHERE username = ?";
@@ -202,7 +216,7 @@ public class TeacherManagementController {
      * Adds a new teacher to the database.
      */
     @FXML
-    private void addTeacher() {
+    public void addTeacher() {
         String username = usernameField.getText();
         String name = nameField.getText();
         String age = ageField.getText();
@@ -283,7 +297,7 @@ public class TeacherManagementController {
      * Updates the selected teacher in the database.
      */
     @FXML
-    private void updateTeacher() {
+    public void updateTeacher() {
         Teacher selectedTeacher = teacherTable.getSelectionModel().getSelectedItem();
         if (selectedTeacher != null) {
             String oldUsername = selectedTeacher.getUsername();
