@@ -33,50 +33,50 @@ import java.util.HashSet;
 public class TeacherQuestionController implements Initializable {
 
     @FXML
-    private TextField questionField;
+    public TextField questionField;
     @FXML
-    private ComboBox<String> typeComboBox;
+    public ComboBox<String> typeComboBox;
     @FXML
-    private TextField scoreField;
+    public TextField scoreField;
     @FXML
-    private TableView<Question> questionTable;
+    public TableView<Question> questionTable;
     @FXML
-    private TableColumn<Question, String> questionColumn;
+    public TableColumn<Question, String> questionColumn;
     @FXML
-    private TableColumn<Question, String> optionAColumn;
+    public TableColumn<Question, String> optionAColumn;
     @FXML
-    private TableColumn<Question, String> optionBColumn;
+    public TableColumn<Question, String> optionBColumn;
     @FXML
-    private TableColumn<Question, String> optionCColumn;
+    public TableColumn<Question, String> optionCColumn;
     @FXML
-    private TableColumn<Question, String> optionDColumn;
+    public TableColumn<Question, String> optionDColumn;
     @FXML
-    private TableColumn<Question, String> answerColumn;
+    public TableColumn<Question, String> answerColumn;
     @FXML
-    private TableColumn<Question, String> typeColumn;
+    public TableColumn<Question, String> typeColumn;
     @FXML
-    private TableColumn<Question, Integer> scoreColumn;
+    public TableColumn<Question, Integer> scoreColumn;
     @FXML
-    private TextField editQuestionField;
+    public TextField editQuestionField;
     @FXML
-    private TextField editOptionAField;
+    public TextField editOptionAField;
     @FXML
-    private TextField editOptionBField;
+    public TextField editOptionBField;
     @FXML
-    private TextField editOptionCField;
+    public TextField editOptionCField;
     @FXML
-    private TextField editOptionDField;
+    public TextField editOptionDField;
     @FXML
-    private TextField editAnswerField;
+    public TextField editAnswerField;
     @FXML
-    private ComboBox<String> editTypeComboBox;
+    public ComboBox<String> editTypeComboBox;
     @FXML
-    private TextField editScoreField;
+    public TextField editScoreField;
 
-    private ObservableList<Question> questionList;
+    public ObservableList<Question> questionList;
 
     @FXML
-    private Label errorLabel;
+    public Label errorLabel;
 
     /**
      * Initializes the controller class.
@@ -107,7 +107,7 @@ public class TeacherQuestionController implements Initializable {
     /**
      * Loads questions from the database and populates the TableView.
      */
-    private void loadQuestionsFromDatabase() {
+    public void loadQuestionsFromDatabase() {
         String sql = "SELECT * FROM question";
 
         try (Connection conn = DatabaseConnection.getConnection();
@@ -141,7 +141,7 @@ public class TeacherQuestionController implements Initializable {
      * Clears the input fields.
      */
     @FXML
-    private void handleReset() {
+    public void handleReset() {
         questionField.clear();
         typeComboBox.getSelectionModel().clearSelection();
         scoreField.clear();
@@ -152,7 +152,7 @@ public class TeacherQuestionController implements Initializable {
      * Filters the questions based on the input fields.
      */
     @FXML
-    private void handleFilter() {
+    public void handleFilter() {
         String question = questionField.getText();
         String type = typeComboBox.getValue();
         int score;
@@ -203,7 +203,7 @@ public class TeacherQuestionController implements Initializable {
      * Updates the selected question with the input fields.
      */
     @FXML
-    private void handleUpdate() {
+    public void handleUpdate() {
         Question selectedQuestion = questionTable.getSelectionModel().getSelectedItem();
         if (selectedQuestion == null) {
             errorLabel.setText("No question selected for update.");
@@ -370,7 +370,7 @@ public class TeacherQuestionController implements Initializable {
      * Reloads the questions from the database.
      */
     @FXML
-    private void handleRefresh() {
+    public void handleRefresh() {
         String sql = "SELECT * FROM question";
 
         try (Connection conn = DatabaseConnection.getConnection();
@@ -403,8 +403,9 @@ public class TeacherQuestionController implements Initializable {
      * Handles the add action.
      * Adds a new question to the database.
      */
+    /*
     @FXML
-    private void handleAdd() {
+    public void handleAdd() {
         String editquestion = editQuestionField.getText();
         String type = editTypeComboBox.getValue();
         String scoreText = editScoreField.getText();
@@ -488,6 +489,110 @@ public class TeacherQuestionController implements Initializable {
 
             int affectedRows=pstmt.executeUpdate();
             if (affectedRows>0){
+                errorLabel.setText("Question added successfully.");
+                errorLabel.setStyle("-fx-text-fill: green;");
+            } else {
+                errorLabel.setText("Failed to add the question.");
+                errorLabel.setStyle("-fx-text-fill: red;");
+            }
+
+            ResultSet generatedKeys = pstmt.getGeneratedKeys();
+            if (generatedKeys.next()) {
+                int id = generatedKeys.getInt(1);
+                Question newQuestion = new Question(id, editquestion, optionA, optionB, optionC, optionD, Answer, type, score);
+                questionList.add(newQuestion);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            errorLabel.setText("Database error: " + e.getMessage());
+            errorLabel.setStyle("-fx-text-fill: red;");
+        }
+    }*/
+
+    @FXML
+    public void handleAdd() {
+        String editquestion = editQuestionField.getText();
+        String type = editTypeComboBox.getValue();
+        String scoreText = editScoreField.getText();
+        String optionA = editOptionAField.getText();
+        String optionB = editOptionBField.getText();
+        String optionC = editOptionCField.getText();
+        String optionD = editOptionDField.getText();
+        String Answer = editAnswerField.getText();
+
+        if (editquestion.isEmpty() || type == null || scoreText.isEmpty() || optionA.isEmpty() || optionB.isEmpty() || optionC.isEmpty() || optionD.isEmpty() || Answer.isEmpty()) {
+            errorLabel.setText("All fields must be filled out.");
+            errorLabel.setStyle("-fx-text-fill: red;");
+            return;
+        }
+
+        int score;
+        try {
+            score = Integer.parseInt(scoreText);
+        } catch (NumberFormatException e) {
+            errorLabel.setText("Score must be a valid integer.");
+            errorLabel.setStyle("-fx-text-fill: red;");
+            return;
+        }
+
+        if ("Single".equals(type)) {
+            if (!editAnswerField.getText().matches("[ABCD]")) {
+                errorLabel.setText("Answer format incorrect");
+                errorLabel.setStyle("-fx-text-fill: red;");
+                return;
+            }
+        } else {
+            if (!editAnswerField.getText().matches("[ABCD]{2,4}")) {
+                errorLabel.setText("Answer format incorrect");
+                errorLabel.setStyle("-fx-text-fill: red;");
+                return;
+            }
+        }
+
+        Set<Character> charSet = new HashSet<>();
+        for (char c : editAnswerField.getText().toCharArray()) {
+            if (!charSet.add(c)) {
+                errorLabel.setText("Answer contains repeated choice.");
+                errorLabel.setStyle("-fx-text-fill: red;");
+                return;
+            }
+        }
+
+        String checkSql = "SELECT COUNT(*) FROM question WHERE text = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+
+            checkStmt.setString(1, editquestion);
+            ResultSet rs = checkStmt.executeQuery();
+            if (rs.next() && rs.getInt(1) > 0) {
+                errorLabel.setText("The question already exists.");
+                errorLabel.setStyle("-fx-text-fill: red;");
+                return;
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            errorLabel.setText("Database error: " + e.getMessage());
+            errorLabel.setStyle("-fx-text-fill: red;");
+            return;
+        }
+
+        String sql = "INSERT INTO question (text, option_a, option_b, option_c, option_d, answer, is_single_choice, score) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
+
+            pstmt.setString(1, editquestion);
+            pstmt.setString(2, optionA);
+            pstmt.setString(3, optionB);
+            pstmt.setString(4, optionC);
+            pstmt.setString(5, optionD);
+            pstmt.setString(6, Answer);
+            pstmt.setBoolean(7, type.equals("Single"));
+            pstmt.setInt(8, score);
+
+            int affectedRows = pstmt.executeUpdate();
+            if (affectedRows > 0) {
                 errorLabel.setText("Question added successfully.");
                 errorLabel.setStyle("-fx-text-fill: green;");
             } else {

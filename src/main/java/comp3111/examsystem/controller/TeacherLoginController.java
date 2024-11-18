@@ -31,13 +31,13 @@ import comp3111.examsystem.model.TeacherControllerModel;
  */
 public class TeacherLoginController implements Initializable {
     @FXML
-    private TextField usernameTxt;
+    public TextField usernameTxt;
 
     @FXML
-    private PasswordField passwordTxt;
+    public PasswordField passwordTxt;
 
     @FXML
-    private Label errorMessageLbl;
+    public Label errorMessageLbl;
 
     /**
      * Initializes the controller class.
