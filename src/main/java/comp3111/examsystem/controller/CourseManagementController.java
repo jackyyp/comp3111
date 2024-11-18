@@ -153,6 +153,9 @@ public class CourseManagementController {
                 int rowsAffected = pstmt.executeUpdate();
 
                 if (rowsAffected > 0) {
+                    errorMessageLbl.setText("Delete Successful!");
+                    errorMessageLbl.setStyle("-fx-text-fill: green;");
+                    errorMessageLbl.setVisible(true);
                     courseTable.getItems().remove(selectedCourse);
                 } else {
                     errorMessageLbl.setText("Failed to delete course.");
