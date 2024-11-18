@@ -37,66 +37,66 @@ public class StudentGradeStatisticController implements Initializable {
      * The combo box for selecting the course.
      */
     @FXML
-    private ComboBox<String> courseComboBox;
+    ComboBox<String> courseComboBox;
 
     /**
      * The table view for displaying the grades.
      */
     @FXML
-    private TableView<Grade> gradeTable;
+    TableView<Grade> gradeTable;
 
     /**
      * The table column for the course.
      */
     @FXML
-    private TableColumn<Grade, String> courseColumn;
+    TableColumn<Grade, String> courseColumn;
 
     /**
      * The table column for the exam.
      */
     @FXML
-    private TableColumn<Grade, String> examColumn;
+    TableColumn<Grade, String> examColumn;
 
     /**
      * The table column for the score.
      */
     @FXML
-    private TableColumn<Grade, Integer> scoreColumn;
+    TableColumn<Grade, Integer> scoreColumn;
 
     /**
      * The table column for the full score.
      */
     @FXML
-    private TableColumn<Grade, Integer> fullScoreColumn;
+    TableColumn<Grade, Integer> fullScoreColumn;
 
     /**
      * The table column for the time spent.
      */
     @FXML
-    private TableColumn<Grade, Integer> timeColumn;
+    TableColumn<Grade, Integer> timeColumn;
 
     /**
      * The bar chart for displaying the grades.
      */
     @FXML
-    private BarChart<String, Number> gradeChart;
+    BarChart<String, Number> gradeChart;
 
     /**
      * The x-axis for the bar chart.
      */
     @FXML
-    private CategoryAxis xAxis;
+    CategoryAxis xAxis;
 
     /**
      * The y-axis for the bar chart.
      */
     @FXML
-    private NumberAxis yAxis;
+    NumberAxis yAxis;
 
     /**
      * The data model for the student.
      */
-    private StudentControllerModel dataModel;
+    StudentControllerModel dataModel;
 
     /**
      * Sets the data model for the student.
