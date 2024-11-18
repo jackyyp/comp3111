@@ -18,28 +18,37 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Objects;
 
+/**
+ * Controller class for managing the student functionality.
+ *
+ * This class handles the UI and operations for managing students.
+ * It includes methods for navigating to different sections and performing various tasks.
+ *
+ * @author Poon Chin Hung
+ * @version 1.0
+ */
 public class StudentManagementController {
 
     @Data
     @AllArgsConstructor
     public static class Student {
-        private  String username;
-        private  String name ;
-        private  int  age;
-        private  String gender ;
-        private  String department ;
-        private  String password ;
+        private String username;
+        private String name;
+        private int age;
+        private String gender;
+        private String department;
+        private String password;
     }
 
     @FXML
-    private TextField usernameFilter;
+    public TextField usernameFilter;
     @FXML
-    private TextField nameFilter;
+    public TextField nameFilter;
     @FXML
-    private TextField departmentFilter;
+    public TextField departmentFilter;
 
     @FXML
-    private TableView<Student> studentTable;
+    public TableView<Student> studentTable;
     @FXML
     private TableColumn<Student, String> usernameColumn;
     @FXML
@@ -53,24 +62,25 @@ public class StudentManagementController {
     @FXML
     private TableColumn<Student, String> passwordColumn;
     @FXML
-    private TextField usernameField;
+    public TextField usernameField;
     @FXML
-    private TextField nameField;
+    public TextField nameField;
     @FXML
-    private TextField ageField;
+    public TextField ageField;
     @FXML
-    private ComboBox<String> genderComboBox;
+    public ComboBox<String> genderComboBox;
     @FXML
-    private TextField departmentField;
+    public TextField departmentField;
     @FXML
-    private TextField passwordField;
+    public TextField passwordField;
     @FXML
-    private Label errorMessageLbl;
+    public Label errorMessageLbl;
 
-
+    /**
+     * Initializes the controller class.
+     */
     @FXML
     public void initialize() {
-        // Add a TextFormatter to restrict input to numbers only
         ageField.setTextFormatter(new TextFormatter<>(change -> {
             if (change.getControlNewText().matches("\\d*")) {
                 return change;
@@ -101,16 +111,22 @@ public class StudentManagementController {
         loadStudentsFromDatabase();
     }
 
+    /**
+     * Resets the filter fields and reloads the students from the database.
+     */
     @FXML
-    private void resetFilter() {
+    public void resetFilter() {
         usernameFilter.clear();
         nameFilter.clear();
         departmentFilter.clear();
         loadStudentsFromDatabase();
     }
 
+    /**
+     * Filters the students based on the filter fields.
+     */
     @FXML
-    private void filterStudents() {
+    public void filterStudents() {
         String username = usernameFilter.getText();
         String name = nameFilter.getText();
         String department = departmentFilter.getText();
@@ -159,8 +175,11 @@ public class StudentManagementController {
         }
     }
 
+    /**
+     * Deletes the selected student from the database.
+     */
     @FXML
-    private void deleteStudent() {
+    public void deleteStudent() {
         Student selectedStudent = studentTable.getSelectionModel().getSelectedItem();
         System.out.println(selectedStudent);
 
@@ -197,14 +216,11 @@ public class StudentManagementController {
         }
     }
 
-    // unneeded, dynamic update on ops
-//    @FXML
-//    private void refreshStudents() {
-//        // Implement refresh logic here
-//    }
-
+    /**
+     * Adds a new student to the database.
+     */
     @FXML
-    private void addStudent() {
+    public void addStudent() {
         String username = usernameField.getText();
         String name = nameField.getText();
         String age = ageField.getText();
@@ -213,7 +229,7 @@ public class StudentManagementController {
         String password = passwordField.getText();
 
         try {
-            if (username.isEmpty() || name.isEmpty() || gender == null || age.isEmpty() || Integer.parseInt(age) < 0 || department.isEmpty() || password.isEmpty() ) {
+            if (username.isEmpty() || name.isEmpty() || gender == null || age.isEmpty() || Integer.parseInt(age) < 0 || department.isEmpty() || password.isEmpty()) {
                 errorMessageLbl.setText("Error: Please check your inputs.");
                 errorMessageLbl.setStyle("-fx-text-fill: red;");
                 errorMessageLbl.setVisible(true);
@@ -226,7 +242,6 @@ public class StudentManagementController {
             return;
         }
 
-        //if exist, we cant add , we should update
         String checkSql = "SELECT COUNT(*) FROM student WHERE username = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
@@ -280,8 +295,11 @@ public class StudentManagementController {
         }
     }
 
+    /**
+     * Updates the selected student in the database.
+     */
     @FXML
-    private void updateStudent() {
+    public void updateStudent() {
         Student selectedStudent = studentTable.getSelectionModel().getSelectedItem();
         if (selectedStudent != null) {
             String oldUsername = selectedStudent.getUsername();
@@ -294,8 +312,7 @@ public class StudentManagementController {
 
             boolean isAnyFieldUpdated = false;
             if (username != null && !username.isEmpty()) {
-                //if exist more than 1 (including this), then fail for pk property
-                if(!username.equals(selectedStudent.getUsername())) {
+                if (!username.equals(selectedStudent.getUsername())) {
                     String checkSql = "SELECT COUNT(*) FROM student WHERE username = ?";
                     try (Connection conn = DatabaseConnection.getConnection();
                          PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
@@ -353,9 +370,6 @@ public class StudentManagementController {
                 return;
             }
 
-
-
-            // Update query
             String sql = "UPDATE student SET username=?, name = ?, age = ?, gender = ?, department = ?, password = ? WHERE username = ?";
 
             try (Connection conn = DatabaseConnection.getConnection();
@@ -368,10 +382,6 @@ public class StudentManagementController {
                 pstmt.setString(5, selectedStudent.getDepartment());
                 pstmt.setString(6, selectedStudent.getPassword());
                 pstmt.setString(7, oldUsername);
-
-                System.out.println(pstmt);
-                System.out.println(selectedStudent.getUsername());
-                System.out.println(oldUsername);
 
                 int rowsAffected = pstmt.executeUpdate();
 
@@ -392,14 +402,16 @@ public class StudentManagementController {
                 errorMessageLbl.setStyle("-fx-text-fill: red;");
                 errorMessageLbl.setVisible(true);
             }
-        }
-        else{
+        } else {
             errorMessageLbl.setText("No student selected.");
             errorMessageLbl.setStyle("-fx-text-fill: red;");
             errorMessageLbl.setVisible(true);
         }
     }
 
+    /**
+     * Loads the students from the database and populates the table.
+     */
     private void loadStudentsFromDatabase() {
         String sql = "SELECT username, name, age, gender, department, password FROM student";
 
@@ -424,6 +436,4 @@ public class StudentManagementController {
             e.printStackTrace();
         }
     }
-
-
 }

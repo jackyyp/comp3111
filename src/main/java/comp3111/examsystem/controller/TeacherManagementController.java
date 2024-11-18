@@ -14,6 +14,15 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+/**
+ * Controller class for managing the teacher functionality.
+ *
+ * This class handles the UI and operations for managing teachers.
+ * It includes methods for navigating to different sections and performing various tasks.
+ *
+ * @author Poon Chin Hung
+ * @version 1.0
+ */
 public class TeacherManagementController {
 
     @Data
@@ -29,22 +38,39 @@ public class TeacherManagementController {
     }
 
     @FXML
-    private TextField usernameFilter, nameFilter, departmentFilter;
+    public TextField usernameFilter;
     @FXML
-    private TableView<Teacher> teacherTable;
+    public TextField nameFilter;
+    @FXML
+    public TextField departmentFilter;
+    @FXML
+    public TableView<Teacher> teacherTable;
     @FXML
     private TableColumn<Teacher, String> usernameColumn, nameColumn, genderColumn, positionColumn, departmentColumn, passwordColumn;
     @FXML
     private TableColumn<Teacher, Integer> ageColumn;
     @FXML
-    private TextField usernameField, nameField, ageField,  departmentField, passwordField;
+    public TextField usernameField;
     @FXML
-    private ComboBox<String> genderComboBox, positionComboBox;
+    public TextField nameField;
     @FXML
-    private Label errorMessageLbl;
+    public TextField ageField;
+    @FXML
+    public TextField departmentField;
+    @FXML
+    public TextField passwordField;
+    @FXML
+    public ComboBox<String> genderComboBox;
+    @FXML
+    public ComboBox<String> positionComboBox;
+    @FXML
+    public Label errorMessageLbl;
 
     private ObservableList<Teacher> teacherList = FXCollections.observableArrayList();
 
+    /**
+     * Initializes the controller class.
+     */
     @FXML
     public void initialize() {
         // Add a TextFormatter to restrict input to numbers only
@@ -82,16 +108,22 @@ public class TeacherManagementController {
         loadTeachersFromDatabase();
     }
 
+    /**
+     * Resets the filter fields and reloads the teachers from the database.
+     */
     @FXML
-    private void resetFilter() {
+    public void resetFilter() {
         usernameFilter.clear();
         nameFilter.clear();
         departmentFilter.clear();
         loadTeachersFromDatabase();
     }
 
+    /**
+     * Filters the teachers based on the filter fields.
+     */
     @FXML
-    private void filterTeachers() {
+    public void filterTeachers() {
         String username = usernameFilter.getText();
         String name = nameFilter.getText();
         String department = departmentFilter.getText();
@@ -141,8 +173,11 @@ public class TeacherManagementController {
         }
     }
 
+    /**
+     * Deletes the selected teacher from the database.
+     */
     @FXML
-    private void deleteTeacher() {
+    public void deleteTeacher() {
         Teacher selectedTeacher = teacherTable.getSelectionModel().getSelectedItem();
         if (selectedTeacher != null) {
             String sql = "DELETE FROM teacher WHERE username = ?";
@@ -154,10 +189,10 @@ public class TeacherManagementController {
                 int rowsAffected = pstmt.executeUpdate();
 
                 if (rowsAffected > 0) {
+                    teacherTable.getItems().remove(selectedTeacher);
                     errorMessageLbl.setText("Delete Successful!");
                     errorMessageLbl.setStyle("-fx-text-fill: green;");
                     errorMessageLbl.setVisible(true);
-                    teacherTable.getItems().remove(selectedTeacher);
                 } else {
                     errorMessageLbl.setText("Failed to delete teacher.");
                     errorMessageLbl.setStyle("-fx-text-fill: red;");
@@ -177,8 +212,11 @@ public class TeacherManagementController {
         }
     }
 
+    /**
+     * Adds a new teacher to the database.
+     */
     @FXML
-    private void addTeacher() {
+    public void addTeacher() {
         String username = usernameField.getText();
         String name = nameField.getText();
         String age = ageField.getText();
@@ -255,8 +293,11 @@ public class TeacherManagementController {
         }
     }
 
+    /**
+     * Updates the selected teacher in the database.
+     */
     @FXML
-    private void updateTeacher() {
+    public void updateTeacher() {
         Teacher selectedTeacher = teacherTable.getSelectionModel().getSelectedItem();
         if (selectedTeacher != null) {
             String oldUsername = selectedTeacher.getUsername();
@@ -372,6 +413,9 @@ public class TeacherManagementController {
         }
     }
 
+    /**
+     * Loads the teachers from the database and populates the table.
+     */
     private void loadTeachersFromDatabase() {
         String sql = "SELECT username, name, gender, age, position, department, password FROM teacher";
 
@@ -387,7 +431,6 @@ public class TeacherManagementController {
                 String gender = rs.getString("gender");
                 int age = rs.getInt("age");
                 String position = rs.getString("position");
-                System.out.println(position);
                 String department = rs.getString("department");
                 String password = rs.getString("password");
 
