@@ -7,7 +7,6 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TableColumn;
@@ -21,10 +20,16 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import comp3111.examsystem.database.DatabaseConnection;
-
 import java.util.Set;
 import java.util.HashSet;
 
+/**
+ * Controller class for handling the question management interface for teachers.
+ * This class is responsible for managing the UI interactions for question management.
+ *
+ * author Wong Cheuk Yuen
+ * @version 1.0
+ */
 public class TeacherQuestionController implements Initializable {
 
     @FXML
@@ -73,6 +78,12 @@ public class TeacherQuestionController implements Initializable {
     @FXML
     private Label errorLabel;
 
+    /**
+     * Initializes the controller class.
+     *
+     * @param location  the location used to resolve relative paths for the root object, or null if the location is not known
+     * @param resources the resources used to localize the root object, or null if the root object was not localized
+     */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         typeComboBox.setItems(FXCollections.observableArrayList("Single", "Multiple"));
@@ -93,6 +104,9 @@ public class TeacherQuestionController implements Initializable {
         loadQuestionsFromDatabase();
     }
 
+    /**
+     * Loads questions from the database and populates the TableView.
+     */
     private void loadQuestionsFromDatabase() {
         String sql = "SELECT * FROM question";
 
@@ -122,6 +136,10 @@ public class TeacherQuestionController implements Initializable {
         }
     }
 
+    /**
+     * Handles the reset action.
+     * Clears the input fields.
+     */
     @FXML
     private void handleReset() {
         questionField.clear();
@@ -129,16 +147,18 @@ public class TeacherQuestionController implements Initializable {
         scoreField.clear();
     }
 
+    /**
+     * Handles the filter action.
+     * Filters the questions based on the input fields.
+     */
     @FXML
     private void handleFilter() {
-        // Implement filter logic here
         String question = questionField.getText();
         String type = typeComboBox.getValue();
         int score;
         try {
             score = scoreField.getText().isEmpty() ? -1 : Integer.parseInt(scoreField.getText());
         } catch (NumberFormatException e) {
-            // Show an error message or handle the invalid number appropriately
             errorLabel.setText("Score must be a valid integer.");
             errorLabel.setStyle("-fx-text-fill: red;");
             return;
@@ -178,6 +198,10 @@ public class TeacherQuestionController implements Initializable {
         }
     }
 
+    /**
+     * Handles the update action.
+     * Updates the selected question with the input fields.
+     */
     @FXML
     private void handleUpdate() {
         Question selectedQuestion = questionTable.getSelectionModel().getSelectedItem();
@@ -254,7 +278,6 @@ public class TeacherQuestionController implements Initializable {
                         return;
                     }
                 }
-                // Check for duplicate characters
                 Set<Character> charSet = new HashSet<>();
                 for (char c : editAnswerField.getText().toCharArray()) {
                     if (!charSet.add(c)) {
@@ -272,7 +295,6 @@ public class TeacherQuestionController implements Initializable {
                 try {
                     updatedScore = Integer.parseInt(editScoreField.getText());
                 } catch (NumberFormatException e) {
-                    // Show an error message or handle the invalid number appropriately
                     errorLabel.setText("Score must be a valid integer.");
                     errorLabel.setStyle("-fx-text-fill: red;");
                     return;
@@ -343,6 +365,10 @@ public class TeacherQuestionController implements Initializable {
         }
     }
 
+    /**
+     * Handles the refresh action.
+     * Reloads the questions from the database.
+     */
     @FXML
     private void handleRefresh() {
         String sql = "SELECT * FROM question";
@@ -373,6 +399,10 @@ public class TeacherQuestionController implements Initializable {
         }
     }
 
+    /**
+     * Handles the add action.
+     * Adds a new question to the database.
+     */
     @FXML
     private void handleAdd() {
         String editquestion = editQuestionField.getText();
@@ -385,7 +415,6 @@ public class TeacherQuestionController implements Initializable {
         String Answer = editAnswerField.getText();
 
         if (editquestion.isEmpty() || type == null || scoreText.isEmpty() || optionA.isEmpty() || optionB.isEmpty() || optionC.isEmpty() || optionD.isEmpty() || Answer.isEmpty()) {
-            // Show an error message or handle the empty fields appropriately
             errorLabel.setText("All fields must be filled out.");
             errorLabel.setStyle("-fx-text-fill: red;");
             return;
@@ -395,7 +424,6 @@ public class TeacherQuestionController implements Initializable {
         try {
             score = Integer.parseInt(scoreText);
         } catch (NumberFormatException e) {
-            // Show an error message or handle the invalid number appropriately
             errorLabel.setText("Score must be a valid integer.");
             errorLabel.setStyle("-fx-text-fill: red;");
             return;
@@ -416,7 +444,6 @@ public class TeacherQuestionController implements Initializable {
             }
         }
 
-        // Check for duplicate characters
         Set<Character> charSet = new HashSet<>();
         for (char c : editAnswerField.getText().toCharArray()) {
             if (!charSet.add(c)) {
@@ -426,7 +453,6 @@ public class TeacherQuestionController implements Initializable {
             }
         }
 
-        // Check for duplicate question text
         String checkSql = "SELECT COUNT(*) FROM question WHERE text = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
@@ -452,7 +478,7 @@ public class TeacherQuestionController implements Initializable {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, editquestion);
-            pstmt.setString(2, optionA); // Replace with actual options
+            pstmt.setString(2, optionA);
             pstmt.setString(3, optionB);
             pstmt.setString(4, optionC);
             pstmt.setString(5, optionD);
@@ -469,7 +495,6 @@ public class TeacherQuestionController implements Initializable {
                 errorLabel.setStyle("-fx-text-fill: red;");
             }
 
-            // Retrieve the generated id and create a new Question object
             ResultSet generatedKeys = pstmt.getGeneratedKeys();
             if (generatedKeys.next()) {
                 int id = generatedKeys.getInt(1);
@@ -483,6 +508,12 @@ public class TeacherQuestionController implements Initializable {
         }
     }
 
+    /**
+     * Handles the delete action.
+     * Deletes the selected question from the database.
+     *
+     * @param event the action event triggered by the delete button
+     */
     @FXML
     public void handleDelete(ActionEvent event) {
         Question selectedQuestion = questionTable.getSelectionModel().getSelectedItem();
@@ -499,7 +530,6 @@ public class TeacherQuestionController implements Initializable {
             pstmt.setInt(1, selectedQuestion.getId());
             pstmt.executeUpdate();
 
-            // Remove the question from the TableView
             ObservableList<Question> allQuestions = questionTable.getItems();
             allQuestions.remove(selectedQuestion);
 

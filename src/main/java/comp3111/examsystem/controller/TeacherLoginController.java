@@ -22,20 +22,39 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import comp3111.examsystem.model.TeacherControllerModel;
+
+/**
+ * Controller class for handling teacher login.
+ *
+ * @author Wong Cheuk Yuen
+ * @version 1.0
+ */
 public class TeacherLoginController implements Initializable {
     @FXML
     private TextField usernameTxt;
+
     @FXML
     private PasswordField passwordTxt;
+
     @FXML
     private Label errorMessageLbl;
 
-
-
+    /**
+     * Initializes the controller class.
+     *
+     * @param location  the location used to resolve relative paths for the root object, or null if the location is not known
+     * @param resources the resources used to localize the root object, or null if the root object was not localized
+     */
     public void initialize(URL location, ResourceBundle resources) {
 
     }
 
+    /**
+     * Handles the login action.
+     * Validates the user input and performs login if valid.
+     *
+     * @param e the action event triggered by the login button
+     */
     @FXML
     public void login(ActionEvent e) {
         // after login, we should load the student's information
@@ -63,7 +82,6 @@ public class TeacherLoginController implements Initializable {
                     return controller;
                 });
 
-
                 Stage stage = new Stage();
                 stage.setTitle("Hi " + username + ", Welcome to HKUST Examination System");
                 stage.setScene(new Scene(fxmlLoader.load()));
@@ -83,6 +101,10 @@ public class TeacherLoginController implements Initializable {
 
     }
 
+    /**
+     * Handles the register action.
+     * Opens the registration page.
+     */
     @FXML
     public void register() {
         try {
