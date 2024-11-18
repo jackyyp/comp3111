@@ -24,43 +24,96 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
-
+/**
+ * The controller for the student grade statistic page.
+ *
+ * This controller is responsible for displaying the student's grades and statistics.
+ *
+ * @author WANG Shao Fu
+ */
 public class StudentGradeStatisticController implements Initializable {
 
+    /**
+     * The combo box for selecting the course.
+     */
     @FXML
     private ComboBox<String> courseComboBox;
 
+    /**
+     * The table view for displaying the grades.
+     */
     @FXML
     private TableView<Grade> gradeTable;
 
+    /**
+     * The table column for the course.
+     */
     @FXML
     private TableColumn<Grade, String> courseColumn;
 
+    /**
+     * The table column for the exam.
+     */
     @FXML
     private TableColumn<Grade, String> examColumn;
 
+    /**
+     * The table column for the score.
+     */
     @FXML
     private TableColumn<Grade, Integer> scoreColumn;
 
+    /**
+     * The table column for the full score.
+     */
     @FXML
     private TableColumn<Grade, Integer> fullScoreColumn;
 
+    /**
+     * The table column for the time spent.
+     */
     @FXML
     private TableColumn<Grade, Integer> timeColumn;
 
+    /**
+     * The bar chart for displaying the grades.
+     */
     @FXML
     private BarChart<String, Number> gradeChart;
+
+    /**
+     * The x-axis for the bar chart.
+     */
     @FXML
     private CategoryAxis xAxis;
+
+    /**
+     * The y-axis for the bar chart.
+     */
     @FXML
     private NumberAxis yAxis;
+
+    /**
+     * The data model for the student.
+     */
     private StudentControllerModel dataModel;
 
+    /**
+     * Sets the data model for the student.
+     *
+     * @param dataModel the data model for the student
+     */
     public void setDataModel(StudentControllerModel dataModel) {
         this.dataModel = dataModel;
         System.out.println("Current Username: " + dataModel.getUsername());
     }
 
+    /**
+     * Initializes the controller.
+     *
+     * @param location the location of the controller
+     * @param resources the resources of the controller
+     */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         loadCourses();
@@ -72,9 +125,12 @@ public class StudentGradeStatisticController implements Initializable {
         fullScoreColumn.setCellValueFactory(new PropertyValueFactory<>("fullScore"));
         timeColumn.setCellValueFactory(new PropertyValueFactory<>("time"));
 
-        loadGradesFromDatabase();
+        loadGradesFromDatabase(null);
     }
 
+    /**
+     * Loads the courses from the database.
+     */
     private void loadCourses() {
         String sql = "SELECT DISTINCT course FROM exam e " +
                 "JOIN grade g ON e.id = g.exam_id " +
@@ -97,10 +153,11 @@ public class StudentGradeStatisticController implements Initializable {
         }
     }
 
-    private void loadGradesFromDatabase() {
-        loadGradesFromDatabase(null);
-    }
-
+    /**
+     * Loads the grades from the database.
+     *
+     * @param courseFilter the course filter
+     */
     private void loadGradesFromDatabase(String courseFilter) {
         String sql = "SELECT e.course, e.name AS exam, g.score, " +
                 "(SELECT SUM(q.score) FROM question q JOIN exam_question_link eql ON q.id = eql.question_id WHERE eql.exam_id = e.id) AS full_score, " +
@@ -159,21 +216,48 @@ public class StudentGradeStatisticController implements Initializable {
         }
     }
 
-
+    /**
+     * Filters the grades based on the selected course.
+     *
+     * @param event the event that triggered the filter
+     */
     @FXML
     public void filterGrades(ActionEvent event) {
         String selectedCourse = courseComboBox.getSelectionModel().getSelectedItem();
         loadGradesFromDatabase(selectedCourse);
     }
 
-
+    /**
+     * A grade.
+     *
+     * @author WANG Shao Fu
+     */
     @Data
     @AllArgsConstructor
     public static class Grade {
+        /**
+         * The course of the grade.
+         */
         private String course;
+
+        /**
+         * The exam of the grade.
+         */
         private String exam;
+
+        /**
+         * The score of the grade.
+         */
         private int score;
+
+        /**
+         * The full score of the grade.
+         */
         private int fullScore;
+
+        /**
+         * The time spent on the grade.
+         */
         private int time;
     }
 }
