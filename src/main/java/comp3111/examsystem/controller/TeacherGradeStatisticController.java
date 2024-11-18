@@ -22,6 +22,15 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
+/**
+ * Controller class for managing the teacher grade statistics functionality.
+ *
+ * This class handles the UI and operations for managing teacher grade statistics.
+ * It includes methods for navigating to different sections and performing various tasks.
+ *
+ * @author  Poon Chin Hung
+ * @version 1.0
+ */
 public class TeacherGradeStatisticController implements Initializable {
     @Data
     @AllArgsConstructor
@@ -71,6 +80,12 @@ public class TeacherGradeStatisticController implements Initializable {
 
     private final ObservableList<Grade> gradeList = FXCollections.observableArrayList();
 
+    /**
+     * Initializes the controller class.
+     *
+     * @param url the location used to resolve relative paths for the root object, or null if the location is not known
+     * @param resourceBundle the resources used to localize the root object, or null if the root object was not localized
+     */
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         barChart.setLegendVisible(false);
@@ -89,7 +104,6 @@ public class TeacherGradeStatisticController implements Initializable {
         fullScoreColumn.setCellValueFactory(new PropertyValueFactory<>("fullScore"));
         timeSpendColumn.setCellValueFactory(new PropertyValueFactory<>("timeSpend"));
 
-
         query();
 
         // Populate ChoiceBox elements with unique values from gradeList
@@ -100,7 +114,9 @@ public class TeacherGradeStatisticController implements Initializable {
         loadChart();
     }
 
-
+    /**
+     * Resets the filter fields and reloads the grade statistics from the database.
+     */
     @FXML
     public void reset() {
         courseCombox.setValue(null);
@@ -109,6 +125,9 @@ public class TeacherGradeStatisticController implements Initializable {
         query();
     }
 
+    /**
+     * Queries the database and updates the grade list based on the selected filters.
+     */
     @FXML
     public void query() {
         String sql = "SELECT s.name, e.course, e.name AS exam, g.score, " +
@@ -145,16 +164,16 @@ public class TeacherGradeStatisticController implements Initializable {
 
             ResultSet rs = pstmt.executeQuery();
             gradeList.clear();
+
             while (rs.next()) {
-                Grade grade = new Grade(
+                gradeList.add(new Grade(
                         rs.getString("name"),
                         rs.getString("course"),
                         rs.getString("exam"),
                         rs.getInt("score"),
                         rs.getInt("full_score"),
                         rs.getInt("time_spent")
-                );
-                gradeList.add(grade);
+                ));
             }
             gradeTable.setItems(gradeList);
             loadChart();
@@ -163,6 +182,9 @@ public class TeacherGradeStatisticController implements Initializable {
         }
     }
 
+    /**
+     * Loads the chart data based on the grade list.
+     */
     private void loadChart() {
         // X axis: courseNum, Y axis: average score
         XYChart.Series<String, Number> seriesBar = new XYChart.Series<>();

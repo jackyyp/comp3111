@@ -23,6 +23,15 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.ResourceBundle;
 
+/**
+ * Controller class for managing the login functionality for managers.
+ *
+ * This class handles the login process for managers, including verifying credentials
+ * and navigating to the main UI upon successful login.
+ *
+ * @author Poon Chin Hung
+ * @version 1.0
+ */
 public class ManagerLoginController implements Initializable {
     @FXML
     private TextField usernameTxt;
@@ -31,10 +40,24 @@ public class ManagerLoginController implements Initializable {
     @FXML
     private Label errorMessageLbl;
 
+    /**
+     * Initializes the controller class.
+     *
+     * @param location  the location used to resolve relative paths for the root object, or null if the location is not known
+     * @param resources the resources used to localize the root object, or null if the root object was not localized
+     */
     public void initialize(URL location, ResourceBundle resources) {
 
     }
 
+    /**
+     * Handles the login action.
+     *
+     * This method is called when the login button is pressed. It verifies the
+     * manager's credentials and navigates to the main UI if the login is successful.
+     *
+     * @param e the action event triggered by the login button
+     */
     @FXML
     public void login(ActionEvent e) {
 

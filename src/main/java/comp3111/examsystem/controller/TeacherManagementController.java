@@ -14,6 +14,15 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+/**
+ * Controller class for managing the teacher functionality.
+ *
+ * This class handles the UI and operations for managing teachers.
+ * It includes methods for navigating to different sections and performing various tasks.
+ *
+ * @author Poon Chin Hung
+ * @version 1.0
+ */
 public class TeacherManagementController {
 
     @Data
@@ -37,7 +46,7 @@ public class TeacherManagementController {
     @FXML
     private TableColumn<Teacher, Integer> ageColumn;
     @FXML
-    private TextField usernameField, nameField, ageField,  departmentField, passwordField;
+    private TextField usernameField, nameField, ageField, departmentField, passwordField;
     @FXML
     private ComboBox<String> genderComboBox, positionComboBox;
     @FXML
@@ -45,6 +54,9 @@ public class TeacherManagementController {
 
     private ObservableList<Teacher> teacherList = FXCollections.observableArrayList();
 
+    /**
+     * Initializes the controller class.
+     */
     @FXML
     public void initialize() {
         // Add a TextFormatter to restrict input to numbers only
@@ -82,6 +94,9 @@ public class TeacherManagementController {
         loadTeachersFromDatabase();
     }
 
+    /**
+     * Resets the filter fields and reloads the teachers from the database.
+     */
     @FXML
     private void resetFilter() {
         usernameFilter.clear();
@@ -90,6 +105,9 @@ public class TeacherManagementController {
         loadTeachersFromDatabase();
     }
 
+    /**
+     * Filters the teachers based on the filter fields.
+     */
     @FXML
     private void filterTeachers() {
         String username = usernameFilter.getText();
@@ -141,6 +159,9 @@ public class TeacherManagementController {
         }
     }
 
+    /**
+     * Deletes the selected teacher from the database.
+     */
     @FXML
     private void deleteTeacher() {
         Teacher selectedTeacher = teacherTable.getSelectionModel().getSelectedItem();
@@ -154,10 +175,10 @@ public class TeacherManagementController {
                 int rowsAffected = pstmt.executeUpdate();
 
                 if (rowsAffected > 0) {
+                    teacherTable.getItems().remove(selectedTeacher);
                     errorMessageLbl.setText("Delete Successful!");
                     errorMessageLbl.setStyle("-fx-text-fill: green;");
                     errorMessageLbl.setVisible(true);
-                    teacherTable.getItems().remove(selectedTeacher);
                 } else {
                     errorMessageLbl.setText("Failed to delete teacher.");
                     errorMessageLbl.setStyle("-fx-text-fill: red;");
@@ -177,6 +198,9 @@ public class TeacherManagementController {
         }
     }
 
+    /**
+     * Adds a new teacher to the database.
+     */
     @FXML
     private void addTeacher() {
         String username = usernameField.getText();
@@ -255,6 +279,9 @@ public class TeacherManagementController {
         }
     }
 
+    /**
+     * Updates the selected teacher in the database.
+     */
     @FXML
     private void updateTeacher() {
         Teacher selectedTeacher = teacherTable.getSelectionModel().getSelectedItem();
@@ -372,6 +399,9 @@ public class TeacherManagementController {
         }
     }
 
+    /**
+     * Loads the teachers from the database and populates the table.
+     */
     private void loadTeachersFromDatabase() {
         String sql = "SELECT username, name, gender, age, position, department, password FROM teacher";
 
@@ -387,7 +417,6 @@ public class TeacherManagementController {
                 String gender = rs.getString("gender");
                 int age = rs.getInt("age");
                 String position = rs.getString("position");
-                System.out.println(position);
                 String department = rs.getString("department");
                 String password = rs.getString("password");
 

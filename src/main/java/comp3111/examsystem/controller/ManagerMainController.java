@@ -15,7 +15,15 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-
+/**
+ * Controller class for managing the main functionality for managers.
+ *
+ * This class handles the main UI and operations for managers after they have logged in.
+ * It includes methods for navigating to different sections and performing various tasks.
+ *
+ * @author Poon Chin Hung
+ * @version 1.0
+ */
 public class ManagerMainController implements Initializable {
     @Setter
     private ManagerControllerModel dataModel;
@@ -23,9 +31,22 @@ public class ManagerMainController implements Initializable {
     @FXML
     private Button studentButton;
 
+    /**
+     * Initializes the controller class.
+     *
+     * @param location  the location used to resolve relative paths for the root object, or null if the location is not known
+     * @param resources the resources used to localize the root object, or null if the root object was not localized
+     */
     public void initialize(URL location, ResourceBundle resources) {
     }
 
+    /**
+     * Handles the logout action.
+     *
+     * This method is called when the logout button is pressed. It navigates back to the login UI.
+     *
+     * @param event the action event triggered by the logout button
+     */
     @FXML
     public void logout(ActionEvent event) {
         try {
@@ -51,6 +72,13 @@ public class ManagerMainController implements Initializable {
         }
     }
 
+    /**
+     * Opens the Student Management UI.
+     *
+     * This method is called when the student management button is pressed.
+     *
+     * @param event the action event triggered by the student management button
+     */
     @FXML
     public void openStudentManageUI(ActionEvent event) {
         try {
@@ -65,6 +93,13 @@ public class ManagerMainController implements Initializable {
         }
     }
 
+    /**
+     * Opens the Teacher Management UI.
+     *
+     * This method is called when the teacher management button is pressed.
+     *
+     * @param event the action event triggered by the teacher management button
+     */
     @FXML
     public void openTeacherManageUI(ActionEvent event) {
         try {
@@ -79,6 +114,13 @@ public class ManagerMainController implements Initializable {
         }
     }
 
+    /**
+     * Opens the Course Management UI.
+     *
+     * This method is called when the course management button is pressed.
+     *
+     * @param event the action event triggered by the course management button
+     */
     @FXML
     public void openCourseManageUI(ActionEvent event) {
         try {
@@ -93,11 +135,19 @@ public class ManagerMainController implements Initializable {
         }
     }
 
+    /**
+     * Exits the application.
+     */
     @FXML
     public void exit() {
         System.exit(0);
     }
 
+    /**
+     * Closes the current stage.
+     *
+     * @param event the action event triggered by the button
+     */
     private void closeCurrentStage(ActionEvent event) {
         // Get the current stage from the event
         Stage currentStage = (Stage) ((Button) event.getSource()).getScene().getWindow();
