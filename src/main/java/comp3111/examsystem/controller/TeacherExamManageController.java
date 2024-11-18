@@ -19,6 +19,7 @@ import java.sql.Statement;
  * Controller class for handling the exam management interface for teachers.
  * This class is responsible for managing the UI interactions for exam management.
  *
+ * @author Wong Cheuk Yuen
  * @version 1.0
  */
 public class TeacherExamManageController {
