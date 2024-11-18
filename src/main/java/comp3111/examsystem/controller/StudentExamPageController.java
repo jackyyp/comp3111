@@ -156,15 +156,6 @@ public class StudentExamPageController {
     }
 
     /**
-     * Gets the exam name.
-     *
-     * @return the exam name
-     */
-    public String getExamName() {
-        return examNameLabel.getText();
-    }
-
-    /**
      * Initializes the controller.
      */
     public void initialize() {
@@ -322,7 +313,7 @@ public class StudentExamPageController {
      * @param seconds the time in seconds
      * @return the formatted time string
      */
-    private String formatTime(long seconds) {
+    String formatTime(long seconds) {
         long hours = seconds / 3600;
         long minutes = (seconds % 3600) / 60;
         long remainingSeconds = seconds % 60;
@@ -410,7 +401,7 @@ public class StudentExamPageController {
      *
      * @param stage the stage of the exam
      */
-    private void proceedWithSubmission(Stage stage) {
+    void proceedWithSubmission(Stage stage) {
         timeline.stop();
         int totalScore = 0;
         int correctAnswers = 0;
@@ -457,7 +448,7 @@ public class StudentExamPageController {
      * @param score     the score of the student
      * @param timeSpent the time spent by the student
      */
-    private void saveGradeToDatabase(String studentId, int examId, int score, int timeSpent) {
+    void saveGradeToDatabase(String studentId, int examId, int score, int timeSpent) {
         String sql = "INSERT INTO grade (student_id, exam_id, score, time_spent) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -476,7 +467,7 @@ public class StudentExamPageController {
      *
      * @param stage the stage of the exam
      */
-    private void loadStudentMainPage(Stage stage) {
+    void loadStudentMainPage(Stage stage) {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("StudentMainUI.fxml"));
             fxmlLoader.setControllerFactory(param -> {
@@ -494,22 +485,11 @@ public class StudentExamPageController {
     /**
      * Loads the student main page.
      */
-    void loadStudentMainPage() {
-        try {
-            FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("StudentMainUI.fxml"));
-            Stage stage = (Stage) examNameLabel.getScene().getWindow(); // Get the current stage
-            Scene scene = new Scene(fxmlLoader.load());
-            System.out.println(stage);
-            stage.setScene(scene);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     /**
      * A question.
      */
-    private static class Question {
+    static class Question {
         private final int id;
         private final VBox questionBox;
         private final ToggleGroup group;
@@ -519,7 +499,7 @@ public class StudentExamPageController {
         private final CheckBox optionDCheckBox;
         /**
          * -- GETTER --
-         *  Gets the correct answer for the question.
+         * Gets the correct answer for the question.
          *
          * @return the correct answer for the question
          */
@@ -527,7 +507,7 @@ public class StudentExamPageController {
         private final String correctAnswer;
         /**
          * -- GETTER --
-         *  Gets the score for the question.
+         * Gets the score for the question.
          *
          * @return the  score for the question
          */
@@ -632,7 +612,7 @@ public class StudentExamPageController {
      * Jumps to the selected question.
      */
     @FXML
-    private void jumpToQuestion() {
+    void jumpToQuestion() {
         int selectedIndex = questionListView.getSelectionModel().getSelectedIndex();
         if (selectedIndex >= 0 && selectedIndex < questionBoxes.size()) {
             currentQuestionIndex = selectedIndex;
