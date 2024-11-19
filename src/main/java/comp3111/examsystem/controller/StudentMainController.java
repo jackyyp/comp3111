@@ -84,7 +84,7 @@ public class StudentMainController implements Initializable {
                 "JOIN exam_question_link eql ON e.id = eql.exam_id " +
                 "LEFT JOIN grade g ON e.id = g.exam_id AND g.student_id = ? " +
                 "WHERE g.exam_id IS NULL AND e.is_published = 1 " +
-                "ORDER BY e.name ASC";
+                "ORDER BY e.course ASC";
 
         System.out.println("Executing SQL: " + sql);
 

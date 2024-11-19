@@ -3,6 +3,7 @@ package comp3111.examsystem.database;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 public class DatabaseConnection {
     private static final String URL = "jdbc:sqlite:examsystem.db";
@@ -16,6 +17,10 @@ public class DatabaseConnection {
         if (mockConnection != null) {
             return mockConnection;
         }
-        return DriverManager.getConnection(URL);
+        Connection conn = DriverManager.getConnection(URL);
+        try (Statement stmt = conn.createStatement()) {
+            stmt.execute("PRAGMA foreign_keys=ON");
+        }
+        return conn;
     }
 }
