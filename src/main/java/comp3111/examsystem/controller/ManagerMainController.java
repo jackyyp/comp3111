@@ -75,9 +75,9 @@ public class ManagerMainController implements Initializable {
 
     /**
      * Opens the Student Management UI.
-     * <p>
      *
-     * @return
+     * This method is called when the student management button is pressed.
+     *
      */
     @FXML
     public void openStudentManageUI() {
