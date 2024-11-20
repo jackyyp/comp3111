@@ -242,7 +242,7 @@ public class TeacherQuestionControllerTest {
         // Mock the add statement
         when(mockPstmt.executeUpdate()).thenReturn(1);
         when(mockCheckStmt.executeQuery()).thenReturn(mockRs);
-        when(mockRs.next()).thenReturn(false); // Ensure no existing question is found
+        when(mockRs.next()).thenReturn(false); //Ensure no existing question is found
 
         // Add a question using the handleAdd method
         robot.interact(() -> {
