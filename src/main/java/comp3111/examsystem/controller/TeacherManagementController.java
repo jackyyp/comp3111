@@ -46,9 +46,19 @@ public class TeacherManagementController {
     @FXML
     public TableView<Teacher> teacherTable;
     @FXML
-    private TableColumn<Teacher, String> usernameColumn, nameColumn, genderColumn, positionColumn, departmentColumn, passwordColumn;
+    TableColumn<Teacher, String> usernameColumn;
     @FXML
-    private TableColumn<Teacher, Integer> ageColumn;
+    TableColumn<Teacher, String> nameColumn;
+    @FXML
+    TableColumn<Teacher, String> genderColumn;
+    @FXML
+    TableColumn<Teacher, String> positionColumn;
+    @FXML
+    TableColumn<Teacher, String> departmentColumn;
+    @FXML
+    TableColumn<Teacher, String> passwordColumn;
+    @FXML
+    TableColumn<Teacher, Integer> ageColumn;
     @FXML
     public TextField usernameField;
     @FXML

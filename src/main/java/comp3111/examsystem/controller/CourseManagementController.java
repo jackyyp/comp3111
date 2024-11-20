@@ -42,7 +42,11 @@ public class CourseManagementController {
     @FXML
     public TableView<Course> courseTable;
     @FXML
-    private TableColumn<Course, String> courseIdColumn, courseNameColumn, departmentColumn;
+    TableColumn<Course, String> courseIdColumn;
+    @FXML
+    TableColumn<Course, String> courseNameColumn;
+    @FXML
+    TableColumn<Course, String> departmentColumn;
     @FXML
     public TextField courseIdField;
     @FXML
