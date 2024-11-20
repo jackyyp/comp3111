@@ -24,50 +24,50 @@ import java.sql.Statement;
  */
 public class TeacherExamManageController {
     @FXML
-    private TextField examField, questionFilterField, examnameField, timelimitField;
+    public TextField examField, questionFilterField, examnameField, timelimitField;
     @FXML
-    private TableView<Exam> examTable;
+    public TableView<Exam> examTable;
     @FXML
-    private TextField courseField;
+    public TextField courseField;
     @FXML
-    private ComboBox<String> publishedComboBox;
+    public ComboBox<String> publishedComboBox;
     @FXML
-    private ComboBox<String> typeComboBox;
+    public ComboBox<String> typeComboBox;
     @FXML
-    private TableView<Question> examQuestionTable, questionTable;
+    public TableView<Question> examQuestionTable, questionTable;
     @FXML
-    private TableColumn<Exam, Integer> examIdColumn;
+    public TableColumn<Exam, Integer> examIdColumn;
     @FXML
-    private TableColumn<Exam, String> examNameColumn, examCourseColumn;
+    public TableColumn<Exam, String> examNameColumn, examCourseColumn;
     @FXML
-    private TableColumn<Exam, Boolean> examPublishedColumn;
+    public TableColumn<Exam, Boolean> examPublishedColumn;
     @FXML
-    private TableColumn<Exam, Integer> examTimeLimitColumn;
+    public TableColumn<Exam, Integer> examTimeLimitColumn;
     @FXML
-    private TableColumn<Question, Integer> examQuestionIdColumn, questionIdColumn;
+    public TableColumn<Question, Integer> examQuestionIdColumn, questionIdColumn;
     @FXML
-    private TableColumn<Question, String> examQuestionTextColumn, questionTextColumn, questionOptionAColumn, questionOptionBColumn, questionOptionCColumn, questionOptionDColumn, questionAnswerColumn, questionTypeColumn;
+    public TableColumn<Question, String> examQuestionTextColumn, questionTextColumn, questionOptionAColumn, questionOptionBColumn, questionOptionCColumn, questionOptionDColumn, questionAnswerColumn, questionTypeColumn;
     @FXML
-    private TableColumn<Question, Integer> questionScoreColumn;
+    public TableColumn<Question, Integer> questionScoreColumn;
     @FXML
-    private Label errorLabel;
+    public Label errorLabel;
     @FXML
-    private TextField scoreField;
+    public TextField scoreField;
     @FXML
-    private TextField questionField;
+    public TextField questionField;
     @FXML
-    private ComboBox<String> editpublishedComboBox;
+    public ComboBox<String> editpublishedComboBox;
     @FXML
-    private TextField editcourseField;
+    public TextField editcourseField;
     @FXML
-    private TableColumn<Question, String> examQuestionTypeColumn;
+    public TableColumn<Question, String> examQuestionTypeColumn;
     @FXML
-    private TableColumn<Question, Integer> examQuestionScoreColumn;
+    public TableColumn<Question, Integer> examQuestionScoreColumn;
 
-    private ObservableList<Exam> examList = FXCollections.observableArrayList();
-    private ObservableList<Question> examQuestionList = FXCollections.observableArrayList();
-    private ObservableList<Question> questionList = FXCollections.observableArrayList();
-    private int currentExamId;
+    public ObservableList<Exam> examList = FXCollections.observableArrayList();
+    public ObservableList<Question> examQuestionList = FXCollections.observableArrayList();
+    public ObservableList<Question> questionList = FXCollections.observableArrayList();
+    public int currentExamId;
 
     /**
      * Initializes the controller class.
@@ -113,7 +113,7 @@ public class TeacherExamManageController {
      *
      * @param examId the ID of the exam
      */
-    private void loadExamQuestions(int examId) {
+    public void loadExamQuestions(int examId) {
         String sql = "SELECT q.* FROM question q " +
                 "JOIN exam_question_link eq ON q.id = eq.question_id " +
                 "WHERE eq.exam_id = ?";
@@ -149,7 +149,7 @@ public class TeacherExamManageController {
     /**
      * Loads exams from the database and populates the TableView.
      */
-    private void loadExams() {
+    public void loadExams() {
         String sql = "SELECT * FROM exam";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -175,7 +175,7 @@ public class TeacherExamManageController {
     /**
      * Loads questions from the database and populates the TableView.
      */
-    private void loadQuestions() {
+    public void loadQuestions() {
         String sql = "SELECT * FROM question";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -206,7 +206,7 @@ public class TeacherExamManageController {
      * Handles the filter action for questions.
      */
     @FXML
-    private void handleFilterQuestion() {
+    public void handleFilterQuestion() {
         String question = questionField.getText();
         String type = typeComboBox.getValue();
         int score;
@@ -256,7 +256,7 @@ public class TeacherExamManageController {
      * Handles the reset action for questions.
      */
     @FXML
-    private void handleResetQuestion() {
+    public void handleResetQuestion() {
         questionField.clear();
         typeComboBox.setValue(null);
         scoreField.clear();
@@ -266,7 +266,7 @@ public class TeacherExamManageController {
      * Handles the filter action for exams.
      */
     @FXML
-    private void handleFilterExam() {
+    public void handleFilterExam() {
         String examName = examField.getText();
         String courseId = courseField.getText();
         String published = publishedComboBox.getValue();
@@ -305,7 +305,7 @@ public class TeacherExamManageController {
      * Handles the add action for exams.
      */
     @FXML
-    private void handleAddExam() {
+    public void handleAddExam() {
         String examName = examnameField.getText();
         String courseId = editcourseField.getText();
         String published = editpublishedComboBox.getValue();
@@ -356,7 +356,7 @@ public class TeacherExamManageController {
             pstmt.setBoolean(3, "Yes".equals(published));
             pstmt.setInt(4, timeLimit);
 
-            int affectedRows = pstmt.executeUpdate();
+            int affectedRows =pstmt.executeUpdate();
             if (affectedRows > 0) {
                 errorLabel.setText("Exam added successfully.");
                 errorLabel.setStyle("-fx-text-fill: green;");
@@ -377,7 +377,7 @@ public class TeacherExamManageController {
      * Handles the update action for exams.
      */
     @FXML
-    private void handleUpdateExam() {
+    public void handleUpdateExam() {
         Exam selectedExam = examTable.getSelectionModel().getSelectedItem();
 
         if (selectedExam == null) {
@@ -463,7 +463,7 @@ public class TeacherExamManageController {
      * Handles the delete action for exams.
      */
     @FXML
-    private void handleDeleteExam() {
+    public void handleDeleteExam() {
         Exam selectedExam = examTable.getSelectionModel().getSelectedItem();
 
         if (selectedExam == null) {
@@ -499,7 +499,7 @@ public class TeacherExamManageController {
      * Handles the reset action for exams.
      */
     @FXML
-    private void handleResetExam() {
+    public void handleResetExam() {
         examField.clear();
         courseField.clear();
         publishedComboBox.setValue(null);
@@ -510,7 +510,7 @@ public class TeacherExamManageController {
      * Reloads the exams and questions from the database.
      */
     @FXML
-    private void handleRefresh() {
+    public void handleRefresh() {
         loadExams();
         loadQuestions();
     }
@@ -520,7 +520,7 @@ public class TeacherExamManageController {
      * Deletes the selected question from the current exam.
      */
     @FXML
-    private void handleDeleteFromExam() {
+    public void handleDeleteFromExam() {
         Question selectedQuestion = examQuestionTable.getSelectionModel().getSelectedItem();
         if (selectedQuestion != null) {
             try (Connection conn = DatabaseConnection.getConnection();
@@ -547,7 +547,7 @@ public class TeacherExamManageController {
      * Adds the selected question to the current exam.
      */
     @FXML
-    private void handleAddToExam() {
+    public void handleAddToExam() {
         Question selectedQuestion = questionTable.getSelectionModel().getSelectedItem();
         if (selectedQuestion != null) {
             String checkSql = "SELECT COUNT(*) FROM exam_question_link WHERE exam_id = ? AND question_id = ?";

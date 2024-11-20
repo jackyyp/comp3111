@@ -1,14 +1,18 @@
 package comp3111.examsystem.controller;
 
 import comp3111.examsystem.database.DatabaseConnection;
+import comp3111.examsystem.model.TeacherControllerModel;
 import javafx.animation.PauseTransition;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
 import java.net.URL;
 import java.sql.Connection;
@@ -26,23 +30,23 @@ import java.util.ResourceBundle;
  */
 public class TeacherRegisterController implements Initializable {
     @FXML
-    private TextField usernameTxt;
+    public TextField usernameTxt;
     @FXML
-    private TextField nameTxt;
+    public TextField nameTxt;
     @FXML
-    private ComboBox<String> genderComboBox;
+    public ComboBox<String> genderComboBox;
     @FXML
-    private ComboBox<String> positionComboBox;
+    public ComboBox<String> positionComboBox;
     @FXML
-    private TextField ageTxt;
+    public TextField ageTxt;
     @FXML
-    private TextField departmentTxt;
+    public TextField departmentTxt;
     @FXML
-    private PasswordField passwordTxt;
+    public PasswordField passwordTxt;
     @FXML
-    private PasswordField confirmPasswordTxt;
+    public PasswordField confirmPasswordTxt;
     @FXML
-    private Label errorMessageLbl;
+    public Label errorMessageLbl;
 
     /**
      * Initializes the controller class.
@@ -70,10 +74,9 @@ public class TeacherRegisterController implements Initializable {
      * Handles the register action.
      * Validates the user input and performs registration if valid.
      *
-     * @param e the action event triggered by the register button
      */
     @FXML
-    private void register(ActionEvent e) {
+    public void register() {
         String username = usernameTxt.getText();
         String name = nameTxt.getText();
         String gender = genderComboBox.getValue();
