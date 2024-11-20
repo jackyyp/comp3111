@@ -8,6 +8,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.ResourceBundle;
+
 import comp3111.examsystem.Main;
 import comp3111.examsystem.database.DatabaseConnection;
 import comp3111.examsystem.model.StudentControllerModel;
@@ -46,7 +47,7 @@ public class TeacherLoginController implements Initializable {
      * @param resources the resources used to localize the root object, or null if the root object was not localized
      */
     public void initialize(URL location, ResourceBundle resources) {
-
+        errorMessageLbl.setVisible(false); // Hide the error message by default
     }
 
     /**
