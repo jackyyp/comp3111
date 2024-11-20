@@ -31,6 +31,7 @@ public class TeacherMainController implements Initializable {
      *
      * @param dataModel the data model to set
      */
+
     public void setDataModel(TeacherControllerModel dataModel) {
         this.dataModel = dataModel;
     }

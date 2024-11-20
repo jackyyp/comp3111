@@ -2,6 +2,8 @@ package comp3111.examsystem.controller;
 
 import java.net.URL;
 import java.util.ResourceBundle;
+
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -20,6 +22,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import comp3111.examsystem.database.DatabaseConnection;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+
 import java.util.Set;
 import java.util.HashSet;
 
@@ -30,6 +35,8 @@ import java.util.HashSet;
  * author Wong Cheuk Yuen
  * @version 1.0
  */
+@AllArgsConstructor
+@NoArgsConstructor
 public class TeacherQuestionController implements Initializable {
 
     @FXML
@@ -143,7 +150,7 @@ public class TeacherQuestionController implements Initializable {
     @FXML
     public void handleReset() {
         questionField.clear();
-        typeComboBox.getSelectionModel().clearSelection();
+        typeComboBox.setValue(null);
         scoreField.clear();
     }
 
@@ -153,33 +160,22 @@ public class TeacherQuestionController implements Initializable {
      */
     @FXML
     public void handleFilter() {
-        String question = questionField.getText();
+        String questionText = questionField.getText();
         String type = typeComboBox.getValue();
-        int score;
-        try {
-            score = scoreField.getText().isEmpty() ? -1 : Integer.parseInt(scoreField.getText());
-        } catch (NumberFormatException e) {
-            errorLabel.setText("Score must be a valid integer.");
-            errorLabel.setStyle("-fx-text-fill: red;");
-            return;
-        }
+        String scoreText = scoreField.getText();
 
-        String sql = "SELECT * FROM question WHERE text LIKE ? AND (is_single_choice = ? OR ? IS NULL) AND (score = ? OR ? = -1)";
-
+        String sql = "SELECT * FROM question WHERE text LIKE ? AND is_single_choice = ? AND score = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, "%" + question + "%");
-            pstmt.setBoolean(2, type != null && type.equals("Single"));
-            pstmt.setString(3, type);
-            pstmt.setInt(4, score);
-            pstmt.setInt(5, score);
+            pstmt.setString(1, "%" + questionText + "%");
+            pstmt.setBoolean(2, "Single".equals(type));
+            pstmt.setInt(3, Integer.parseInt(scoreText));
 
             ResultSet rs = pstmt.executeQuery();
-            questionList.clear();
-
+            ObservableList<Question> filteredQuestions = FXCollections.observableArrayList();
             while (rs.next()) {
-                Question q = new Question(
+                Question question = new Question(
                         rs.getInt("id"),
                         rs.getString("text"),
                         rs.getString("option_a"),
@@ -190,9 +186,9 @@ public class TeacherQuestionController implements Initializable {
                         rs.getBoolean("is_single_choice") ? "Single" : "Multiple",
                         rs.getInt("score")
                 );
-                questionList.add(q);
+                filteredQuestions.add(question);
             }
-
+            questionTable.setItems(filteredQuestions);
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -206,8 +202,10 @@ public class TeacherQuestionController implements Initializable {
     public void handleUpdate() {
         Question selectedQuestion = questionTable.getSelectionModel().getSelectedItem();
         if (selectedQuestion == null) {
-            errorLabel.setText("No question selected for update.");
-            errorLabel.setStyle("-fx-text-fill: red;");
+            Platform.runLater(() -> {
+                errorLabel.setText("No question selected for update.");
+                errorLabel.setStyle("-fx-text-fill: red;");
+            });
             return;
         }
         String prev_question= selectedQuestion.getText();
@@ -230,8 +228,10 @@ public class TeacherQuestionController implements Initializable {
             } else{
                 updatedQuestion=editQuestionField.getText();
                 if(updatedQuestion.equals(prev_question)){
-                    errorLabel.setText("The question already exists.");
-                    errorLabel.setStyle("-fx-text-fill: red;");
+                    Platform.runLater(() -> {
+                        errorLabel.setText("The question already exists.");
+                        errorLabel.setStyle("-fx-text-fill: red;");
+                    });
                     return;
                 }
             }
@@ -347,10 +347,7 @@ public class TeacherQuestionController implements Initializable {
                     questionTable.refresh();
                     errorLabel.setText("Question updated successfully.");
                     errorLabel.setStyle("-fx-text-fill: green;");
-                    //} else {
-                        //errorLabel.setText("Failed to update the question.");
-                        //errorLabel.setStyle("-fx-text-fill: red;");
-                    //}
+
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -413,8 +410,10 @@ public class TeacherQuestionController implements Initializable {
         String Answer = editAnswerField.getText();
 
         if (editquestion.isEmpty() || type == null || scoreText.isEmpty() || optionA.isEmpty() || optionB.isEmpty() || optionC.isEmpty() || optionD.isEmpty() || Answer.isEmpty()) {
-            errorLabel.setText("All fields must be filled out.");
-            errorLabel.setStyle("-fx-text-fill: red;");
+            Platform.runLater(() -> {
+                errorLabel.setText("All fields must be filled out.");
+                errorLabel.setStyle("-fx-text-fill: red;");
+            });
             return;
         }
 
@@ -422,8 +421,10 @@ public class TeacherQuestionController implements Initializable {
         try {
             score = Integer.parseInt(scoreText);
         } catch (NumberFormatException e) {
-            errorLabel.setText("Score must be a valid integer.");
-            errorLabel.setStyle("-fx-text-fill: red;");
+            Platform.runLater(() -> {
+                errorLabel.setText("Score must be a valid integer.");
+                errorLabel.setStyle("-fx-text-fill: red;");
+            });
             return;
         }
 
@@ -497,6 +498,7 @@ public class TeacherQuestionController implements Initializable {
                 int id = generatedKeys.getInt(1);
                 Question newQuestion = new Question(id, editquestion, optionA, optionB, optionC, optionD, Answer, type, score);
                 questionList.add(newQuestion);
+                questionTable.setItems(questionList);
             }
         } catch (SQLException e) {
             e.printStackTrace();
