@@ -227,32 +227,32 @@ public class TeacherQuestionController implements Initializable {
         if (selectedQuestion != null) {
             if(editQuestionField.getText().isEmpty()){
                 updatedQuestion = prev_question;
-            }
-            else{
+            } else{
                 updatedQuestion=editQuestionField.getText();
+                if(updatedQuestion.equals(prev_question)){
+                    errorLabel.setText("The question already exists.");
+                    errorLabel.setStyle("-fx-text-fill: red;");
+                    return;
+                }
             }
             if(editOptionAField.getText().isEmpty()){
                 updatedOptionA=prev_option_a;
-            }
-            else{
+            } else{
                 updatedOptionA=editOptionAField.getText();
             }
             if(editOptionBField.getText().isEmpty()){
                 updatedOptionB=prev_option_b;
-            }
-            else{
+            } else{
                 updatedOptionB=editOptionBField.getText();
             }
             if(editOptionCField.getText().isEmpty()){
                 updatedOptionC=prev_option_c;
-            }
-            else{
+            } else{
                 updatedOptionC=editOptionCField.getText();
             }
             if(editOptionDField.getText().isEmpty()){
                 updatedOptionD=prev_option_d;
-            }
-            else{
+            } else{
                 updatedOptionD=editOptionDField.getText();
             }
             if (editTypeComboBox.getValue() == null || editTypeComboBox.getValue().isEmpty()) {
@@ -262,16 +262,14 @@ public class TeacherQuestionController implements Initializable {
             }
             if(editAnswerField.getText().isEmpty()){
                 updatedAnswer=prev_answer;
-            }
-            else{
+            } else{
                 if ("Single".equals(updatedType)) {
                     if (!editAnswerField.getText().matches("[ABCD]")) {
                         errorLabel.setText("Answer format incorrect");
                         errorLabel.setStyle("-fx-text-fill: red;");
                         return;
                     }
-                }
-                else{
+                } else{
                     if (!editAnswerField.getText().matches("[ABCD]{2,4}")) {
                         errorLabel.setText("Answer format incorrect");
                         errorLabel.setStyle("-fx-text-fill: red;");
@@ -290,8 +288,7 @@ public class TeacherQuestionController implements Initializable {
             }
             if(editScoreField.getText().isEmpty()){
                 updatedScore=selectedQuestion.getScore();
-            }
-            else {
+            } else {
                 try {
                     updatedScore = Integer.parseInt(editScoreField.getText());
                 } catch (NumberFormatException e) {
@@ -336,23 +333,24 @@ public class TeacherQuestionController implements Initializable {
                     pstmt.setInt(8, updatedScore);
                     pstmt.setInt(9, selectedQuestion.getId());
 
-                    int affectedRows = pstmt.executeUpdate();
-                    if (affectedRows > 0) {
-                        selectedQuestion.setText(updatedQuestion);
-                        selectedQuestion.setOptionA(updatedOptionA);
-                        selectedQuestion.setOptionB(updatedOptionB);
-                        selectedQuestion.setOptionC(updatedOptionC);
-                        selectedQuestion.setOptionD(updatedOptionD);
-                        selectedQuestion.setAnswer(updatedAnswer);
-                        selectedQuestion.setType(updatedType);
-                        selectedQuestion.setScore(updatedScore);
-                        questionTable.refresh();
-                        errorLabel.setText("Question updated successfully.");
-                        errorLabel.setStyle("-fx-text-fill: green;");
-                    } else {
-                        errorLabel.setText("Failed to update the question.");
-                        errorLabel.setStyle("-fx-text-fill: red;");
-                    }
+                    //int affectedRows =
+                    pstmt.executeUpdate();
+                    //if (affectedRows >0) {
+                    selectedQuestion.setText(updatedQuestion);
+                    selectedQuestion.setOptionA(updatedOptionA);
+                    selectedQuestion.setOptionB(updatedOptionB);
+                    selectedQuestion.setOptionC(updatedOptionC);
+                    selectedQuestion.setOptionD(updatedOptionD);
+                    selectedQuestion.setAnswer(updatedAnswer);
+                    selectedQuestion.setType(updatedType);
+                    selectedQuestion.setScore(updatedScore);
+                    questionTable.refresh();
+                    errorLabel.setText("Question updated successfully.");
+                    errorLabel.setStyle("-fx-text-fill: green;");
+                    //} else {
+                        //errorLabel.setText("Failed to update the question.");
+                        //errorLabel.setStyle("-fx-text-fill: red;");
+                    //}
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -403,112 +401,6 @@ public class TeacherQuestionController implements Initializable {
      * Handles the add action.
      * Adds a new question to the database.
      */
-    /*
-    @FXML
-    public void handleAdd() {
-        String editquestion = editQuestionField.getText();
-        String type = editTypeComboBox.getValue();
-        String scoreText = editScoreField.getText();
-        String optionA = editOptionAField.getText();
-        String optionB = editOptionBField.getText();
-        String optionC = editOptionCField.getText();
-        String optionD = editOptionDField.getText();
-        String Answer = editAnswerField.getText();
-
-        if (editquestion.isEmpty() || type == null || scoreText.isEmpty() || optionA.isEmpty() || optionB.isEmpty() || optionC.isEmpty() || optionD.isEmpty() || Answer.isEmpty()) {
-            errorLabel.setText("All fields must be filled out.");
-            errorLabel.setStyle("-fx-text-fill: red;");
-            return;
-        }
-
-        int score;
-        try {
-            score = Integer.parseInt(scoreText);
-        } catch (NumberFormatException e) {
-            errorLabel.setText("Score must be a valid integer.");
-            errorLabel.setStyle("-fx-text-fill: red;");
-            return;
-        }
-
-        if ("Single".equals(type)) {
-            if (!editAnswerField.getText().matches("[ABCD]")) {
-                errorLabel.setText("Answer format incorrect");
-                errorLabel.setStyle("-fx-text-fill: red;");
-                return;
-            }
-        }
-        else{
-            if (!editAnswerField.getText().matches("[ABCD]{2,4}")) {
-                errorLabel.setText("Answer format incorrect");
-                errorLabel.setStyle("-fx-text-fill: red;");
-                return;
-            }
-        }
-
-        Set<Character> charSet = new HashSet<>();
-        for (char c : editAnswerField.getText().toCharArray()) {
-            if (!charSet.add(c)) {
-                errorLabel.setText("Answer contains repeated choice.");
-                errorLabel.setStyle("-fx-text-fill: red;");
-                return;
-            }
-        }
-
-        String checkSql = "SELECT COUNT(*) FROM question WHERE text = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
-
-            checkStmt.setString(1, editquestion);
-            ResultSet rs = checkStmt.executeQuery();
-            if (rs.next() && rs.getInt(1) > 0) {
-                errorLabel.setText("The question already exists.");
-                errorLabel.setStyle("-fx-text-fill: red;");
-                return;
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            errorLabel.setText("Database error: " + e.getMessage());
-            errorLabel.setStyle("-fx-text-fill: red;");
-            return;
-        }
-
-        String sql = "INSERT INTO question (text, option_a, option_b, option_c, option_d, answer, is_single_choice, score) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, editquestion);
-            pstmt.setString(2, optionA);
-            pstmt.setString(3, optionB);
-            pstmt.setString(4, optionC);
-            pstmt.setString(5, optionD);
-            pstmt.setString(6, Answer);
-            pstmt.setBoolean(7, type.equals("Single"));
-            pstmt.setInt(8, score);
-
-            int affectedRows=pstmt.executeUpdate();
-            if (affectedRows>0){
-                errorLabel.setText("Question added successfully.");
-                errorLabel.setStyle("-fx-text-fill: green;");
-            } else {
-                errorLabel.setText("Failed to add the question.");
-                errorLabel.setStyle("-fx-text-fill: red;");
-            }
-
-            ResultSet generatedKeys = pstmt.getGeneratedKeys();
-            if (generatedKeys.next()) {
-                int id = generatedKeys.getInt(1);
-                Question newQuestion = new Question(id, editquestion, optionA, optionB, optionC, optionD, Answer, type, score);
-                questionList.add(newQuestion);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            errorLabel.setText("Database error: " + e.getMessage());
-            errorLabel.setStyle("-fx-text-fill: red;");
-        }
-    }*/
-
     @FXML
     public void handleAdd() {
         String editquestion = editQuestionField.getText();
