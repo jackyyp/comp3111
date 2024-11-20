@@ -8,6 +8,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -64,6 +65,11 @@ public class StudentExamPageControllerTest {
         when(mockConn.prepareStatement(anyString())).thenReturn(mockPstmt);
         when(mockPstmt.executeQuery()).thenReturn(mockRs);
         DatabaseConnection.setMockConnection(mockConn);
+    }
+
+    @AfterEach
+    public void tearDown() {
+        reset(mockConn, mockPstmt, mockRs);
     }
 
     @Test
@@ -124,6 +130,10 @@ public class StudentExamPageControllerTest {
 
     @Test
     public void testQuestionSingleChoiceConstructor() {
+        // Initialize the data model
+        StudentControllerModel dataModel = new StudentControllerModel();
+        controller.setDataModel(dataModel);
+
         VBox questionBox = new VBox();
         RadioButton optionAButton = new RadioButton("A: Option A");
         optionAButton.setUserData("A");
@@ -143,6 +153,8 @@ public class StudentExamPageControllerTest {
         int score = 10;
 
         StudentExamPageController.Question question = new StudentExamPageController.Question(1, questionBox, group, correctAnswer, score, true);
+
+        assertEquals(score, question.getScore());
     }
 
     @Test
@@ -231,18 +243,23 @@ public class StudentExamPageControllerTest {
 //
     @Test
     public void testShowNextQuestion(FxRobot robot) {
-        controller.questions.add(new StudentExamPageController.Question(1, new VBox(), new ToggleGroup(), "A", 10, true));
-        controller.questions.add(new StudentExamPageController.Question(2, new VBox(), new ToggleGroup(), "B", 10, true));
-        controller.questionBoxes.add(new VBox());
-        controller.questionBoxes.add(new VBox());
-        controller.currentQuestionIndex = 0;
+        Platform.runLater(() -> {
+            controller.questions.add(new StudentExamPageController.Question(1, new VBox(), new ToggleGroup(), "A", 10, true));
+            controller.questions.add(new StudentExamPageController.Question(2, new VBox(), new ToggleGroup(), "B", 10, true));
+            controller.questionBoxes.add(new VBox());
+            controller.questionBoxes.add(new VBox());
+            controller.currentQuestionIndex = 0;
 
-        controller.showNextQuestion();
-        controller.showNextQuestion();
+            controller.showNextQuestion();
+            controller.showNextQuestion();
+        });
+        WaitForAsyncUtils.waitForFxEvents();
 
-//        Assertions.assertThat(controller.currentQuestionIndex).isEqualTo(0);
-//        Assertions.assertThat(controller.questionsContainer.getChildren()).containsExactly(controller.questionBoxes.get(0));
+        // Add assertions to verify the behavior
+//        assertEquals(1, controller.currentQuestionIndex);
+//        assertEquals(controller.questionBoxes.get(1), controller.questionsContainer.getChildren().get(0));
     }
+
     @Test
     public void testShowPreviousQuestion(FxRobot robot) {
         controller.questions.add(new StudentExamPageController.Question(1, new VBox(), new ToggleGroup(), "A", 10, true));
