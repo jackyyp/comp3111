@@ -44,6 +44,10 @@ public class CourseManagementControllerTest {
         controller.departmentField = new TextField();
         controller.errorMessageLbl = new Label();
 
+        controller.courseIdColumn = new TableColumn<>("Course ID");
+        controller.courseNameColumn = new TableColumn<>("Course Name");
+        controller.departmentColumn = new TableColumn<>("Department");
+
 
         VBox vbox = new VBox(controller.courseIdFilter, controller.courseNameFilter, controller.departmentFilter, controller.courseTable, controller.courseIdField, controller.courseNameField, controller.departmentField, controller.errorMessageLbl);
         Scene scene = new Scene(vbox);
@@ -59,6 +63,20 @@ public class CourseManagementControllerTest {
         when(mockConn.prepareStatement(anyString())).thenReturn(mockPstmt);
         when(mockPstmt.executeQuery()).thenReturn(mockRs);
         DatabaseConnection.setMockConnection(mockConn);
+    }
+
+    @Test
+    public void testInitialize(FxRobot robot) {
+        // Call the initialize method
+        robot.interact(() -> controller.initialize());
+
+        // Verify that the TableColumns are set up correctly
+        Assertions.assertThat(controller.courseIdColumn.getText()).isEqualTo("Course ID");
+        Assertions.assertThat(controller.courseNameColumn.getText()).isEqualTo("Course Name");
+        Assertions.assertThat(controller.departmentColumn.getText()).isEqualTo("Department");
+
+        // Verify that the TableView is empty initially
+        Assertions.assertThat(controller.courseTable.getItems()).isEmpty();
     }
 
     @Test

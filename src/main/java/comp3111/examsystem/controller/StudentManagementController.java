@@ -50,17 +50,17 @@ public class StudentManagementController {
     @FXML
     public TableView<Student> studentTable;
     @FXML
-    private TableColumn<Student, String> usernameColumn;
+    TableColumn<Student, String> usernameColumn;
     @FXML
-    private TableColumn<Student, String> nameColumn;
+    TableColumn<Student, String> nameColumn;
     @FXML
-    private TableColumn<Student, Integer> ageColumn;
+    TableColumn<Student, Integer> ageColumn;
     @FXML
-    private TableColumn<Student, String> genderColumn;
+    TableColumn<Student, String> genderColumn;
     @FXML
-    private TableColumn<Student, String> departmentColumn;
+    TableColumn<Student, String> departmentColumn;
     @FXML
-    private TableColumn<Student, String> passwordColumn;
+    TableColumn<Student, String> passwordColumn;
     @FXML
     public TextField usernameField;
     @FXML

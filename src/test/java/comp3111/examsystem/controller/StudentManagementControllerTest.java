@@ -3,12 +3,10 @@ package comp3111.examsystem.controller;
 import comp3111.examsystem.controller.StudentManagementController;
 import comp3111.examsystem.controller.StudentManagementController.Student;
 import comp3111.examsystem.database.DatabaseConnection;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,6 +47,14 @@ public class StudentManagementControllerTest {
         controller.nameFilter = new TextField();
         controller.departmentFilter = new TextField();
 
+        // Initialize TableColumns
+        controller.usernameColumn = new TableColumn<>("Username");
+        controller.nameColumn = new TableColumn<>("Name");
+        controller.ageColumn = new TableColumn<>("Age");
+        controller.genderColumn = new TableColumn<>("Gender");
+        controller.departmentColumn = new TableColumn<>("Department");
+        controller.passwordColumn = new TableColumn<>("Password");
+
         VBox vbox = new VBox(controller.usernameField, controller.nameField, controller.ageField, controller.genderComboBox, controller.departmentField, controller.passwordField, controller.studentTable, controller.errorMessageLbl, controller.usernameFilter, controller.nameFilter, controller.departmentFilter);
         Scene scene = new Scene(vbox);
         stage.setScene(scene);
@@ -63,6 +69,27 @@ public class StudentManagementControllerTest {
         when(mockConn.prepareStatement(anyString())).thenReturn(mockPstmt);
         when(mockPstmt.executeQuery()).thenReturn(mockRs);
         DatabaseConnection.setMockConnection(mockConn);
+    }
+
+    @Test
+    public void testInitialize(FxRobot robot) {
+        // Call the initialize method
+        robot.interact(() -> controller.initialize());
+
+        // Verify that the ComboBox is populated correctly
+        ObservableList<String> expectedGenders = FXCollections.observableArrayList("Male", "Female", "Other");
+        Assertions.assertThat(controller.genderComboBox.getItems()).containsExactlyElementsOf(expectedGenders);
+
+        // Verify that the TableView columns are set up correctly
+        Assertions.assertThat(controller.usernameColumn.getText()).isEqualTo("Username");
+        Assertions.assertThat(controller.nameColumn.getText()).isEqualTo("Name");
+        Assertions.assertThat(controller.ageColumn.getText()).isEqualTo("Age");
+        Assertions.assertThat(controller.genderColumn.getText()).isEqualTo("Gender");
+        Assertions.assertThat(controller.departmentColumn.getText()).isEqualTo("Department");
+        Assertions.assertThat(controller.passwordColumn.getText()).isEqualTo("Password");
+
+        // Verify that the TableView is empty initially
+        Assertions.assertThat(controller.studentTable.getItems()).isEmpty();
     }
 
     @Test
