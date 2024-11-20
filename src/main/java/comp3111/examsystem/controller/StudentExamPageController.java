@@ -179,15 +179,14 @@ public class StudentExamPageController {
      */
     public void loadQuestions(int examId) {
         System.out.println("Fetching questions for exam ID: " + examId);
-
-        // Fetch the exam details including time limit
         String examSql = "SELECT time_limit FROM exam WHERE id = ?";
-        String questionSql = "SELECT q.id, q.text, q.option_a, q.option_b, q.option_c, q.option_d, q.is_single_choice, q.answer, q.score " + "FROM question q JOIN exam_question_link eql ON q.id = eql.question_id " + "WHERE eql.exam_id = ?";
+        String questionSql = "SELECT q.id, q.text, q.option_a, q.option_b, q.option_c, q.option_d, q.is_single_choice, q.answer, q.score " +
+                "FROM question q JOIN exam_question_link eql ON q.id = eql.question_id WHERE eql.exam_id = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection()) {
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement examStmt = conn.prepareStatement(examSql);
+             PreparedStatement pstmt = conn.prepareStatement(questionSql)) {
 
-            // Fetch the time limit for the exam
-            PreparedStatement examStmt = conn.prepareStatement(examSql);
             examStmt.setInt(1, examId);
             ResultSet examRs = examStmt.executeQuery();
             if (examRs.next()) {
@@ -195,63 +194,38 @@ public class StudentExamPageController {
                 timeRemainingSeconds = timeAllowedSeconds;
             }
 
-            // Fetch the questions for the exam
-            PreparedStatement pstmt = conn.prepareStatement(questionSql);
             pstmt.setInt(1, examId);
             ResultSet rs = pstmt.executeQuery();
-
             while (rs.next()) {
                 int id = rs.getInt("id");
                 String questionText = rs.getString("text");
-                String optionA = rs.getString("option_a");
-                String optionB = rs.getString("option_b");
-                String optionC = rs.getString("option_c");
-                String optionD = rs.getString("option_d");
+                String[] options = {rs.getString("option_a"), rs.getString("option_b"), rs.getString("option_c"), rs.getString("option_d")};
                 boolean isSingleChoice = rs.getBoolean("is_single_choice");
                 String answer = rs.getString("answer");
                 int score = rs.getInt("score");
 
-                System.out.println("Question: " + questionText);
-                System.out.println("Options: A) " + optionA + " B) " + optionB + " C) " + optionC + " D) " + optionD);
-
-                VBox questionBox = new VBox();
-                questionBox.setSpacing(5);
-
+                VBox questionBox = new VBox(5);
                 Label questionLabel = new Label(questionText);
+                questionBox.getChildren().add(questionLabel);
 
                 if (isSingleChoice) {
                     ToggleGroup group = new ToggleGroup();
-                    RadioButton optionAButton = new RadioButton("A: " + optionA);
-                    optionAButton.setUserData("A");
-                    optionAButton.setToggleGroup(group);
-                    RadioButton optionBButton = new RadioButton("B: " + optionB);
-                    optionBButton.setUserData("B");
-                    optionBButton.setToggleGroup(group);
-                    RadioButton optionCButton = new RadioButton("C: " + optionC);
-                    optionCButton.setUserData("C");
-                    optionCButton.setToggleGroup(group);
-                    RadioButton optionDButton = new RadioButton("D: " + optionD);
-                    optionDButton.setUserData("D");
-                    optionDButton.setToggleGroup(group);
-
-                    questionBox.getChildren().addAll(questionLabel, optionAButton, optionBButton, optionCButton, optionDButton);
-
+                    for (char option = 'A'; option <= 'D'; option++) {
+                        RadioButton button = new RadioButton(option + ": " + options[option - 'A']);
+                        button.setUserData(String.valueOf(option));
+                        button.setToggleGroup(group);
+                        questionBox.getChildren().add(button);
+                    }
                     questions.add(new Question(id, questionBox, group, answer, score, true));
                 } else {
-                    CheckBox optionACheckBox = new CheckBox("A: " + optionA);
-                    optionACheckBox.setUserData("A");
-                    CheckBox optionBCheckBox = new CheckBox("B: " + optionB);
-                    optionBCheckBox.setUserData("B");
-                    CheckBox optionCCheckBox = new CheckBox("C: " + optionC);
-                    optionCCheckBox.setUserData("C");
-                    CheckBox optionDCheckBox = new CheckBox("D: " + optionD);
-                    optionDCheckBox.setUserData("D");
-
-                    questionBox.getChildren().addAll(questionLabel, optionACheckBox, optionBCheckBox, optionCCheckBox, optionDCheckBox);
-
-                    questions.add(new Question(id, questionBox, optionACheckBox, optionBCheckBox, optionCCheckBox, optionDCheckBox, answer, score, false));
+                    CheckBox[] checkBoxes = new CheckBox[4];
+                    for (char option = 'A'; option <= 'D'; option++) {
+                        checkBoxes[option - 'A'] = new CheckBox(option + ": " + options[option - 'A']);
+                        checkBoxes[option - 'A'].setUserData(String.valueOf(option));
+                        questionBox.getChildren().add(checkBoxes[option - 'A']);
+                    }
+                    questions.add(new Question(id, questionBox, checkBoxes[0], checkBoxes[1], checkBoxes[2], checkBoxes[3], answer, score, false));
                 }
-
                 questionBoxes.add(questionBox);
             }
 
@@ -261,33 +235,22 @@ public class StudentExamPageController {
             }
 
             updateNavigationButtons();
-            // Populate the ListView with question numbers and text
             questionListView.setItems(FXCollections.observableArrayList(getQuestionListItems()));
 
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
 
-        // Start the countdown timer
         timeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
             timeRemainingSeconds--;
             countdownLabel.setText("Time Remaining: " + formatTime(timeRemainingSeconds));
-
-            if (timeRemainingSeconds <= 10) {
-                countdownLabel.setStyle("-fx-text-fill: red;");
-            } else {
-                countdownLabel.setStyle("-fx-text-fill: black;");
-            }
-
+            countdownLabel.setStyle(timeRemainingSeconds <= 10 ? "-fx-text-fill: red;" : "-fx-text-fill: black;");
             if (timeRemainingSeconds <= 0) {
                 timeline.stop();
-
-                // Close the confirmation alert if it is showing
                 if (confirmationAlert != null && confirmationAlert.isShowing()) {
                     confirmationAlert.hide();
                 }
-
-                submitExam(false); // Auto-submit without confirmation when time is up
+                submitExam(false);
             }
         }));
         timeline.setCycleCount(Animation.INDEFINITE);

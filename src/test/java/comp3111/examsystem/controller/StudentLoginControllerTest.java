@@ -13,6 +13,7 @@ import org.testfx.assertions.api.Assertions;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -38,7 +39,11 @@ public class StudentLoginControllerTest {
         loginButton.setId("loginButton"); // Set the id for the login button
         loginButton.setOnAction(controller::login);
 
-        VBox vbox = new VBox(controller.usernameTxt, controller.passwordTxt, loginButton, controller.errorMessageLbl);
+        Button registerButton = new Button("Register");
+        registerButton.setId("registerButton"); // Set the id for the register button
+        registerButton.setOnAction(controller::register);
+
+        VBox vbox = new VBox(controller.usernameTxt, controller.passwordTxt, loginButton, registerButton, controller.errorMessageLbl);
         Scene scene = new Scene(vbox);
         stage.setScene(scene);
         stage.show();
@@ -58,10 +63,24 @@ public class StudentLoginControllerTest {
     public void testFailedLogin(FxRobot robot) throws SQLException {
         when(mockRs.next()).thenReturn(false);
 
-        robot.clickOn(controller.usernameTxt).write("");
-        robot.clickOn(controller.passwordTxt).write("");
+        robot.clickOn(controller.usernameTxt).write("wrongUser");
+        robot.clickOn(controller.passwordTxt).write("wrongPass");
+        robot.clickOn("#loginButton");
+
+        Assertions.assertThat(controller.errorMessageLbl).isVisible();
+    }
+
+    @Test
+    public void testSuccessfulLogin(FxRobot robot) throws SQLException {
+        when(mockRs.next()).thenReturn(true, false); // Return true first, then false
+        when(mockRs.getString("username")).thenReturn("testUser");
+
+        robot.clickOn(controller.usernameTxt).write("testUser");
+        robot.clickOn(controller.passwordTxt).write("testPass");
         robot.clickOn("#loginButton");
 
         Assertions.assertThat(controller.errorMessageLbl).hasText("");
     }
+
+
 }

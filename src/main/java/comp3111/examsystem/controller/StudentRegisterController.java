@@ -140,9 +140,9 @@ public class StudentRegisterController implements Initializable {
                 errorMessageLbl.setVisible(true);
 
                 // Pause for 1 second then close the window
-                PauseTransition pause = new PauseTransition(Duration.seconds(1));
-                pause.setOnFinished(event -> ((Stage) ((Button) e.getSource()).getScene().getWindow()).close());
-                pause.play();
+//                PauseTransition pause = new PauseTransition(Duration.seconds(1));
+//                pause.setOnFinished(event -> ((Stage) ((Button) e.getSource()).getScene().getWindow()).close());
+//                pause.play();
             } else {
                 errorMessageLbl.setText("Failed to register user.");
                 errorMessageLbl.setVisible(true);
