@@ -13,21 +13,11 @@ class TeacherControllerModelTest {
     }
 
     @Test
-    void testGetAndSetExamId() {
-        TeacherControllerModel model = new TeacherControllerModel();
-        model.setExamId(456);
-        assertEquals(456, model.getExamId());
-    }
-
-    @Test
     void testEquals() {
         TeacherControllerModel model1 = new TeacherControllerModel();
         model1.setUsername("teacherUser");
-        model1.setExamId(456);
-
         TeacherControllerModel model2 = new TeacherControllerModel();
         model2.setUsername("teacherUser");
-        model2.setExamId(456);
 
         assertEquals(model1, model2);
     }
@@ -43,12 +33,8 @@ class TeacherControllerModelTest {
     void testHashCode() {
         TeacherControllerModel model1 = new TeacherControllerModel();
         model1.setUsername("teacherUser");
-        model1.setExamId(456);
-
         TeacherControllerModel model2 = new TeacherControllerModel();
         model2.setUsername("teacherUser");
-        model2.setExamId(456);
-
         assertEquals(model1.hashCode(), model2.hashCode());
     }
 
@@ -56,8 +42,7 @@ class TeacherControllerModelTest {
     void testToString() {
         TeacherControllerModel model = new TeacherControllerModel();
         model.setUsername("teacherUser");
-        model.setExamId(456);
-        String expected = "TeacherControllerModel(username=teacherUser, examId=456)";
+        String expected = "TeacherControllerModel(username=teacherUser, name=null)";
         assertEquals(expected, model.toString());
     }
 }
