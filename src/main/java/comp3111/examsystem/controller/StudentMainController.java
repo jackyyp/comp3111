@@ -62,7 +62,7 @@ public class StudentMainController implements Initializable {
     /**
      * A map to store exam names and their corresponding IDs.
      */
-    private Map<String, Integer> examMap = new HashMap<>();
+    Map<String, Integer> examMap = new HashMap<>();
 
     /**
      * Initializes the controller.
@@ -202,13 +202,6 @@ public class StudentMainController implements Initializable {
         }
     }
 
-    /**
-     * Exits the application.
-     */
-    @FXML
-    public void exit() {
-        System.exit(0);
-    }
 
     /**
      * Logs out the user.

@@ -131,7 +131,7 @@ public class StudentGradeStatisticController implements Initializable {
     /**
      * Loads the courses from the database.
      */
-    private void loadCourses() {
+    void loadCourses() {
         String sql = "SELECT DISTINCT course FROM exam e " +
                 "JOIN grade g ON e.id = g.exam_id " +
                 "WHERE g.student_id = ?";
@@ -158,7 +158,7 @@ public class StudentGradeStatisticController implements Initializable {
      *
      * @param courseFilter the course filter
      */
-    private void loadGradesFromDatabase(String courseFilter) {
+    void loadGradesFromDatabase(String courseFilter) {
         String sql = "SELECT e.course, e.name AS exam, g.score, " +
                 "(SELECT SUM(q.score) FROM question q JOIN exam_question_link eql ON q.id = eql.question_id WHERE eql.exam_id = e.id) AS full_score, " +
                 "g.time_spent " +
