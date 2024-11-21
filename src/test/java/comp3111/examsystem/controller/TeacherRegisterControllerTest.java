@@ -1,13 +1,11 @@
 package comp3111.examsystem.controller;
 
 import comp3111.examsystem.database.DatabaseConnection;
-import javafx.animation.PauseTransition;
 import javafx.collections.FXCollections;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,7 +14,6 @@ import org.testfx.assertions.api.Assertions;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
-import java.awt.event.ActionEvent;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -25,19 +22,20 @@ import java.sql.SQLException;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(ApplicationExtension.class)
-public class StudentRegisterControllerTest {
+public class TeacherRegisterControllerTest {
 
-    private StudentRegisterController controller;
+    private TeacherRegisterController controller;
     private Connection mockConn;
     private PreparedStatement mockPstmt;
     private ResultSet mockRs;
 
     @Start
     private void start(Stage stage) {
-        controller = new StudentRegisterController();
+        controller = new TeacherRegisterController();
         controller.usernameTxt = new TextField();
         controller.nameTxt = new TextField();
         controller.genderComboBox = new ComboBox<>(FXCollections.observableArrayList("Male", "Female", "Other"));
+        controller.positionComboBox = new ComboBox<>(FXCollections.observableArrayList("Junior", "Senior", "Parttime"));
         controller.ageTxt = new TextField();
         controller.departmentTxt = new TextField();
         controller.passwordTxt = new PasswordField();
@@ -46,7 +44,7 @@ public class StudentRegisterControllerTest {
         Button registerButton = new Button("Register");
         registerButton.setId("registerButton");
 
-        VBox vbox = new VBox(controller.usernameTxt, controller.nameTxt, controller.genderComboBox, controller.ageTxt, controller.departmentTxt, controller.passwordTxt, controller.confirmPasswordTxt, registerButton, controller.errorMessageLbl);
+        VBox vbox = new VBox(controller.usernameTxt, controller.nameTxt, controller.genderComboBox, controller.positionComboBox, controller.ageTxt, controller.departmentTxt, controller.passwordTxt, controller.confirmPasswordTxt, registerButton, controller.errorMessageLbl);
         Scene scene = new Scene(vbox);
         stage.setScene(scene);
         stage.show();
@@ -57,7 +55,6 @@ public class StudentRegisterControllerTest {
         mockConn = mock(Connection.class);
         mockPstmt = mock(PreparedStatement.class);
         mockRs = mock(ResultSet.class);
-        when(mockRs.getInt(1)).thenReturn(0); // Ensure this line is present
         when(mockConn.prepareStatement(anyString())).thenReturn(mockPstmt);
         when(mockPstmt.executeQuery()).thenReturn(mockRs);
         DatabaseConnection.setMockConnection(mockConn);
@@ -65,46 +62,45 @@ public class StudentRegisterControllerTest {
 
     @Test
     public void testRegisterWithMismatchedPasswords(FxRobot robot) {
-
-        robot.clickOn(controller.usernameTxt).write("S123");
-        robot.clickOn(controller.nameTxt).write("John Doe");
-        robot.clickOn(controller.genderComboBox).clickOn("Male");
-        robot.clickOn(controller.ageTxt).write("20");
-        robot.clickOn(controller.departmentTxt).write("CS");
+        robot.clickOn(controller.usernameTxt).write("T123");
+        robot.clickOn(controller.nameTxt).write("Jane Doe");
+        robot.clickOn(controller.genderComboBox).clickOn("Female");
+        robot.clickOn(controller.positionComboBox).clickOn("Junior");
+        robot.clickOn(controller.ageTxt).write("30");
+        robot.clickOn(controller.departmentTxt).write("Math");
         robot.clickOn(controller.passwordTxt).write("password");
         robot.clickOn(controller.confirmPasswordTxt).write("differentPassword");
-        robot.interact(()->controller.register());
+        robot.interact(() -> controller.register());
 
         Assertions.assertThat(controller.errorMessageLbl).hasText("Error: Please check your inputs.");
     }
-
 
     @Test
     public void testRegisterWithInvalidInputs(FxRobot robot) {
         robot.clickOn(controller.usernameTxt).write("");
         robot.clickOn(controller.nameTxt).write("");
-        robot.clickOn(controller.genderComboBox).clickOn("Male");
+        robot.clickOn(controller.genderComboBox).clickOn("Female");
+        robot.clickOn(controller.positionComboBox).clickOn("Junior");
         robot.clickOn(controller.ageTxt).write("-1");
         robot.clickOn(controller.departmentTxt).write("");
         robot.clickOn(controller.passwordTxt).write("password");
         robot.clickOn(controller.confirmPasswordTxt).write("differentPassword");
-        robot.interact(()->controller.register());
+        robot.interact(() -> controller.register());
 
         Assertions.assertThat(controller.errorMessageLbl).hasText("Error: Please check your inputs.");
     }
 
-
     @Test
     public void testRegisterWithNegativeAge(FxRobot robot) throws SQLException {
         when(mockRs.next()).thenReturn(true).thenReturn(false);
-        when(mockRs.getInt(1)).thenReturn(0);
 
         robot.interact(() -> {
-            controller.usernameTxt.setText("student1");
-            controller.nameTxt.setText("John Doe");
-            controller.genderComboBox.setValue("Male");
+            controller.usernameTxt.setText("teacher1");
+            controller.nameTxt.setText("Jane Doe");
+            controller.genderComboBox.setValue("Female");
+            controller.positionComboBox.setValue("Junior");
             controller.ageTxt.setText("-1");
-            controller.departmentTxt.setText("CS");
+            controller.departmentTxt.setText("Math");
             controller.passwordTxt.setText("password");
             controller.confirmPasswordTxt.setText("password");
             controller.register();
@@ -116,21 +112,21 @@ public class StudentRegisterControllerTest {
     @Test
     public void testSuccessfulRegister(FxRobot robot) throws SQLException {
         when(mockRs.next()).thenReturn(true).thenReturn(false);
-        when(mockRs.getInt(1)).thenReturn(0);
 
         robot.interact(() -> {
-            controller.usernameTxt.setText("student1");
-            controller.nameTxt.setText("John Doe");
-            controller.genderComboBox.setValue("Male");
-            controller.ageTxt.setText("20");
-            controller.departmentTxt.setText("CS");
+            controller.usernameTxt.setText("teacher1");
+            controller.nameTxt.setText("Jane Doe");
+            controller.genderComboBox.setValue("Female");
+            controller.positionComboBox.setValue("Junior");
+            controller.ageTxt.setText("30");
+            controller.departmentTxt.setText("Math");
             controller.passwordTxt.setText("password");
             controller.confirmPasswordTxt.setText("password");
 
             controller.register();
         });
 
-        Assertions.assertThat(controller.errorMessageLbl.getText()).isEqualTo("Registration successful!");
+        Assertions.assertThat(controller.errorMessageLbl.getText()).isEqualTo("Add Successful!");
     }
 
     @Test
@@ -140,20 +136,21 @@ public class StudentRegisterControllerTest {
         Assertions.assertThat(controller.usernameTxt.getText()).isEmpty();
         Assertions.assertThat(controller.nameTxt.getText()).isEmpty();
         Assertions.assertThat(controller.genderComboBox.getItems()).containsExactly("Male", "Female", "Other");
+        Assertions.assertThat(controller.positionComboBox.getItems()).containsExactly("Junior", "Senior", "Parttime");
         Assertions.assertThat(controller.ageTxt.getText()).isEmpty();
         Assertions.assertThat(controller.departmentTxt.getText()).isEmpty();
         Assertions.assertThat(controller.passwordTxt.getText()).isEmpty();
         Assertions.assertThat(controller.confirmPasswordTxt.getText()).isEmpty();
     }
 
-
     @Test
     public void testNonNumberAgeInput(FxRobot robot) {
-        robot.clickOn(controller.usernameTxt).write("S123");
-        robot.clickOn(controller.nameTxt).write("John Doe");
-        robot.clickOn(controller.genderComboBox).clickOn("Male");
-        robot.clickOn(controller.ageTxt).write("twenty");
-        robot.clickOn(controller.departmentTxt).write("CS");
+        robot.clickOn(controller.usernameTxt).write("T123");
+        robot.clickOn(controller.nameTxt).write("Jane Doe");
+        robot.clickOn(controller.genderComboBox).clickOn("Female");
+        robot.clickOn(controller.positionComboBox).clickOn("Junior");
+        robot.clickOn(controller.ageTxt).write("thirty");
+        robot.clickOn(controller.departmentTxt).write("Math");
         robot.clickOn(controller.passwordTxt).write("password");
         robot.clickOn(controller.confirmPasswordTxt).write("password");
         robot.interact(() -> controller.register());
@@ -163,71 +160,76 @@ public class StudentRegisterControllerTest {
 
     @Test
     public void testMissingUserName(FxRobot robot) {
-        // Test missing username
         robot.clickOn(controller.usernameTxt).write("");
-        robot.clickOn(controller.nameTxt).write("John Doe");
-        robot.clickOn(controller.genderComboBox).clickOn("Male");
-        robot.clickOn(controller.ageTxt).write("20");
-        robot.clickOn(controller.departmentTxt).write("CS");
+        robot.clickOn(controller.nameTxt).write("Jane Doe");
+        robot.clickOn(controller.genderComboBox).clickOn("Female");
+        robot.clickOn(controller.positionComboBox).clickOn("Junior");
+        robot.clickOn(controller.ageTxt).write("30");
+        robot.clickOn(controller.departmentTxt).write("Math");
         robot.clickOn(controller.passwordTxt).write("password");
         robot.clickOn(controller.confirmPasswordTxt).write("password");
         robot.interact(() -> controller.register());
+
         Assertions.assertThat(controller.errorMessageLbl).hasText("Error: Please check your inputs.");
     }
 
     @Test
     public void testMissingName(FxRobot robot) {
-        // Test missing name
-        robot.clickOn(controller.usernameTxt).write("S123");
+        robot.clickOn(controller.usernameTxt).write("T123");
         robot.clickOn(controller.nameTxt).write("");
-        robot.clickOn(controller.genderComboBox).clickOn("Male");
-        robot.clickOn(controller.ageTxt).write("20");
-        robot.clickOn(controller.departmentTxt).write("CS");
+        robot.clickOn(controller.genderComboBox).clickOn("Female");
+        robot.clickOn(controller.positionComboBox).clickOn("Junior");
+        robot.clickOn(controller.ageTxt).write("30");
+        robot.clickOn(controller.departmentTxt).write("Math");
         robot.clickOn(controller.passwordTxt).write("password");
         robot.clickOn(controller.confirmPasswordTxt).write("password");
         robot.interact(() -> controller.register());
+
         Assertions.assertThat(controller.errorMessageLbl).hasText("Error: Please check your inputs.");
     }
 
     @Test
     public void testMissingAge(FxRobot robot) {
-        // Test missing age
-        robot.clickOn(controller.usernameTxt).write("S123");
-        robot.clickOn(controller.nameTxt).write("John Doe");
-        robot.clickOn(controller.genderComboBox).clickOn("Male");
+        robot.clickOn(controller.usernameTxt).write("T123");
+        robot.clickOn(controller.nameTxt).write("Jane Doe");
+        robot.clickOn(controller.genderComboBox).clickOn("Female");
+        robot.clickOn(controller.positionComboBox).clickOn("Junior");
         robot.clickOn(controller.ageTxt).write("");
-        robot.clickOn(controller.departmentTxt).write("CS");
+        robot.clickOn(controller.departmentTxt).write("Math");
         robot.clickOn(controller.passwordTxt).write("password");
         robot.clickOn(controller.confirmPasswordTxt).write("password");
         robot.interact(() -> controller.register());
+
         Assertions.assertThat(controller.errorMessageLbl).hasText("Error: Please check your inputs.");
     }
 
     @Test
     public void testMissingDepartment(FxRobot robot) {
-        // Test missing department
-        robot.clickOn(controller.usernameTxt).write("S123");
-        robot.clickOn(controller.nameTxt).write("John Doe");
-        robot.clickOn(controller.genderComboBox).clickOn("Male");
-        robot.clickOn(controller.ageTxt).write("20");
+        robot.clickOn(controller.usernameTxt).write("T123");
+        robot.clickOn(controller.nameTxt).write("Jane Doe");
+        robot.clickOn(controller.genderComboBox).clickOn("Female");
+        robot.clickOn(controller.positionComboBox).clickOn("Junior");
+        robot.clickOn(controller.ageTxt).write("30");
         robot.clickOn(controller.departmentTxt).write("");
         robot.clickOn(controller.passwordTxt).write("password");
         robot.clickOn(controller.confirmPasswordTxt).write("password");
         robot.interact(() -> controller.register());
+
         Assertions.assertThat(controller.errorMessageLbl).hasText("Error: Please check your inputs.");
     }
 
     @Test
     public void testMissingPassword(FxRobot robot) {
-        // Test missing password
-        robot.clickOn(controller.usernameTxt).write("S123");
-        robot.clickOn(controller.nameTxt).write("John Doe");
-        robot.clickOn(controller.genderComboBox).clickOn("Male");
-        robot.clickOn(controller.ageTxt).write("20");
-        robot.clickOn(controller.departmentTxt).write("CS");
+        robot.clickOn(controller.usernameTxt).write("T123");
+        robot.clickOn(controller.nameTxt).write("Jane Doe");
+        robot.clickOn(controller.genderComboBox).clickOn("Female");
+        robot.clickOn(controller.positionComboBox).clickOn("Junior");
+        robot.clickOn(controller.ageTxt).write("30");
+        robot.clickOn(controller.departmentTxt).write("Math");
         robot.clickOn(controller.passwordTxt).write("");
         robot.clickOn(controller.confirmPasswordTxt).write("password");
         robot.interact(() -> controller.register());
+
         Assertions.assertThat(controller.errorMessageLbl).hasText("Error: Please check your inputs.");
     }
 
@@ -236,11 +238,12 @@ public class StudentRegisterControllerTest {
         when(mockRs.next()).thenReturn(true);
         when(mockRs.getInt(1)).thenReturn(1);
 
-        robot.clickOn(controller.usernameTxt).write("S123");
-        robot.clickOn(controller.nameTxt).write("John Doe");
-        robot.clickOn(controller.genderComboBox).clickOn("Male");
-        robot.clickOn(controller.ageTxt).write("20");
-        robot.clickOn(controller.departmentTxt).write("CS");
+        robot.clickOn(controller.usernameTxt).write("T123");
+        robot.clickOn(controller.nameTxt).write("Jane Doe");
+        robot.clickOn(controller.genderComboBox).clickOn("Female");
+        robot.clickOn(controller.positionComboBox).clickOn("Junior");
+        robot.clickOn(controller.ageTxt).write("30");
+        robot.clickOn(controller.departmentTxt).write("Math");
         robot.clickOn(controller.passwordTxt).write("password");
         robot.clickOn(controller.confirmPasswordTxt).write("password");
         robot.interact(() -> controller.register());
@@ -252,11 +255,12 @@ public class StudentRegisterControllerTest {
     public void testErrorConnectingToDatabase(FxRobot robot) throws SQLException {
         when(mockConn.prepareStatement(anyString())).thenThrow(new SQLException("Database error"));
 
-        robot.clickOn(controller.usernameTxt).write("S123");
-        robot.clickOn(controller.nameTxt).write("John Doe");
-        robot.clickOn(controller.genderComboBox).clickOn("Male");
-        robot.clickOn(controller.ageTxt).write("20");
-        robot.clickOn(controller.departmentTxt).write("CS");
+        robot.clickOn(controller.usernameTxt).write("T123");
+        robot.clickOn(controller.nameTxt).write("Jane Doe");
+        robot.clickOn(controller.genderComboBox).clickOn("Female");
+        robot.clickOn(controller.positionComboBox).clickOn("Junior");
+        robot.clickOn(controller.ageTxt).write("30");
+        robot.clickOn(controller.departmentTxt).write("Math");
         robot.clickOn(controller.passwordTxt).write("password");
         robot.clickOn(controller.confirmPasswordTxt).write("password");
         robot.interact(() -> controller.register());
