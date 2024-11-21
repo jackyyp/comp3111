@@ -14,15 +14,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-/**
- * Controller class for managing the teacher functionality.
- *
- * This class handles the UI and operations for managing teachers.
- * It includes methods for navigating to different sections and performing various tasks.
- *
- * @author Poon Chin Hung
- * @version 1.0
- */
 public class TeacherManagementController {
 
     @Data
@@ -52,13 +43,13 @@ public class TeacherManagementController {
     @FXML
     TableColumn<Teacher, String> genderColumn;
     @FXML
+    TableColumn<Teacher, Integer> ageColumn;
+    @FXML
     TableColumn<Teacher, String> positionColumn;
     @FXML
     TableColumn<Teacher, String> departmentColumn;
     @FXML
     TableColumn<Teacher, String> passwordColumn;
-    @FXML
-    TableColumn<Teacher, Integer> ageColumn;
     @FXML
     public TextField usernameField;
     @FXML
@@ -78,12 +69,8 @@ public class TeacherManagementController {
 
     private ObservableList<Teacher> teacherList = FXCollections.observableArrayList();
 
-    /**
-     * Initializes the controller class.
-     */
     @FXML
     public void initialize() {
-        // Add a TextFormatter to restrict input to numbers only
         ageField.setTextFormatter(new TextFormatter<>(change -> {
             if (change.getControlNewText().matches("\\d*")) {
                 return change;
@@ -105,12 +92,12 @@ public class TeacherManagementController {
         });
 
         genderComboBox.setItems(FXCollections.observableArrayList("Male", "Female", "Other"));
+        positionComboBox.setItems(FXCollections.observableArrayList("Junior", "Senior", "Parttime"));
         usernameColumn.setCellValueFactory(new PropertyValueFactory<>("username"));
         nameColumn.setCellValueFactory(new PropertyValueFactory<>("name"));
         genderColumn.setCellValueFactory(new PropertyValueFactory<>("gender"));
         ageColumn.setCellValueFactory(new PropertyValueFactory<>("age"));
         positionColumn.setCellValueFactory(new PropertyValueFactory<>("position"));
-        positionComboBox.setItems(FXCollections.observableArrayList("Junior", "Senior", "Parttime"));
         departmentColumn.setCellValueFactory(new PropertyValueFactory<>("department"));
         passwordColumn.setCellValueFactory(new PropertyValueFactory<>("password"));
 
@@ -118,9 +105,6 @@ public class TeacherManagementController {
         loadTeachersFromDatabase();
     }
 
-    /**
-     * Resets the filter fields and reloads the teachers from the database.
-     */
     @FXML
     public void resetFilter() {
         usernameFilter.clear();
@@ -129,9 +113,6 @@ public class TeacherManagementController {
         loadTeachersFromDatabase();
     }
 
-    /**
-     * Filters the teachers based on the filter fields.
-     */
     @FXML
     public void filterTeachers() {
         String username = usernameFilter.getText();
@@ -139,27 +120,25 @@ public class TeacherManagementController {
         String department = departmentFilter.getText();
 
         StringBuilder sql = new StringBuilder("SELECT username, name, gender, age, position, department, password FROM teacher WHERE 1=1");
-        if (username != null && !username.isEmpty()) {
+        if (!username.isEmpty()) {
             sql.append(" AND username LIKE ?");
         }
-        if (name != null && !name.isEmpty()) {
+        if (!name.isEmpty()) {
             sql.append(" AND name LIKE ?");
         }
-        if (department != null && !department.isEmpty()) {
+        if (!department.isEmpty()) {
             sql.append(" AND department LIKE ?");
         }
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql.toString())) {
-
+        executePreparedStatement(sql.toString(), pstmt -> {
             int paramIndex = 1;
-            if (username != null && !username.isEmpty()) {
+            if (!username.isEmpty()) {
                 pstmt.setString(paramIndex++, "%" + username + "%");
             }
-            if (name != null && !name.isEmpty()) {
+            if (!name.isEmpty()) {
                 pstmt.setString(paramIndex++, "%" + name + "%");
             }
-            if (department != null && !department.isEmpty()) {
+            if (!department.isEmpty()) {
                 pstmt.setString(paramIndex++, "%" + department + "%");
             }
 
@@ -177,44 +156,29 @@ public class TeacherManagementController {
 
                 teacherTable.getItems().add(new Teacher(resultUsername, resultName, resultGender, resultAge, resultPosition, resultDepartment, resultPassword));
             }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            return null;
+        });
     }
 
-    /**
-     * Deletes the selected teacher from the database.
-     */
     @FXML
     public void deleteTeacher() {
         Teacher selectedTeacher = teacherTable.getSelectionModel().getSelectedItem();
         if (selectedTeacher != null) {
             String sql = "DELETE FROM teacher WHERE username = ?";
 
-            try (Connection conn = DatabaseConnection.getConnection();
-                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
+            executePreparedStatement(sql, pstmt -> {
                 pstmt.setString(1, selectedTeacher.getUsername());
                 int rowsAffected = pstmt.executeUpdate();
 
                 if (rowsAffected > 0) {
                     teacherTable.getItems().remove(selectedTeacher);
-                    errorMessageLbl.setText("Delete Successful!");
-                    errorMessageLbl.setStyle("-fx-text-fill: green;");
-                    errorMessageLbl.setVisible(true);
                 } else {
-                    errorMessageLbl.setText("Failed to delete teacher.");
+                    errorMessageLbl.setText("Error: Could not delete teacher.");
                     errorMessageLbl.setStyle("-fx-text-fill: red;");
                     errorMessageLbl.setVisible(true);
                 }
-
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-                errorMessageLbl.setText("Error connecting to the database.");
-                errorMessageLbl.setStyle("-fx-text-fill: red;");
-                errorMessageLbl.setVisible(true);
-            }
+                return null;
+            });
         } else {
             errorMessageLbl.setText("No teacher selected.");
             errorMessageLbl.setStyle("-fx-text-fill: red;");
@@ -222,9 +186,6 @@ public class TeacherManagementController {
         }
     }
 
-    /**
-     * Adds a new teacher to the database.
-     */
     @FXML
     public void addTeacher() {
         String username = usernameField.getText();
@@ -250,62 +211,40 @@ public class TeacherManagementController {
         }
 
         String checkSql = "SELECT COUNT(*) FROM teacher WHERE username = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
-
+        executePreparedStatement(checkSql, checkStmt -> {
             checkStmt.setString(1, username);
             ResultSet rs = checkStmt.executeQuery();
             if (rs.next() && rs.getInt(1) > 0) {
                 errorMessageLbl.setText("Error: Username already exists.");
                 errorMessageLbl.setStyle("-fx-text-fill: red;");
                 errorMessageLbl.setVisible(true);
-                return;
+                return null;
             }
 
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            errorMessageLbl.setText("Error connecting to the database.");
-            errorMessageLbl.setStyle("-fx-text-fill: red;");
-            errorMessageLbl.setVisible(true);
-            return;
-        }
+            String sql = "INSERT INTO teacher (username, name, gender, age, position, department, password) VALUES (?, ?, ?, ?, ?, ?, ?)";
+            executePreparedStatement(sql, pstmt -> {
+                pstmt.setString(1, username);
+                pstmt.setString(2, name);
+                pstmt.setString(3, gender);
+                pstmt.setInt(4, Integer.parseInt(age));
+                pstmt.setString(5, position);
+                pstmt.setString(6, department);
+                pstmt.setString(7, password);
+                int rowsAffected = pstmt.executeUpdate();
 
-        String sql = "INSERT INTO teacher (username, name, gender, age, position, department, password) VALUES (?, ?, ?, ?, ?, ?, ?)";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, username);
-            pstmt.setString(2, name);
-            pstmt.setString(3, gender);
-            pstmt.setInt(4, Integer.parseInt(age));
-            pstmt.setString(5, position);
-            pstmt.setString(6, department);
-            pstmt.setString(7, password);
-            int rowsAffected = pstmt.executeUpdate();
-
-            if (rowsAffected > 0) {
-                errorMessageLbl.setText("Add Successful!");
-                errorMessageLbl.setStyle("-fx-text-fill: green;");
-                errorMessageLbl.setVisible(true);
-                teacherTable.getItems().add(new Teacher(username, name, gender, Integer.parseInt(age), position, department, password));
-            } else {
-                errorMessageLbl.setText("Failed to add teacher.");
-                errorMessageLbl.setStyle("-fx-text-fill: red;");
-                errorMessageLbl.setVisible(true);
-            }
-
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            errorMessageLbl.setText("Error connecting to the database.");
-            errorMessageLbl.setStyle("-fx-text-fill: red;");
-            errorMessageLbl.setVisible(true);
-        }
+                if (rowsAffected > 0) {
+                    teacherTable.getItems().add(new Teacher(username, name, gender, Integer.parseInt(age), position, department, password));
+                } else {
+                    errorMessageLbl.setText("Error: Could not add teacher.");
+                    errorMessageLbl.setStyle("-fx-text-fill: red;");
+                    errorMessageLbl.setVisible(true);
+                }
+                return null;
+            });
+            return null;
+        });
     }
 
-    /**
-     * Updates the selected teacher in the database.
-     */
     @FXML
     public void updateTeacher() {
         Teacher selectedTeacher = teacherTable.getSelectionModel().getSelectedItem();
@@ -320,39 +259,31 @@ public class TeacherManagementController {
             String password = passwordField.getText();
 
             boolean isAnyFieldUpdated = false;
-            if (username != null && !username.isEmpty()) {
-                if (!username.equals(oldUsername)) {
+            if (!username.isEmpty()) {
+                if (!username.equals(selectedTeacher.getUsername())) {
                     String checkSql = "SELECT COUNT(*) FROM teacher WHERE username = ?";
-                    try (Connection conn = DatabaseConnection.getConnection();
-                         PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
-
+                    executePreparedStatement(checkSql, checkStmt -> {
                         checkStmt.setString(1, username);
                         ResultSet rs = checkStmt.executeQuery();
                         if (rs.next() && rs.getInt(1) > 0) {
                             errorMessageLbl.setText("Error: Username already exists.");
                             errorMessageLbl.setStyle("-fx-text-fill: red;");
                             errorMessageLbl.setVisible(true);
-                            return;
+                            return null;
                         }
-
-                    } catch (SQLException ex) {
-                        ex.printStackTrace();
-                        errorMessageLbl.setText("Error connecting to the database.");
-                        errorMessageLbl.setStyle("-fx-text-fill: red;");
-                        errorMessageLbl.setVisible(true);
-                        return;
-                    }
+                        return null;
+                    });
+                    selectedTeacher.setUsername(username);
+                    isAnyFieldUpdated = true;
                 }
-                selectedTeacher.setUsername(username);
-                isAnyFieldUpdated = true;
             }
-            if (name != null && !name.isEmpty()) {
+            if (!name.isEmpty()) {
                 selectedTeacher.setName(name);
                 isAnyFieldUpdated = true;
             }
-            if (age != null && !age.isEmpty()) {
+            if (!age.isEmpty()) {
                 if (Integer.parseInt(age) < 0) {
-                    errorMessageLbl.setText("Error: Please check your inputs.");
+                    errorMessageLbl.setText("Error: Age cannot be negative.");
                     errorMessageLbl.setStyle("-fx-text-fill: red;");
                     errorMessageLbl.setVisible(true);
                     return;
@@ -360,19 +291,19 @@ public class TeacherManagementController {
                 selectedTeacher.setAge(Integer.parseInt(age));
                 isAnyFieldUpdated = true;
             }
-            if (gender != null && !gender.isEmpty()) {
+            if (gender != null) {
                 selectedTeacher.setGender(gender);
                 isAnyFieldUpdated = true;
             }
-            if (position != null && !position.isEmpty()) {
+            if (position != null) {
                 selectedTeacher.setPosition(position);
                 isAnyFieldUpdated = true;
             }
-            if (department != null && !department.isEmpty()) {
+            if (!department.isEmpty()) {
                 selectedTeacher.setDepartment(department);
                 isAnyFieldUpdated = true;
             }
-            if (password != null && !password.isEmpty()) {
+            if (!password.isEmpty()) {
                 selectedTeacher.setPassword(password);
                 isAnyFieldUpdated = true;
             }
@@ -384,10 +315,7 @@ public class TeacherManagementController {
             }
 
             String sql = "UPDATE teacher SET username=?, name = ?, gender = ?, age = ?, position = ?, department = ?, password = ? WHERE username = ?";
-
-            try (Connection conn = DatabaseConnection.getConnection();
-                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
+            executePreparedStatement(sql, pstmt -> {
                 pstmt.setString(1, selectedTeacher.getUsername());
                 pstmt.setString(2, selectedTeacher.getName());
                 pstmt.setString(3, selectedTeacher.getGender());
@@ -400,22 +328,14 @@ public class TeacherManagementController {
                 int rowsAffected = pstmt.executeUpdate();
 
                 if (rowsAffected > 0) {
-                    errorMessageLbl.setText("Update Successful!");
-                    errorMessageLbl.setStyle("-fx-text-fill: green;");
-                    errorMessageLbl.setVisible(true);
                     teacherTable.refresh();
                 } else {
-                    errorMessageLbl.setText("Failed to update teacher.");
+                    errorMessageLbl.setText("Error: Could not update teacher.");
                     errorMessageLbl.setStyle("-fx-text-fill: red;");
                     errorMessageLbl.setVisible(true);
                 }
-
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-                errorMessageLbl.setText("Error connecting to the database.");
-                errorMessageLbl.setStyle("-fx-text-fill: red;");
-                errorMessageLbl.setVisible(true);
-            }
+                return null;
+            });
         } else {
             errorMessageLbl.setText("No teacher selected.");
             errorMessageLbl.setStyle("-fx-text-fill: red;");
@@ -423,15 +343,10 @@ public class TeacherManagementController {
         }
     }
 
-    /**
-     * Loads the teachers from the database and populates the table.
-     */
     private void loadTeachersFromDatabase() {
         String sql = "SELECT username, name, gender, age, position, department, password FROM teacher";
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
+        executePreparedStatement(sql, pstmt -> {
             ResultSet rs = pstmt.executeQuery();
             teacherTable.getItems().clear();
 
@@ -446,9 +361,37 @@ public class TeacherManagementController {
 
                 teacherTable.getItems().add(new Teacher(username, name, gender, age, position, department, password));
             }
+            return null;
+        });
+    }
 
+    private <T> T executeDatabaseOperation(DatabaseOperation<T> operation) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            return operation.execute(conn);
         } catch (SQLException e) {
             e.printStackTrace();
+            errorMessageLbl.setText("Error connecting to the database.");
+            errorMessageLbl.setStyle("-fx-text-fill: red;");
+            errorMessageLbl.setVisible(true);
+            return null;
         }
+    }
+
+    private <T> T executePreparedStatement(String sql, PreparedStatementOperation<T> operation) {
+        return executeDatabaseOperation(conn -> {
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                return operation.execute(pstmt);
+            }
+        });
+    }
+
+    @FunctionalInterface
+    private interface DatabaseOperation<T> {
+        T execute(Connection conn) throws SQLException;
+    }
+
+    @FunctionalInterface
+    private interface PreparedStatementOperation<T> {
+        T execute(PreparedStatement pstmt) throws SQLException;
     }
 }
