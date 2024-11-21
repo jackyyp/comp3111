@@ -1,5 +1,6 @@
 # COMP3111 Project
 ## Group ID: 27
+## _Check our folder "supplementaries" for more information_
 ## Members
 ### Wang Shao Fu
  - swangem@connect.ust.hk
@@ -17,6 +18,6 @@
  - In charge of Task 3
  - Working branch: dev/jackyyp
 
-
-
+### Database Schema Design ###
+![img.png](img.png)
 
