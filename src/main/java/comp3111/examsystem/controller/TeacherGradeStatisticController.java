@@ -22,15 +22,6 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
-/**
- * Controller class for managing the teacher grade statistics functionality.
- *
- * This class handles the UI and operations for managing teacher grade statistics.
- * It includes methods for navigating to different sections and performing various tasks.
- *
- * @author  Poon Chin Hung
- * @version 1.0
- */
 public class TeacherGradeStatisticController implements Initializable {
     @Data
     @AllArgsConstructor
@@ -80,20 +71,16 @@ public class TeacherGradeStatisticController implements Initializable {
 
     private final ObservableList<Grade> gradeList = FXCollections.observableArrayList();
 
-    /**
-     * Initializes the controller class.
-     *
-     * @param url the location used to resolve relative paths for the root object, or null if the location is not known
-     * @param resourceBundle the resources used to localize the root object, or null if the root object was not localized
-     */
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         barChart.setLegendVisible(false);
+        barChart.setAnimated(false); // Disable animation
         categoryAxisBar.setLabel("Course");
         numberAxisBar.setLabel("Avg. Score");
         pieChart.setLegendVisible(false);
         pieChart.setTitle("Student Scores");
         lineChart.setLegendVisible(false);
+        lineChart.setAnimated(false); // Disable animation
         categoryAxisLine.setLabel("Exam");
         numberAxisLine.setLabel("Avg. Score");
 
@@ -106,7 +93,6 @@ public class TeacherGradeStatisticController implements Initializable {
 
         query();
 
-        // Populate ChoiceBox elements with unique values from gradeList
         courseCombox.getItems().setAll(gradeList.stream().map(Grade::getCourseNum).distinct().collect(Collectors.toList()));
         examCombox.getItems().setAll(gradeList.stream().map(Grade::getExamName).distinct().collect(Collectors.toList()));
         studentCombox.getItems().setAll(gradeList.stream().map(Grade::getStudentName).distinct().collect(Collectors.toList()));
@@ -114,9 +100,6 @@ public class TeacherGradeStatisticController implements Initializable {
         loadChart();
     }
 
-    /**
-     * Resets the filter fields and reloads the grade statistics from the database.
-     */
     @FXML
     public void reset() {
         courseCombox.setValue(null);
@@ -125,9 +108,6 @@ public class TeacherGradeStatisticController implements Initializable {
         query();
     }
 
-    /**
-     * Queries the database and updates the grade list based on the selected filters.
-     */
     @FXML
     public void query() {
         String sql = "SELECT s.name, e.course, e.name AS exam, g.score, " +
@@ -182,26 +162,26 @@ public class TeacherGradeStatisticController implements Initializable {
         }
     }
 
-    /**
-     * Loads the chart data based on the grade list.
-     */
     private void loadChart() {
-        // X axis: courseNum, Y axis: average score
         XYChart.Series<String, Number> seriesBar = new XYChart.Series<>();
         barChart.getData().clear();
 
-        // Calculate average score per course
         Map<String, Double> courseAvgScores = gradeList.stream()
                 .collect(Collectors.groupingBy(Grade::getCourseNum, Collectors.averagingInt(Grade::getScore)));
 
         for (Map.Entry<String, Double> entry : courseAvgScores.entrySet()) {
-            seriesBar.getData().add(new XYChart.Data<>(entry.getKey(), entry.getValue()));
+            XYChart.Data<String, Number> data = new XYChart.Data<>(entry.getKey(), entry.getValue());
+            data.nodeProperty().addListener((observable, oldValue, newValue) -> {
+                if (newValue != null) {
+                    newValue.setStyle("-fx-bar-fill: blue;"); // Set bar color to blue
+                }
+            });
+            seriesBar.getData().add(data);
         }
         barChart.getData().add(seriesBar);
 
         pieChart.getData().clear();
 
-        // Calculate total score per student
         Map<String, Integer> studentTotalScores = gradeList.stream()
                 .collect(Collectors.groupingBy(Grade::getStudentName, Collectors.summingInt(Grade::getScore)));
 
@@ -209,7 +189,6 @@ public class TeacherGradeStatisticController implements Initializable {
             pieChart.getData().add(new PieChart.Data(entry.getKey(), entry.getValue()));
         }
 
-        // X axis: courseNum + "-" + examName, Y axis: average score (group by course + exam)
         XYChart.Series<String, Number> seriesLine = new XYChart.Series<>();
         lineChart.getData().clear();
 
