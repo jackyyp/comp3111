@@ -22,6 +22,15 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
+/**
+ * Controller class for managing the teacher grade statistics functionality.
+ * <p>
+ * This class handles the UI and operations for managing teacher grade statistics.
+ * It includes methods for navigating to different sections and performing various tasks.
+ *
+ * @author Poon Chin Hung, Wang Shao Fu
+ * @version 2.0
+ */
 public class TeacherGradeStatisticController implements Initializable {
     @Data
     @AllArgsConstructor
@@ -71,6 +80,12 @@ public class TeacherGradeStatisticController implements Initializable {
 
     private final ObservableList<Grade> gradeList = FXCollections.observableArrayList();
 
+    /**
+     * Initializes the controller class.
+     *
+     * @param url            the location used to resolve relative paths for the root object, or null if the location is not known
+     * @param resourceBundle the resources used to localize the root object, or null if the root object was not localized
+     */
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
         barChart.setLegendVisible(false);
@@ -100,6 +115,9 @@ public class TeacherGradeStatisticController implements Initializable {
         loadChart();
     }
 
+    /**
+     * Resets the filter fields and reloads the grade statistics from the database.
+     */
     @FXML
     public void reset() {
         courseCombox.setValue(null);
@@ -108,6 +126,9 @@ public class TeacherGradeStatisticController implements Initializable {
         query();
     }
 
+    /**
+     * Queries the database and updates the grade list based on the selected filters.
+     */
     @FXML
     public void query() {
         String sql = "SELECT s.name, e.course, e.name AS exam, g.score, " +
@@ -162,6 +183,9 @@ public class TeacherGradeStatisticController implements Initializable {
         }
     }
 
+    /**
+     * Loads the chart data based on the grade list.
+     */
     private void loadChart() {
         XYChart.Series<String, Number> seriesBar = new XYChart.Series<>();
         barChart.getData().clear();
