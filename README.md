@@ -19,5 +19,5 @@
  - Working branch: dev/jackyyp
 
 ### Database Schema Design ###
-![img.png](img.png)
+![db_schema.png](db_schema.png)
 
