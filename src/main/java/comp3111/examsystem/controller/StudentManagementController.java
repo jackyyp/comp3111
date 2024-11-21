@@ -5,7 +5,6 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.util.Duration;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -101,6 +100,7 @@ public class StudentManagementController {
         nameFilter.clear();
         departmentFilter.clear();
         loadStudentsFromDatabase();
+        studentTable.refresh();
     }
 
     @FXML
@@ -145,37 +145,31 @@ public class StudentManagementController {
 
                 studentTable.getItems().add(new Student(resultUsername, resultName, resultAge, resultGender, resultDepartment, resultPassword));
             }
-            return null;
+            studentTable.refresh();
+            return true;
         });
     }
 
     @FXML
     public void deleteStudent() {
         Student selectedStudent = studentTable.getSelectionModel().getSelectedItem();
-        if (selectedStudent != null) {
-            String sql = "DELETE FROM student WHERE username = ?";
-
-            executePreparedStatement(sql, pstmt -> {
-                pstmt.setString(1, selectedStudent.getUsername());
-                int rowsAffected = pstmt.executeUpdate();
-
-                if (rowsAffected > 0) {
-                    errorMessageLbl.setText("Delete Successful!");
-                    errorMessageLbl.setStyle("-fx-text-fill: green;");
-                    errorMessageLbl.setVisible(true);
-                    studentTable.getItems().remove(selectedStudent);
-                } else {
-                    errorMessageLbl.setText("Failed to delete student.");
-                    errorMessageLbl.setStyle("-fx-text-fill: red;");
-                    errorMessageLbl.setVisible(true);
-                }
-                return null;
-            });
-        } else {
-            errorMessageLbl.setText("No student selected.");
-            errorMessageLbl.setStyle("-fx-text-fill: red;");
-            errorMessageLbl.setVisible(true);
+        if (selectedStudent == null) {
+            setMessage(false,"No student selected.");
+            return;
         }
+
+        String sql = "DELETE FROM student WHERE username = ?";
+        executePreparedStatement(sql, pstmt -> {
+            pstmt.setString(1, selectedStudent.getUsername());
+            pstmt.executeUpdate();
+            setMessage(true,"Delete Successful!");
+
+            studentTable.getItems().remove(selectedStudent);
+            studentTable.refresh();
+            return true;
+
+        });
+
     }
 
     @FXML
@@ -187,159 +181,144 @@ public class StudentManagementController {
         String department = departmentField.getText();
         String password = passwordField.getText();
 
-        try {
-            if (username.isEmpty() || name.isEmpty() || gender == null || age.isEmpty() || Integer.parseInt(age) < 0 || department.isEmpty() || password.isEmpty()) {
-                errorMessageLbl.setText("Error: Please check your inputs.");
-                errorMessageLbl.setStyle("-fx-text-fill: red;");
-                errorMessageLbl.setVisible(true);
-                return;
-            }
-        } catch (NumberFormatException exception) {
-            errorMessageLbl.setText("Error: Please check your inputs.");
-            errorMessageLbl.setStyle("-fx-text-fill: red;");
-            errorMessageLbl.setVisible(true);
+        if (username.isEmpty() || name.isEmpty() || gender == null || age.isEmpty() || department.isEmpty() || password.isEmpty()) {
+            setMessage(false, "Error: Please check your inputs.");
+            return;
+        }
+        if (Integer.parseInt(age) < 0) {
+            setMessage(false,"Error: Please check your inputs.");
             return;
         }
 
         String checkSql = "SELECT COUNT(*) FROM student WHERE username = ?";
-        executePreparedStatement(checkSql, checkStmt -> {
-            checkStmt.setString(1, username);
-            ResultSet rs = checkStmt.executeQuery();
-            if (rs.next() && rs.getInt(1) > 0) {
-                errorMessageLbl.setText("Error: Username already exists.");
-                errorMessageLbl.setStyle("-fx-text-fill: red;");
-                errorMessageLbl.setVisible(true);
-                return null;
-            }
-
-            String sql = "INSERT INTO student (username, name, gender, age, department, password) VALUES (?, ?, ?, ?, ?, ?)";
-            executePreparedStatement(sql, pstmt -> {
-                pstmt.setString(1, username);
-                pstmt.setString(2, name);
-                pstmt.setString(3, gender);
-                pstmt.setInt(4, Integer.parseInt(age));
-                pstmt.setString(5, department);
-                pstmt.setString(6, password);
-                int rowsAffected = pstmt.executeUpdate();
-
-                if (rowsAffected > 0) {
-                    errorMessageLbl.setText("Add Successful!");
-                    errorMessageLbl.setStyle("-fx-text-fill: green;");
-                    errorMessageLbl.setVisible(true);
-                    studentTable.getItems().add(new Student(username, name, Integer.parseInt(age), gender, department, password));
-                } else {
-                    errorMessageLbl.setText("Failed to add student.");
-                    errorMessageLbl.setStyle("-fx-text-fill: red;");
-                    errorMessageLbl.setVisible(true);
-                }
-                return null;
-            });
-            return null;
+        boolean isDuplicate = executePreparedStatement(checkSql, checkStmt -> {
+                    checkStmt.setString(1, username);
+                    ResultSet rs = checkStmt.executeQuery();
+                    if (rs.getInt(1) > 0) {
+                        setMessage(false,"Error: Username already exists.");
+                       return true;
+                    }
+                    return false;
         });
+        if(isDuplicate){
+            return;
+        }
+
+        String sql = "INSERT INTO student (username, name, gender, age, department, password) VALUES (?, ?, ?, ?, ?, ?)";
+        executePreparedStatement(sql, pstmt -> {
+            pstmt.setString(1, username);
+            pstmt.setString(2, name);
+            pstmt.setString(3, gender);
+            pstmt.setInt(4, Integer.parseInt(age));
+            pstmt.setString(5, department);
+            pstmt.setString(6, password);
+            pstmt.executeUpdate();
+
+            setMessage(true,"Add Successful!");
+            studentTable.getItems().add(new Student(username, name, Integer.parseInt(age), gender, department, password));
+            studentTable.refresh();
+            return true;
+
+        });
+
     }
 
     @FXML
     public void updateStudent() {
         Student selectedStudent = studentTable.getSelectionModel().getSelectedItem();
-        if (selectedStudent != null) {
-            String oldUsername = selectedStudent.getUsername();
-            String username = usernameField.getText();
-            String name = nameField.getText();
-            String age = ageField.getText();
-            String gender = genderComboBox.getValue();
-            String department = departmentField.getText();
-            String password = passwordField.getText();
+        if (selectedStudent == null) {
+            setMessage(false,"No student selected.");
+            return;
+        }
 
-            boolean isAnyFieldUpdated = false;
-            if (!username.isEmpty()) {
-                if (!username.equals(selectedStudent.getUsername())) {
-                    String checkSql = "SELECT COUNT(*) FROM student WHERE username = ?";
-                    executePreparedStatement(checkSql, checkStmt -> {
-                        checkStmt.setString(1, username);
-                        ResultSet rs = checkStmt.executeQuery();
-                        if (rs.next() && rs.getInt(1) > 0) {
-                            errorMessageLbl.setText("Error: Duplicate username with other student.");
-                            errorMessageLbl.setStyle("-fx-text-fill: red;");
-                            errorMessageLbl.setVisible(true);
-                            return null;
-                        }
-                        return null;
-                    });
-                }
-                selectedStudent.setUsername(username);
-                isAnyFieldUpdated = true;
-            }
+        String oldUsername = selectedStudent.getUsername();
+        String username = usernameField.getText();
+        String name = nameField.getText();
+        String age = ageField.getText();
+        String gender = genderComboBox.getValue();
+        String department = departmentField.getText();
+        String password = passwordField.getText();
+        boolean isAnyFieldUpdated = false;
 
-            if (!name.isEmpty()) {
-                selectedStudent.setName(name);
-                isAnyFieldUpdated = true;
-            }
-            if (!age.isEmpty()) {
-                if (Integer.parseInt(age) < 0) {
-                    errorMessageLbl.setText("Error: Please check your inputs.");
-                    errorMessageLbl.setStyle("-fx-text-fill: red;");
-                    errorMessageLbl.setVisible(true);
+        if (!username.isEmpty()) {
+            //changing to different name , check if name will be duplicate
+            if (!username.equals(selectedStudent.getUsername())) {
+                String checkSql = "SELECT COUNT(*) FROM student WHERE username = ?";
+                boolean isDuplicate = executePreparedStatement(checkSql, checkStmt -> {
+                    checkStmt.setString(1, username);
+                    ResultSet rs = checkStmt.executeQuery();
+
+                    if (rs.getInt(1) > 0) {
+                        setMessage(false,"Error: Duplicate username with other student.");
+                        return true;
+                    }
+                    return false;
+                });
+                if(isDuplicate){
                     return;
                 }
-                selectedStudent.setAge(Integer.parseInt(age));
-                isAnyFieldUpdated = true;
             }
-            if (gender != null) {
-                selectedStudent.setGender(gender);
-                isAnyFieldUpdated = true;
-            }
-            if (!department.isEmpty()) {
-                selectedStudent.setDepartment(department);
-                isAnyFieldUpdated = true;
-            }
-            if (!password.isEmpty()) {
-                selectedStudent.setPassword(password);
-                isAnyFieldUpdated = true;
-            }
-            if (!isAnyFieldUpdated) {
-                errorMessageLbl.setText("Error: No fields to update.");
-                errorMessageLbl.setStyle("-fx-text-fill: red;");
-                errorMessageLbl.setVisible(true);
+
+            selectedStudent.setUsername(username);
+            isAnyFieldUpdated = true;
+        }
+
+        if (!name.isEmpty()) {
+            selectedStudent.setName(name);
+            isAnyFieldUpdated = true;
+        }
+
+        if (!age.isEmpty()) {
+            if (Integer.parseInt(age) < 0) {
+                setMessage(false,"Error: Please check your inputs.");
                 return;
             }
 
-            String sql = "UPDATE student SET username=?, name = ?, age = ?, gender = ?, department = ?, password = ? WHERE username = ?";
-            executePreparedStatement(sql, pstmt -> {
-                pstmt.setString(1, selectedStudent.getUsername());
-                pstmt.setString(2, selectedStudent.getName());
-                pstmt.setInt(3, selectedStudent.getAge());
-                pstmt.setString(4, selectedStudent.getGender());
-                pstmt.setString(5, selectedStudent.getDepartment());
-                pstmt.setString(6, selectedStudent.getPassword());
-                pstmt.setString(7, oldUsername);
-
-                int rowsAffected = pstmt.executeUpdate();
-
-                if (rowsAffected > 0) {
-                    errorMessageLbl.setText("Update Successful!");
-                    errorMessageLbl.setStyle("-fx-text-fill: green;");
-                    errorMessageLbl.setVisible(true);
-                } else {
-                    errorMessageLbl.setText("Failed to update student.");
-                    errorMessageLbl.setStyle("-fx-text-fill: red;");
-                    errorMessageLbl.setVisible(true);
-                }
-                return null;
-            });
-        } else {
-            errorMessageLbl.setText("No student selected.");
-            errorMessageLbl.setStyle("-fx-text-fill: red;");
-            errorMessageLbl.setVisible(true);
+            selectedStudent.setAge(Integer.parseInt(age));
+            isAnyFieldUpdated = true;
         }
+        if (gender != null) {
+            selectedStudent.setGender(gender);
+            isAnyFieldUpdated = true;
+        }
+        if (!department.isEmpty()) {
+            selectedStudent.setDepartment(department);
+            isAnyFieldUpdated = true;
+        }
+        if (!password.isEmpty()) {
+            selectedStudent.setPassword(password);
+            isAnyFieldUpdated = true;
+        }
+
+        if (!isAnyFieldUpdated) {
+            setMessage(false,"Error: No fields to update.");
+            return;
+        }
+
+
+        String sql = "UPDATE student SET username=?, name = ?, age = ?, gender = ?, department = ?, password = ? WHERE username = ?";
+        executePreparedStatement(sql, pstmt -> {
+            pstmt.setString(1, selectedStudent.getUsername());
+            pstmt.setString(2, selectedStudent.getName());
+            pstmt.setInt(3, selectedStudent.getAge());
+            pstmt.setString(4, selectedStudent.getGender());
+            pstmt.setString(5, selectedStudent.getDepartment());
+            pstmt.setString(6, selectedStudent.getPassword());
+            pstmt.setString(7, oldUsername);
+
+            pstmt.executeUpdate();
+
+            setMessage(true,"Update Successful!");
+            studentTable.refresh();
+            return true;
+        });
     }
 
     void loadStudentsFromDatabase() {
         String sql = "SELECT username, name, age, gender, department, password FROM student";
-
         executePreparedStatement(sql, pstmt -> {
             ResultSet rs = pstmt.executeQuery();
             studentTable.getItems().clear();
-
             while (rs.next()) {
                 String username = rs.getString("username");
                 String name = rs.getString("name");
@@ -350,38 +329,52 @@ public class StudentManagementController {
 
                 studentTable.getItems().add(new Student(username, name, age, gender, department, password));
             }
-            return null;
+            return true;
         });
+
+        studentTable.refresh();
     }
 
-    private <T> T executeDatabaseOperation(DatabaseOperation<T> operation) {
+    private boolean executeDatabaseOperation(DatabaseOperation operation) {
         try (Connection conn = DatabaseConnection.getConnection()) {
-            return operation.execute(conn);
+           return operation.execute(conn);
         } catch (SQLException e) {
             e.printStackTrace();
-            errorMessageLbl.setText("Error connecting to the database.");
-            errorMessageLbl.setStyle("-fx-text-fill: red;");
-            errorMessageLbl.setVisible(true);
-            return null;
+            setMessage(false,"Error connecting to the database.");
+            return false;
         }
     }
 
-    private <T> T executePreparedStatement(String sql, PreparedStatementOperation<T> operation) {
+    private boolean executePreparedStatement(String sql, PreparedStatementOperation operation) {
         return executeDatabaseOperation(conn -> {
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 return operation.execute(pstmt);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                setMessage(false,"Error connecting to the database.");
+                return false;
             }
         });
     }
 
     @FunctionalInterface
-    private interface DatabaseOperation<T> {
-        T execute(Connection conn) throws SQLException;
+    private interface DatabaseOperation {
+        boolean execute(Connection conn) throws SQLException;
     }
 
     @FunctionalInterface
-    private interface PreparedStatementOperation<T> {
-        T execute(PreparedStatement pstmt) throws SQLException;
+    private interface PreparedStatementOperation {
+        boolean execute(PreparedStatement pstmt) throws SQLException;
+    }
+
+    void setMessage(boolean success, String message){
+        errorMessageLbl.setText(message);
+        if(success){
+            errorMessageLbl.setStyle("-fx-text-fill: green;");
+        }else{
+            errorMessageLbl.setStyle("-fx-text-fill: red;");
+        }
+        errorMessageLbl.setVisible(true);
     }
 
 
