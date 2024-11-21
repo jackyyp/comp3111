@@ -17,10 +17,12 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import comp3111.examsystem.model.Question;
 import javafx.scene.control.Label;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
 import comp3111.examsystem.database.DatabaseConnection;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
@@ -31,8 +33,9 @@ import java.util.HashSet;
 /**
  * Controller class for handling the question management interface for teachers.
  * This class is responsible for managing the UI interactions for question management.
- *
+ * <p>
  * author Wong Cheuk Yuen
+ *
  * @version 1.0
  */
 @AllArgsConstructor
@@ -160,22 +163,33 @@ public class TeacherQuestionController implements Initializable {
      */
     @FXML
     public void handleFilter() {
-        String questionText = questionField.getText();
+        String question = questionField.getText();
         String type = typeComboBox.getValue();
-        String scoreText = scoreField.getText();
+        int score;
+        try {
+            score = scoreField.getText().isEmpty() ? -1 : Integer.parseInt(scoreField.getText());
+        } catch (NumberFormatException e) {
+            errorLabel.setText("Score must be a valid integer.");
+            errorLabel.setStyle("-fx-text-fill: red;");
+            return;
+        }
 
-        String sql = "SELECT * FROM question WHERE text LIKE ? AND is_single_choice = ? AND score = ?";
+        String sql = "SELECT * FROM question WHERE text LIKE ? AND (is_single_choice = ? OR ? IS NULL) AND (score = ? OR ? = -1)";
+
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, "%" + questionText + "%");
-            pstmt.setBoolean(2, "Single".equals(type));
-            pstmt.setInt(3, Integer.parseInt(scoreText));
+            pstmt.setString(1, "%" + question + "%");
+            pstmt.setBoolean(2, type != null && type.equals("Single"));
+            pstmt.setString(3, type);
+            pstmt.setInt(4, score);
+            pstmt.setInt(5, score);
 
             ResultSet rs = pstmt.executeQuery();
-            ObservableList<Question> filteredQuestions = FXCollections.observableArrayList();
+            questionList.clear();
+
             while (rs.next()) {
-                Question question = new Question(
+                Question q = new Question(
                         rs.getInt("id"),
                         rs.getString("text"),
                         rs.getString("option_a"),
@@ -186,9 +200,9 @@ public class TeacherQuestionController implements Initializable {
                         rs.getBoolean("is_single_choice") ? "Single" : "Multiple",
                         rs.getInt("score")
                 );
-                filteredQuestions.add(question);
+                questionList.add(q);
             }
-            questionTable.setItems(filteredQuestions);
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -208,12 +222,12 @@ public class TeacherQuestionController implements Initializable {
             });
             return;
         }
-        String prev_question= selectedQuestion.getText();
-        String prev_option_a= selectedQuestion.getOptionA();
-        String prev_option_b= selectedQuestion.getOptionB();
-        String prev_option_c= selectedQuestion.getOptionC();
-        String prev_option_d= selectedQuestion.getOptionD();
-        String prev_answer= selectedQuestion.getAnswer();
+        String prev_question = selectedQuestion.getText();
+        String prev_option_a = selectedQuestion.getOptionA();
+        String prev_option_b = selectedQuestion.getOptionB();
+        String prev_option_c = selectedQuestion.getOptionC();
+        String prev_option_d = selectedQuestion.getOptionD();
+        String prev_answer = selectedQuestion.getAnswer();
         String updatedQuestion;
         String updatedOptionA;
         String updatedOptionB;
@@ -223,11 +237,11 @@ public class TeacherQuestionController implements Initializable {
         String updatedType;
         int updatedScore;
         if (selectedQuestion != null) {
-            if(editQuestionField.getText().isEmpty()){
+            if (editQuestionField.getText().isEmpty()) {
                 updatedQuestion = prev_question;
-            } else{
-                updatedQuestion=editQuestionField.getText();
-                if(updatedQuestion.equals(prev_question)){
+            } else {
+                updatedQuestion = editQuestionField.getText();
+                if (updatedQuestion.equals(prev_question)) {
                     Platform.runLater(() -> {
                         errorLabel.setText("The question already exists.");
                         errorLabel.setStyle("-fx-text-fill: red;");
@@ -235,41 +249,41 @@ public class TeacherQuestionController implements Initializable {
                     return;
                 }
             }
-            if(editOptionAField.getText().isEmpty()){
-                updatedOptionA=prev_option_a;
-            } else{
-                updatedOptionA=editOptionAField.getText();
+            if (editOptionAField.getText().isEmpty()) {
+                updatedOptionA = prev_option_a;
+            } else {
+                updatedOptionA = editOptionAField.getText();
             }
-            if(editOptionBField.getText().isEmpty()){
-                updatedOptionB=prev_option_b;
-            } else{
-                updatedOptionB=editOptionBField.getText();
+            if (editOptionBField.getText().isEmpty()) {
+                updatedOptionB = prev_option_b;
+            } else {
+                updatedOptionB = editOptionBField.getText();
             }
-            if(editOptionCField.getText().isEmpty()){
-                updatedOptionC=prev_option_c;
-            } else{
-                updatedOptionC=editOptionCField.getText();
+            if (editOptionCField.getText().isEmpty()) {
+                updatedOptionC = prev_option_c;
+            } else {
+                updatedOptionC = editOptionCField.getText();
             }
-            if(editOptionDField.getText().isEmpty()){
-                updatedOptionD=prev_option_d;
-            } else{
-                updatedOptionD=editOptionDField.getText();
+            if (editOptionDField.getText().isEmpty()) {
+                updatedOptionD = prev_option_d;
+            } else {
+                updatedOptionD = editOptionDField.getText();
             }
             if (editTypeComboBox.getValue() == null || editTypeComboBox.getValue().isEmpty()) {
                 updatedType = selectedQuestion.getType();
             } else {
                 updatedType = editTypeComboBox.getValue();
             }
-            if(editAnswerField.getText().isEmpty()){
-                updatedAnswer=prev_answer;
-            } else{
+            if (editAnswerField.getText().isEmpty()) {
+                updatedAnswer = prev_answer;
+            } else {
                 if ("Single".equals(updatedType)) {
                     if (!editAnswerField.getText().matches("[ABCD]")) {
                         errorLabel.setText("Answer format incorrect");
                         errorLabel.setStyle("-fx-text-fill: red;");
                         return;
                     }
-                } else{
+                } else {
                     if (!editAnswerField.getText().matches("[ABCD]{2,4}")) {
                         errorLabel.setText("Answer format incorrect");
                         errorLabel.setStyle("-fx-text-fill: red;");
@@ -284,10 +298,10 @@ public class TeacherQuestionController implements Initializable {
                         return;
                     }
                 }
-                updatedAnswer=editAnswerField.getText();
+                updatedAnswer = editAnswerField.getText();
             }
-            if(editScoreField.getText().isEmpty()){
-                updatedScore=selectedQuestion.getScore();
+            if (editScoreField.getText().isEmpty()) {
+                updatedScore = selectedQuestion.getScore();
             } else {
                 try {
                     updatedScore = Integer.parseInt(editScoreField.getText());
