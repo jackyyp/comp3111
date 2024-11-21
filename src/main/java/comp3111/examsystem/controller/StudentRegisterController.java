@@ -1,14 +1,11 @@
 package comp3111.examsystem.controller;
 
 import comp3111.examsystem.database.DatabaseConnection;
-import javafx.animation.PauseTransition;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 
 import java.net.URL;
 import java.sql.Connection;
@@ -17,92 +14,37 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ResourceBundle;
 
-/**
- * The controller for the student registration page.
- * <p>
- * This controller is responsible for handling the student's registration.
- *
- * @author WANG Shao Fu
- */
-public class StudentRegisterController implements Initializable {
+public class StudentRegisterController {
 
-    /**
-     * The text field for the username.
-     */
     @FXML
-    TextField usernameTxt;
-
-    /**
-     * The text field for the name.
-     */
+    public TextField usernameTxt;
     @FXML
-    TextField nameTxt;
-
-    /**
-     * The combo box for selecting the gender.
-     */
+    public TextField nameTxt;
     @FXML
-    ComboBox<String> genderComboBox;
-
-    /**
-     * The text field for the age.
-     */
+    public ComboBox<String> genderComboBox;
     @FXML
-    TextField ageTxt;
-
-    /**
-     * The text field for the department.
-     */
+    public TextField ageTxt;
     @FXML
-    TextField departmentTxt;
-
-    /**
-     * The password field for the password.
-     */
+    public TextField departmentTxt;
     @FXML
-    PasswordField passwordTxt;
-
-    /**
-     * The password field for the confirm password.
-     */
+    public PasswordField passwordTxt;
     @FXML
-    PasswordField confirmPasswordTxt;
-
-    /**
-     * The label for displaying the error message.
-     */
+    public PasswordField confirmPasswordTxt;
     @FXML
-    Label errorMessageLbl;
+    public Label errorMessageLbl;
 
-    /**
-     * Initializes the controller.
-     *
-     * @param location  the location of the controller
-     * @param resources the resources of the controller
-     */
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
+    @FXML
+    public void initialize() {
         genderComboBox.setItems(FXCollections.observableArrayList("Male", "Female", "Other"));
     }
 
-    /**
-     * Closes the registration window.
-     *
-     * @param e the event that triggered the close
-     */
     @FXML
     public void close(ActionEvent e) {
-        // Close the registration window
         ((Stage) ((Button) e.getSource()).getScene().getWindow()).close();
     }
 
-    /**
-     * Registers the student.
-     *
-     * @param e the event that triggered the register
-     */
     @FXML
-    public void register(ActionEvent e) {
+    public void register() {
         String username = usernameTxt.getText();
         String name = nameTxt.getText();
         String gender = genderComboBox.getValue();
@@ -111,66 +53,92 @@ public class StudentRegisterController implements Initializable {
         String password = passwordTxt.getText();
         String confirmPassword = confirmPasswordTxt.getText();
 
+        if (username.isEmpty() || name.isEmpty() || gender == null || age.isEmpty() || department.isEmpty() || password.isEmpty() || !password.equals(confirmPassword)) {
+            setMessage(false, "Error: Please check your inputs.");
+            return;
+        }
         try {
-            if (username.isEmpty() || name.isEmpty() || gender == null || age.isEmpty() || Integer.parseInt(age) < 0 || department.isEmpty() || password.isEmpty() || !password.equals(confirmPassword)) {
-                errorMessageLbl.setText("Error: Please check your inputs.");
-                errorMessageLbl.setVisible(true);
+            if (Integer.parseInt(age) < 0) {
+                setMessage(false,"Error: Please check your inputs.");
                 return;
             }
-        } catch (NumberFormatException exception) {
-            errorMessageLbl.setText("Error: Please check your inputs.");
-            errorMessageLbl.setVisible(true);
+        } catch (NumberFormatException e) {
+            setMessage(false, "Error: Please check your inputs.");
             return;
         }
 
         String checkUsernameSql = "SELECT COUNT(*) FROM student WHERE username = ?";
         String insertSql = "INSERT INTO student (username, name, gender, age, department, password) VALUES (?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement checkPstmt = conn.prepareStatement(checkUsernameSql)) {
-
+        boolean isDup = executePreparedStatement(checkUsernameSql, checkPstmt -> {
             checkPstmt.setString(1, username);
             ResultSet rs = checkPstmt.executeQuery();
-            rs.next();
+
             if (rs.getInt(1) > 0) {
-                errorMessageLbl.setText("Error: Username already exists.");
-                errorMessageLbl.setVisible(true);
-                return;
+                setMessage(false, "Error: Username already exists.");
+                return true;
             }
-
-            try (PreparedStatement pstmt = conn.prepareStatement(insertSql)) {
-                pstmt.setString(1, username);
-                pstmt.setString(2, name);
-                pstmt.setString(3, gender);
-                pstmt.setInt(4, Integer.parseInt(age));
-                pstmt.setString(5, department);
-                pstmt.setString(6, password);
-                int rowsAffected = pstmt.executeUpdate();
-
-                if (rowsAffected > 0) {
-                    errorMessageLbl.setText("Registration successful!");
-                    errorMessageLbl.setStyle("-fx-text-fill: green;");
-                    errorMessageLbl.setVisible(true);
-
-                    // Pause for 1 second then close the window
-//                    PauseTransition pause = new PauseTransition(Duration.seconds(1));
-//                    pause.setOnFinished(event -> ((Stage) ((Button) e.getSource()).getScene().getWindow()).close());
-//                    pause.play();
-                } else {
-                    errorMessageLbl.setText("Failed to register user.");
-                    errorMessageLbl.setVisible(true);
-                }
-
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-                errorMessageLbl.setText("Error connecting to the database.");
-                errorMessageLbl.setVisible(true);
-            }
-
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            errorMessageLbl.setText("Error connecting to the database.");
-            errorMessageLbl.setVisible(true);
+            return false;
+        });
+        if (isDup) {
+            return;
         }
+
+
+        executePreparedStatement(insertSql, pstmt -> {
+            pstmt.setString(1, username);
+            pstmt.setString(2, name);
+            pstmt.setString(3, gender);
+            pstmt.setInt(4, Integer.parseInt(age));
+            pstmt.setString(5, department);
+            pstmt.setString(6, password);
+
+            pstmt.executeUpdate();
+            setMessage(true, "Registration successful!");
+
+            return true;
+        });
+    }
+
+    private boolean executeDatabaseOperation(DatabaseOperation operation) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            return operation.execute(conn);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            setMessage(false, "Error connecting to the database.");
+            return false;
+        }
+    }
+
+    private boolean executePreparedStatement(String sql, PreparedStatementOperation operation) {
+        return executeDatabaseOperation(conn -> {
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                return operation.execute(pstmt);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                setMessage(false, "Error connecting to the database.");
+                return false;
+            }
+        });
+    }
+
+    @FunctionalInterface
+    private interface DatabaseOperation {
+        boolean execute(Connection conn) throws SQLException;
+    }
+
+    @FunctionalInterface
+    private interface PreparedStatementOperation {
+        boolean execute(PreparedStatement pstmt) throws SQLException;
+    }
+
+    private void setMessage(boolean success, String message) {
+        errorMessageLbl.setText(message);
+        if (success) {
+            errorMessageLbl.setStyle("-fx-text-fill: green;");
+        } else {
+            errorMessageLbl.setStyle("-fx-text-fill: red;");
+        }
+        errorMessageLbl.setVisible(true);
     }
 }
