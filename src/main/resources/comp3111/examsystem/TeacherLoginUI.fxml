@@ -1,44 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
-<?import java.lang.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<?import javafx.scene.text.*?>
-<VBox alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" style="-fx-background-repeat: stretch;-fx-background-position: center center;" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600" prefWidth="600" spacing="20.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="comp3111.examsystem.controller.TeacherLoginController">
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<VBox alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="343.0" prefWidth="600" spacing="20.0" style="-fx-background-repeat: stretch;-fx-background-position: center center;" xmlns="http://javafx.com/javafx/22" xmlns:fx="http://javafx.com/fxml/1" fx:controller="comp3111.examsystem.controller.TeacherLoginController">
     <children>
         <Label fx:id="titleLbl" text="Examination Management System">
             <VBox.margin>
-                <Insets top="100.0" />
+                <Insets top="50.0" />
             </VBox.margin>
             <font>
                 <Font size="24.0" />
             </font>
         </Label>
         <Region prefHeight="10.0" prefWidth="600.0" />
-        <GridPane
-                  alignment="CENTER"
-                  hgap="10"
-                  vgap="10">
-
+        <GridPane alignment="CENTER" hgap="10" vgap="10">
             <columnConstraints>
                 <ColumnConstraints halignment="RIGHT" />
                 <ColumnConstraints halignment="LEFT" />
             </columnConstraints>
-
-            <Label text="Username:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
-            <TextField fx:id="usernameTxt" promptText="Please enter the user ID" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
-
-            <Label text="Password:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-            <PasswordField fx:id="passwordTxt" promptText="Please enter the password" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-
+            <Label text="Username:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+            <TextField fx:id="usernameTxt" promptText="Please enter the user ID" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+            <Label text="Password:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+            <PasswordField fx:id="passwordTxt" promptText="Please enter the password" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+         <rowConstraints>
+            <RowConstraints />
+            <RowConstraints />
+         </rowConstraints>
         </GridPane>
         <HBox alignment="CENTER" prefHeight="47.0" prefWidth="600.0" spacing="20.0">
             <children>
                 <Button mnemonicParsing="false" onAction="#register" text="Register" />
-                <Button mnemonicParsing="false" onAction="#login" text="Login" />
+                <Button defaultButton="true" mnemonicParsing="false" onAction="#login" text="Login" />
             </children>
         </HBox>
-        <Label fx:id="errorMessageLbl" text="Error: Please check your inputs." visible="true" style="-fx-text-fill: red;" />
+        <!-- Error message label -->
+        <Label fx:id="errorMessageLbl" style="-fx-text-fill: red;" text="Invalid credentials, please try again." visible="false" />
     </children>
 </VBox>

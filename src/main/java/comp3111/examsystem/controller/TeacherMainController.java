@@ -100,11 +100,6 @@ public class TeacherMainController implements Initializable {
     /**
      * Exits the application.
      */
-    @FXML
-    public void exit() {
-        System.exit(0);
-    }
-
     /**
      * Logs out the current user and opens the login UI.
      *
