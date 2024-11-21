@@ -33,16 +33,16 @@
                 </HBox>
                 <HBox spacing="10" VBox.vgrow="ALWAYS">
                     <children>
-                        <TableView fx:id="questionTable" HBox.hgrow="ALWAYS">
+                        <TableView fx:id="questionTable" HBox.hgrow="ALWAYS" prefWidth="700">
                             <columns>
-                                <TableColumn text="Question" fx:id="questionColumn" prefWidth="200"/>
-                                <TableColumn text="Option A" fx:id="optionAColumn"/>
-                                <TableColumn text="Option B" fx:id="optionBColumn"/>
-                                <TableColumn text="Option C" fx:id="optionCColumn"/>
-                                <TableColumn text="Option D" fx:id="optionDColumn"/>
-                                <TableColumn text="Answer" fx:id="answerColumn"/>
-                                <TableColumn text="Type" fx:id="typeColumn"/>
-                                <TableColumn text="Score" fx:id="scoreColumn"/>
+                                <TableColumn text="Question" fx:id="questionColumn" prefWidth="150"/>
+                                <TableColumn text="Option A" fx:id="optionAColumn" prefWidth="100"/>
+                                <TableColumn text="Option B" fx:id="optionBColumn" prefWidth="100"/>
+                                <TableColumn text="Option C" fx:id="optionCColumn" prefWidth="100"/>
+                                <TableColumn text="Option D" fx:id="optionDColumn" prefWidth="100"/>
+                                <TableColumn text="Answer" fx:id="answerColumn" prefWidth="50"/>
+                                <TableColumn text="Type" fx:id="typeColumn" prefWidth="50"/>
+                                <TableColumn text="Score" fx:id="scoreColumn" prefWidth="50"/>
                             </columns>
                         </TableView>
                         <VBox spacing="5">
@@ -88,5 +88,4 @@
         </VBox>
     </children>
 </AnchorPane>
-
 

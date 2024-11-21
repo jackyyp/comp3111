@@ -445,9 +445,6 @@ public class StudentExamPageController {
         }
     }
 
-    /**
-     * Loads the student main page.
-     */
 
     /**
      * A question.

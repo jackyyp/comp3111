@@ -59,13 +59,13 @@
                 <children>
                     <VBox spacing="5" HBox.hgrow="ALWAYS">
                         <children>
-                            <TableView fx:id="examTable" VBox.vgrow="ALWAYS">
+                            <TableView fx:id="examTable" VBox.vgrow="ALWAYS" prefWidth="400">
                                 <columns>
-                                    <TableColumn text="ID" fx:id="examIdColumn"/>
-                                    <TableColumn text="Name" fx:id="examNameColumn"/>
-                                    <TableColumn text="Published" fx:id="examPublishedColumn"/>
-                                    <TableColumn text="Time Limit" fx:id="examTimeLimitColumn"/>
-                                    <TableColumn text="Course" fx:id="examCourseColumn"/>
+                                    <TableColumn text="ID" fx:id="examIdColumn" visible="false"/>
+                                    <TableColumn text="Name" fx:id="examNameColumn" prefWidth="100"/>
+                                    <TableColumn text="Published" fx:id="examPublishedColumn" prefWidth="100"/>
+                                    <TableColumn text="Time Limit" fx:id="examTimeLimitColumn" prefWidth="100"/>
+                                    <TableColumn text="Course" fx:id="examCourseColumn" prefWidth="100"/>
                                 </columns>
                             </TableView>
                         </children>
@@ -88,17 +88,17 @@
                     </VBox>
                     <VBox spacing="5" HBox.hgrow="ALWAYS">
                         <children>
-                            <TableView fx:id="questionTable" VBox.vgrow="ALWAYS">
+                            <TableView fx:id="questionTable" VBox.vgrow="ALWAYS" prefWidth="700">
                                 <columns>
-                                    <TableColumn text="ID" fx:id="questionIdColumn"/>
-                                    <TableColumn text="Text" fx:id="questionTextColumn"/>
-                                    <TableColumn text="Option A" fx:id="questionOptionAColumn"/>
-                                    <TableColumn text="Option B" fx:id="questionOptionBColumn"/>
-                                    <TableColumn text="Option C" fx:id="questionOptionCColumn"/>
-                                    <TableColumn text="Option D" fx:id="questionOptionDColumn"/>
-                                    <TableColumn text="Answer" fx:id="questionAnswerColumn"/>
-                                    <TableColumn text="Type" fx:id="questionTypeColumn"/>
-                                    <TableColumn text="Score" fx:id="questionScoreColumn"/>
+                                    <TableColumn text="ID" fx:id="questionIdColumn" prefWidth="0" visible="false"/>
+                                    <TableColumn text="Question" fx:id="questionTextColumn" prefWidth="150"/>
+                                    <TableColumn text="Option A" fx:id="questionOptionAColumn" prefWidth="100"/>
+                                    <TableColumn text="Option B" fx:id="questionOptionBColumn" prefWidth="100"/>
+                                    <TableColumn text="Option C" fx:id="questionOptionCColumn" prefWidth="100"/>
+                                    <TableColumn text="Option D" fx:id="questionOptionDColumn" prefWidth="100"/>
+                                    <TableColumn text="Answer" fx:id="questionAnswerColumn" prefWidth="50"/>
+                                    <TableColumn text="Type" fx:id="questionTypeColumn" prefWidth="50"/>
+                                    <TableColumn text="Score" fx:id="questionScoreColumn" prefWidth="50"/>
                                 </columns>
                             </TableView>
                             <Label text="Exam name:"/>
