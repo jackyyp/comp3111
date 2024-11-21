@@ -1,103 +1,74 @@
 package comp3111.examsystem.controller;
 
-import comp3111.examsystem.controller.TeacherManagementController;
-import comp3111.examsystem.controller.TeacherManagementController.Teacher;
-import comp3111.examsystem.database.DatabaseConnection;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.scene.Scene;
-import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.testfx.api.FxRobot;
 import org.testfx.assertions.api.Assertions;
-import org.testfx.framework.junit5.ApplicationExtension;
-import org.testfx.framework.junit5.Start;
+import org.testfx.framework.junit5.ApplicationTest;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(ApplicationExtension.class)
-public class TeacherManagementControllerTest {
+public class TeacherManagementControllerTest extends ApplicationTest {
 
     private TeacherManagementController controller;
     private Connection mockConn;
     private PreparedStatement mockPstmt;
     private ResultSet mockRs;
 
-    @Start
-    private void start(Stage stage) {
-        controller = new TeacherManagementController();
-        controller.usernameField = new TextField();
-        controller.nameField = new TextField();
-        controller.ageField = new TextField();
-        controller.genderComboBox = new ComboBox<>();
-        controller.departmentField = new TextField();
-        controller.passwordField = new TextField();
-        controller.positionComboBox = new ComboBox<>();
-        controller.teacherTable = new TableView<>();
-        controller.errorMessageLbl = new Label();
-        controller.usernameFilter = new TextField();
-        controller.nameFilter = new TextField();
-        controller.departmentFilter = new TextField();
-
-        controller.usernameColumn = new TableColumn<>("Username");
-        controller.nameColumn = new TableColumn<>("Name");
-        controller.ageColumn = new TableColumn<>("Age");
-        controller.genderColumn = new TableColumn<>("Gender");
-        controller.departmentColumn = new TableColumn<>("Department");
-        controller.positionColumn = new TableColumn<>("Position");
-        controller.passwordColumn = new TableColumn<>("Password");
-
-
-        VBox vbox = new VBox(controller.usernameField, controller.nameField, controller.ageField, controller.genderComboBox, controller.departmentField, controller.passwordField, controller.positionComboBox, controller.teacherTable, controller.errorMessageLbl, controller.usernameFilter, controller.nameFilter, controller.departmentFilter);
-        Scene scene = new Scene(vbox);
-        stage.setScene(scene);
-        stage.show();
-    }
-
     @BeforeEach
-    public void setUp() throws SQLException {
+    public void setUp() throws Exception {
+        controller = new TeacherManagementController();
         mockConn = mock(Connection.class);
         mockPstmt = mock(PreparedStatement.class);
         mockRs = mock(ResultSet.class);
-        when(mockConn.prepareStatement(anyString())).thenReturn(mockPstmt);
-        when(mockPstmt.executeQuery()).thenReturn(mockRs);
-        DatabaseConnection.setMockConnection(mockConn);
+
+        controller.usernameFilter = new TextField();
+        controller.nameFilter = new TextField();
+        controller.departmentFilter = new TextField();
+        controller.teacherTable = new TableView<>();
+        controller.usernameField = new TextField();
+        controller.nameField = new TextField();
+        controller.ageField = new TextField();
+        controller.departmentField = new TextField();
+        controller.passwordField = new TextField();
+        controller.genderComboBox = new ComboBox<>();
+        controller.positionComboBox = new ComboBox<>();
+        controller.errorMessageLbl = new Label();
+
+        controller.genderComboBox.setItems(FXCollections.observableArrayList("Male", "Female", "Other"));
+        controller.positionComboBox.setItems(FXCollections.observableArrayList("Junior", "Senior", "Parttime"));
     }
 
     @Test
-    public void testInitialize(FxRobot robot) {
-        // Call the initialize method
-        robot.interact(() -> controller.initialize());
+    public void testInitialize() {
+        controller.initialize();
 
-        // Verify that the ComboBoxes are populated correctly
         ObservableList<String> expectedGenders = FXCollections.observableArrayList("Male", "Female", "Other");
         ObservableList<String> expectedPositions = FXCollections.observableArrayList("Junior", "Senior", "Parttime");
 
         Assertions.assertThat(controller.genderComboBox.getItems()).containsExactlyElementsOf(expectedGenders);
         Assertions.assertThat(controller.positionComboBox.getItems()).containsExactlyElementsOf(expectedPositions);
-
-        // Verify that the TableView is empty initially
         Assertions.assertThat(controller.teacherTable.getItems()).isEmpty();
     }
 
     @Test
-    public void testResetFilter(FxRobot robot) {
-        robot.interact(() -> {
-            controller.usernameFilter.setText("T123");
-            controller.nameFilter.setText("Jane Smith");
-            controller.departmentFilter.setText("Math");
-        });
+    public void testResetFilter() {
+        controller.usernameFilter.setText("T123");
+        controller.nameFilter.setText("Jane Smith");
+        controller.departmentFilter.setText("Math");
 
-        robot.interact(() -> controller.resetFilter());
+        controller.resetFilter();
 
         Assertions.assertThat(controller.usernameFilter).hasText("");
         Assertions.assertThat(controller.nameFilter).hasText("");
@@ -105,7 +76,7 @@ public class TeacherManagementControllerTest {
     }
 
     @Test
-    public void testFilterTeachers(FxRobot robot) throws SQLException {
+    public void testFilterTeachers() throws SQLException {
         when(mockConn.prepareStatement(anyString())).thenReturn(mockPstmt);
         when(mockPstmt.executeQuery()).thenReturn(mockRs);
         when(mockRs.next()).thenReturn(true).thenReturn(false);
@@ -115,14 +86,12 @@ public class TeacherManagementControllerTest {
         when(mockRs.getString("gender")).thenReturn("Female");
         when(mockRs.getString("department")).thenReturn("Math");
 
-        robot.interact(() -> {
-            controller.usernameFilter.setText("T123");
-            controller.nameFilter.setText("Jane Smith");
-            controller.departmentFilter.setText("Math");
-            controller.filterTeachers();
-        });
+        controller.usernameFilter.setText("T123");
+        controller.nameFilter.setText("Jane Smith");
+        controller.departmentFilter.setText("Math");
+        controller.filterTeachers();
 
-        ObservableList<Teacher> teachers = controller.teacherTable.getItems();
+        ObservableList<TeacherManagementController.Teacher> teachers = controller.teacherTable.getItems();
         Assertions.assertThat(teachers).hasSize(1);
         Assertions.assertThat(teachers.get(0).getUsername()).isEqualTo("T123");
         Assertions.assertThat(teachers.get(0).getName()).isEqualTo("Jane Smith");
@@ -132,44 +101,70 @@ public class TeacherManagementControllerTest {
     }
 
     @Test
-    public void testAddTeacher(FxRobot robot) throws SQLException {
+    public void testAddTeacher() throws SQLException {
         when(mockPstmt.executeUpdate()).thenReturn(1);
 
-        robot.interact(() -> {
-            controller.usernameField.setText("T123");
-            controller.nameField.setText("Jane Smith");
-            controller.ageField.setText("35");
-            controller.genderComboBox.setValue("Female");
-            controller.departmentField.setText("Math");
-            controller.passwordField.setText("password");
-            controller.positionComboBox.setValue("Junior");
-            controller.addTeacher();
-        });
+        controller.usernameField.setText("T123");
+        controller.nameField.setText("Jane Smith");
+        controller.ageField.setText("35");
+        controller.genderComboBox.setValue("Female");
+        controller.departmentField.setText("Math");
+        controller.passwordField.setText("password");
+        controller.positionComboBox.setValue("Junior");
+        controller.addTeacher();
 
-        ObservableList<Teacher> teachers = controller.teacherTable.getItems();
+        ObservableList<TeacherManagementController.Teacher> teachers = controller.teacherTable.getItems();
         Assertions.assertThat(teachers).hasSize(1);
         Assertions.assertThat(teachers.get(0).getUsername()).isEqualTo("T123");
         Assertions.assertThat(teachers.get(0).getName()).isEqualTo("Jane Smith");
     }
 
     @Test
-    public void testUpdateTeacher(FxRobot robot) throws SQLException {
+    public void testAddTeacherMissingFields() {
+        controller.usernameField.setText("");
+        controller.nameField.setText("Jane Smith");
+        controller.ageField.setText("35");
+        controller.genderComboBox.setValue("Female");
+        controller.departmentField.setText("Math");
+        controller.passwordField.setText("password");
+        controller.positionComboBox.setValue("Junior");
+        controller.addTeacher();
+
+        Assertions.assertThat(controller.errorMessageLbl.getText()).isEqualTo("Error: Please check your inputs.");
+    }
+
+    @Test
+    public void testAddTeacherDatabaseError() throws SQLException {
+        when(mockPstmt.executeUpdate()).thenThrow(new SQLException());
+
+        controller.usernameField.setText("T123");
+        controller.nameField.setText("Jane Smith");
+        controller.ageField.setText("35");
+        controller.genderComboBox.setValue("Female");
+        controller.departmentField.setText("Math");
+        controller.passwordField.setText("password");
+        controller.positionComboBox.setValue("Junior");
+        controller.addTeacher();
+
+        Assertions.assertThat(controller.errorMessageLbl.getText()).isEqualTo("Error connecting to the database.");
+    }
+
+    @Test
+    public void testUpdateTeacher() throws SQLException {
         when(mockPstmt.executeUpdate()).thenReturn(1);
 
-        Teacher teacher = new Teacher("T123", "Jane Smith", "Female",35,"Junior", "Math", "password");
+        TeacherManagementController.Teacher teacher = new TeacherManagementController.Teacher("T123", "Jane Smith", "Female", 35, "Junior", "Math", "password");
         controller.teacherTable.getItems().add(teacher);
         controller.teacherTable.getSelectionModel().select(teacher);
 
-        robot.interact(() -> {
-            controller.usernameField.setText("T123");
-            controller.nameField.setText("Janet Smith");
-            controller.ageField.setText("36");
-            controller.genderComboBox.setValue("Female");
-            controller.departmentField.setText("Physics");
-            controller.passwordField.setText("newpassword");
-            controller.positionComboBox.setValue("Senior");
-            controller.updateTeacher();
-        });
+        controller.usernameField.setText("T123");
+        controller.nameField.setText("Janet Smith");
+        controller.ageField.setText("36");
+        controller.genderComboBox.setValue("Female");
+        controller.departmentField.setText("Physics");
+        controller.passwordField.setText("newpassword");
+        controller.positionComboBox.setValue("Senior");
+        controller.updateTeacher();
 
         Assertions.assertThat(teacher.getUsername()).isEqualTo("T123");
         Assertions.assertThat(teacher.getName()).isEqualTo("Janet Smith");
@@ -181,16 +176,74 @@ public class TeacherManagementControllerTest {
     }
 
     @Test
-    public void testDeleteTeacher(FxRobot robot) throws SQLException {
-        when(mockPstmt.executeUpdate()).thenReturn(1);
-
-        Teacher teacher = new Teacher("T123", "Jane Smith", "Female",35,"Junior", "Math", "password");
+    public void testUpdateTeacherMissingFields() {
+        TeacherManagementController.Teacher teacher = new TeacherManagementController.Teacher("T123", "Jane Smith", "Female", 35, "Junior", "Math", "password");
         controller.teacherTable.getItems().add(teacher);
         controller.teacherTable.getSelectionModel().select(teacher);
 
-        robot.interact(() -> controller.deleteTeacher());
+        controller.usernameField.setText("");
+        controller.nameField.setText("Janet Smith");
+        controller.ageField.setText("36");
+        controller.genderComboBox.setValue("Female");
+        controller.departmentField.setText("Physics");
+        controller.passwordField.setText("newpassword");
+        controller.positionComboBox.setValue("Senior");
+        controller.updateTeacher();
 
-        ObservableList<Teacher> teachers = controller.teacherTable.getItems();
+        Assertions.assertThat(controller.errorMessageLbl.getText()).isEqualTo("Error: Could not update teacher.");
+    }
+
+    @Test
+    public void testUpdateTeacherDatabaseError() throws SQLException {
+        when(mockPstmt.executeUpdate()).thenThrow(new SQLException());
+
+        TeacherManagementController.Teacher teacher = new TeacherManagementController.Teacher("T123", "Jane Smith", "Female", 35, "Junior", "Math", "password");
+        controller.teacherTable.getItems().add(teacher);
+        controller.teacherTable.getSelectionModel().select(teacher);
+
+        controller.usernameField.setText("T123");
+        controller.nameField.setText("Janet Smith");
+        controller.ageField.setText("36");
+        controller.genderComboBox.setValue("Female");
+        controller.departmentField.setText("Physics");
+        controller.passwordField.setText("newpassword");
+        controller.positionComboBox.setValue("Senior");
+        controller.updateTeacher();
+
+        Assertions.assertThat(controller.errorMessageLbl.getText()).isEqualTo("Error: Could not update teacher.");
+    }
+
+    @Test
+    public void testDeleteTeacher() throws SQLException {
+        when(mockPstmt.executeUpdate()).thenReturn(1);
+
+        TeacherManagementController.Teacher teacher = new TeacherManagementController.Teacher("T123", "Jane Smith", "Female", 35, "Junior", "Math", "password");
+        controller.teacherTable.getItems().add(teacher);
+        controller.teacherTable.getSelectionModel().select(teacher);
+
+        controller.deleteTeacher();
+
+        ObservableList<TeacherManagementController.Teacher> teachers = controller.teacherTable.getItems();
         Assertions.assertThat(teachers).isEmpty();
+    }
+
+    @Test
+    public void testDeleteTeacherNoSelection() {
+        controller.deleteTeacher();
+
+        Assertions.assertThat(controller.errorMessageLbl.getText()).isEqualTo("No teacher selected.");
+    }
+
+    @Test
+    public void testDeleteTeacherDatabaseError() throws SQLException {
+        when(mockPstmt.executeUpdate()).thenThrow(new SQLException());
+
+        TeacherManagementController.Teacher teacher = new TeacherManagementController.Teacher("T123", "Jane Smith", "Female", 35, "Junior", "Math", "password");
+        controller.teacherTable.getItems().add(teacher);
+        controller.teacherTable.getSelectionModel().select(teacher);
+
+        controller.deleteTeacher();
+
+        Assertions.assertThat(controller.errorMessageLbl.getText()).isEqualTo("Error: Could not delete teacher.");
     }
 }
