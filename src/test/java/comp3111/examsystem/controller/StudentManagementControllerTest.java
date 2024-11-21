@@ -342,17 +342,20 @@ public class StudentManagementControllerTest {
         when(mockRs.next()).thenReturn(true);
         when(mockRs.getInt(1)).thenReturn(1); // Mock that the username already exists
 
-        StudentManagementController.Student student = new StudentManagementController.Student("S123", "John Doe", 20, "Male", "CS", "password");
-        controller.studentTable.getItems().add(student);
-        controller.studentTable.getSelectionModel().select(student);
+        StudentManagementController.Student student1 = new StudentManagementController.Student("S123", "John Doe", 20, "Male", "CS", "password");
+        StudentManagementController.Student student2 = new StudentManagementController.Student("S124", "John Doe", 20, "Male", "CS", "password");
+        controller.studentTable.getItems().add(student1);
+        controller.studentTable.getItems().add(student2);
+        controller.studentTable.getSelectionModel().select(student2);
 
         robot.interact(() -> {
-            controller.usernameField.setText("S124");
+            controller.usernameField.setText("S123");
             controller.updateStudent();
         });
 
         Assertions.assertThat(controller.errorMessageLbl.getText()).isEqualTo("Error: Duplicate username with other student.");
     }
+
     @Test
     public void testFilterStudentsDatabaseError(FxRobot robot) throws SQLException {
         when(mockConn.prepareStatement(anyString())).thenThrow(new SQLException("Database error"));
