@@ -13,11 +13,13 @@ import javafx.util.Duration;
 import java.net.URL;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ResourceBundle;
+
 /**
  * The controller for the student registration page.
- *
+ * <p>
  * This controller is responsible for handling the student's registration.
  *
  * @author WANG Shao Fu
@@ -75,7 +77,7 @@ public class StudentRegisterController implements Initializable {
     /**
      * Initializes the controller.
      *
-     * @param location the location of the controller
+     * @param location  the location of the controller
      * @param resources the resources of the controller
      */
     @Override
@@ -121,30 +123,47 @@ public class StudentRegisterController implements Initializable {
             return;
         }
 
-        String sql = "INSERT INTO student (username, name, gender, age, department, password) VALUES (?, ?, ?, ?, ?, ?)";
+        String checkUsernameSql = "SELECT COUNT(*) FROM student WHERE username = ?";
+        String insertSql = "INSERT INTO student (username, name, gender, age, department, password) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement checkPstmt = conn.prepareStatement(checkUsernameSql)) {
 
-            pstmt.setString(1, username);
-            pstmt.setString(2, name);
-            pstmt.setString(3, gender);
-            pstmt.setInt(4, Integer.parseInt(age));
-            pstmt.setString(5, department);
-            pstmt.setString(6, password);
-            int rowsAffected = pstmt.executeUpdate();
-
-            if (rowsAffected > 0) {
-                errorMessageLbl.setText("Registration successful!");
-                errorMessageLbl.setStyle("-fx-text-fill: green;");
+            checkPstmt.setString(1, username);
+            ResultSet rs = checkPstmt.executeQuery();
+            rs.next();
+            if (rs.getInt(1) > 0) {
+                errorMessageLbl.setText("Error: Username already exists.");
                 errorMessageLbl.setVisible(true);
+                return;
+            }
 
-                // Pause for 1 second then close the window
-//                PauseTransition pause = new PauseTransition(Duration.seconds(1));
-//                pause.setOnFinished(event -> ((Stage) ((Button) e.getSource()).getScene().getWindow()).close());
-//                pause.play();
-            } else {
-                errorMessageLbl.setText("Failed to register user.");
+            try (PreparedStatement pstmt = conn.prepareStatement(insertSql)) {
+                pstmt.setString(1, username);
+                pstmt.setString(2, name);
+                pstmt.setString(3, gender);
+                pstmt.setInt(4, Integer.parseInt(age));
+                pstmt.setString(5, department);
+                pstmt.setString(6, password);
+                int rowsAffected = pstmt.executeUpdate();
+
+                if (rowsAffected > 0) {
+                    errorMessageLbl.setText("Registration successful!");
+                    errorMessageLbl.setStyle("-fx-text-fill: green;");
+                    errorMessageLbl.setVisible(true);
+
+                    // Pause for 1 second then close the window
+//                    PauseTransition pause = new PauseTransition(Duration.seconds(1));
+//                    pause.setOnFinished(event -> ((Stage) ((Button) e.getSource()).getScene().getWindow()).close());
+//                    pause.play();
+                } else {
+                    errorMessageLbl.setText("Failed to register user.");
+                    errorMessageLbl.setVisible(true);
+                }
+
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                errorMessageLbl.setText("Error connecting to the database.");
                 errorMessageLbl.setVisible(true);
             }
 
