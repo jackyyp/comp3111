@@ -4,7 +4,7 @@ This subfolder contains various resources related to the main project, including
 ## Contents
 The subfolder includes the following:
 
-1. **Screenshots**: Sample inputs and outputs of the program.
+1. **Screenshots and Descriptions**: Sample inputs and outputs of the program.
 2. **Javadoc Website**: Detailed documentation of the code.
 3. **Testing Report**: Report on the testing carried out for the project.
 4. **Coverage Report**: Coverage analysis of the project's code.
