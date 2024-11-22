@@ -3,13 +3,11 @@ package comp3111.examsystem.controller;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -117,30 +115,27 @@ public class TeacherQuestionController implements Initializable {
     public void loadQuestionsFromDatabase() {
         String sql = "SELECT * FROM question";
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
-
-            questionList.clear();
-
-            while (rs.next()) {
-                Question q = new Question(
-                        rs.getInt("id"),
-                        rs.getString("text"),
-                        rs.getString("option_a"),
-                        rs.getString("option_b"),
-                        rs.getString("option_c"),
-                        rs.getString("option_d"),
-                        rs.getString("answer"),
-                        rs.getBoolean("is_single_choice") ? "Single" : "Multiple",
-                        rs.getInt("score")
-                );
-                questionList.add(q);
+        executePreparedStatement(sql, pstmt -> {
+            try (ResultSet rs = pstmt.executeQuery()) {
+                questionList.clear();
+                while (rs.next()) {
+                    Question q = new Question(
+                            rs.getInt("id"),
+                            rs.getString("text"),
+                            rs.getString("option_a"),
+                            rs.getString("option_b"),
+                            rs.getString("option_c"),
+                            rs.getString("option_d"),
+                            rs.getString("answer"),
+                            rs.getBoolean("is_single_choice") ? "Single" : "Multiple",
+                            rs.getInt("score")
+                    );
+                    questionList.add(q);
+                }
+                questionTable.setItems(questionList);
             }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            return true;
+        });
     }
 
     /**
@@ -164,15 +159,30 @@ public class TeacherQuestionController implements Initializable {
         String type = typeComboBox.getValue();
         String scoreText = scoreField.getText();
 
-        String sql = "SELECT * FROM question WHERE text LIKE ? AND is_single_choice = ? AND score = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        StringBuilder sql = new StringBuilder("SELECT * FROM question WHERE 1=1");
+        if (!questionText.isEmpty()) {
+            sql.append(" AND text LIKE ?");
+        }
+        if (type != null) {
+            sql.append(" AND is_single_choice = ?");
+        }
+        if (!scoreText.isEmpty()) {
+            sql.append(" AND score = ?");
+        }
 
-            pstmt.setString(1, "%" + questionText + "%");
-            pstmt.setBoolean(2, "Single".equals(type));
-            pstmt.setInt(3, Integer.parseInt(scoreText));
-
+        executePreparedStatement(sql.toString(), pstmt -> {
+            int paramIndex = 1;
+            if (!questionText.isEmpty()) {
+                pstmt.setString(paramIndex++, "%" + questionText + "%");
+            }
+            if (type != null) {
+                pstmt.setBoolean(paramIndex++, "Single".equals(type));
+            }
+            if (!scoreText.isEmpty()) {
+                pstmt.setInt(paramIndex++, Integer.parseInt(scoreText));
+            }
             ResultSet rs = pstmt.executeQuery();
+
             ObservableList<Question> filteredQuestions = FXCollections.observableArrayList();
             while (rs.next()) {
                 Question question = new Question(
@@ -188,10 +198,10 @@ public class TeacherQuestionController implements Initializable {
                 );
                 filteredQuestions.add(question);
             }
+
             questionTable.setItems(filteredQuestions);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            return true;
+        });
     }
 
     /**
@@ -201,19 +211,21 @@ public class TeacherQuestionController implements Initializable {
     @FXML
     public void handleUpdate() {
         Question selectedQuestion = questionTable.getSelectionModel().getSelectedItem();
+
         if (selectedQuestion == null) {
-            Platform.runLater(() -> {
-                errorLabel.setText("No question selected for update.");
-                errorLabel.setStyle("-fx-text-fill: red;");
-            });
+            errorLabel.setText("No question selected for update.");
+            errorLabel.setStyle("-fx-text-fill: red;");
             return;
         }
-        String prev_question= selectedQuestion.getText();
-        String prev_option_a= selectedQuestion.getOptionA();
-        String prev_option_b= selectedQuestion.getOptionB();
-        String prev_option_c= selectedQuestion.getOptionC();
-        String prev_option_d= selectedQuestion.getOptionD();
-        String prev_answer= selectedQuestion.getAnswer();
+        int oldId = selectedQuestion.getId();
+
+        String prev_question = selectedQuestion.getText();
+        String prev_option_a = selectedQuestion.getOptionA();
+        String prev_option_b = selectedQuestion.getOptionB();
+        String prev_option_c = selectedQuestion.getOptionC();
+        String prev_option_d = selectedQuestion.getOptionD();
+        String prev_answer = selectedQuestion.getAnswer();
+
         String updatedQuestion;
         String updatedOptionA;
         String updatedOptionB;
@@ -222,142 +234,101 @@ public class TeacherQuestionController implements Initializable {
         String updatedAnswer;
         String updatedType;
         int updatedScore;
-        if (selectedQuestion != null) {
-            if(editQuestionField.getText().isEmpty()){
-                updatedQuestion = prev_question;
-            } else{
-                updatedQuestion=editQuestionField.getText();
-                if(updatedQuestion.equals(prev_question)){
-                    Platform.runLater(() -> {
-                        errorLabel.setText("The question already exists.");
-                        errorLabel.setStyle("-fx-text-fill: red;");
-                    });
-                    return;
-                }
-            }
-            if(editOptionAField.getText().isEmpty()){
-                updatedOptionA=prev_option_a;
-            } else{
-                updatedOptionA=editOptionAField.getText();
-            }
-            if(editOptionBField.getText().isEmpty()){
-                updatedOptionB=prev_option_b;
-            } else{
-                updatedOptionB=editOptionBField.getText();
-            }
-            if(editOptionCField.getText().isEmpty()){
-                updatedOptionC=prev_option_c;
-            } else{
-                updatedOptionC=editOptionCField.getText();
-            }
-            if(editOptionDField.getText().isEmpty()){
-                updatedOptionD=prev_option_d;
-            } else{
-                updatedOptionD=editOptionDField.getText();
-            }
-            if (editTypeComboBox.getValue() == null || editTypeComboBox.getValue().isEmpty()) {
-                updatedType = selectedQuestion.getType();
-            } else {
-                updatedType = editTypeComboBox.getValue();
-            }
-            if(editAnswerField.getText().isEmpty()){
-                updatedAnswer=prev_answer;
-            } else{
-                if ("Single".equals(updatedType)) {
-                    if (!editAnswerField.getText().matches("[ABCD]")) {
-                        errorLabel.setText("Answer format incorrect");
-                        errorLabel.setStyle("-fx-text-fill: red;");
-                        return;
-                    }
-                } else{
-                    if (!editAnswerField.getText().matches("[ABCD]{2,4}")) {
-                        errorLabel.setText("Answer format incorrect");
-                        errorLabel.setStyle("-fx-text-fill: red;");
-                        return;
-                    }
-                }
-                Set<Character> charSet = new HashSet<>();
-                for (char c : editAnswerField.getText().toCharArray()) {
-                    if (!charSet.add(c)) {
-                        errorLabel.setText("Answer contains repeated choice.");
-                        errorLabel.setStyle("-fx-text-fill: red;");
-                        return;
-                    }
-                }
-                updatedAnswer=editAnswerField.getText();
-            }
-            if(editScoreField.getText().isEmpty()){
-                updatedScore=selectedQuestion.getScore();
-            } else {
-                try {
-                    updatedScore = Integer.parseInt(editScoreField.getText());
-                } catch (NumberFormatException e) {
-                    errorLabel.setText("Score must be a valid integer.");
-                    errorLabel.setStyle("-fx-text-fill: red;");
-                    return;
-                }
-                updatedScore = Integer.parseInt(editScoreField.getText());
-            }
 
-            String checkSql = "SELECT COUNT(*) FROM question WHERE text = ? AND id != ?";
-            try (Connection conn = DatabaseConnection.getConnection();
-                 PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
-
-                checkStmt.setString(1, updatedQuestion);
-                checkStmt.setInt(2, selectedQuestion.getId());
-                ResultSet rs = checkStmt.executeQuery();
-                if (rs.next() && rs.getInt(1) > 0) {
+        if (editQuestionField.getText().isEmpty()) {
+            updatedQuestion = prev_question;
+        } else {
+            updatedQuestion = editQuestionField.getText();
+            if (updatedQuestion.equals(prev_question)) {
                     errorLabel.setText("The question already exists.");
                     errorLabel.setStyle("-fx-text-fill: red;");
+                return;
+            }
+        }
+
+        updatedOptionA = editOptionAField.getText().isEmpty() ? prev_option_a : editOptionAField.getText();
+        updatedOptionB = editOptionBField.getText().isEmpty() ? prev_option_b : editOptionBField.getText();
+        updatedOptionC = editOptionCField.getText().isEmpty() ? prev_option_c : editOptionCField.getText();
+        updatedOptionD = editOptionDField.getText().isEmpty() ? prev_option_d : editOptionDField.getText();
+        updatedType = (editTypeComboBox.getValue() == null || editTypeComboBox.getValue().isEmpty()) ? selectedQuestion.getType() : editTypeComboBox.getValue();
+
+        if (editAnswerField.getText().isEmpty()) {
+            updatedAnswer = prev_answer;
+        } else {
+            if ("Single".equals(updatedType)) {
+                if (!editAnswerField.getText().matches("[ABCD]")) {
+                    errorLabel.setText("Answer format incorrect");
+                    errorLabel.setStyle("-fx-text-fill: red;");
                     return;
                 }
+            } else {
+                if (!editAnswerField.getText().matches("[ABCD]{2,4}")) {
+                    errorLabel.setText("Answer format incorrect");
+                    errorLabel.setStyle("-fx-text-fill: red;");
+                    return;
+                }
+            }
+            Set<Character> charSet = new HashSet<>();
+            for (char c : editAnswerField.getText().toCharArray()) {
+                if (!charSet.add(c)) {
+                    errorLabel.setText("Answer contains repeated choice.");
+                    errorLabel.setStyle("-fx-text-fill: red;");
+                    return;
+                }
+            }
+            updatedAnswer = editAnswerField.getText();
+        }
 
-            } catch (SQLException e) {
-                e.printStackTrace();
-                errorLabel.setText("Database error: " + e.getMessage());
+
+        if (editScoreField.getText().isEmpty()) {
+            updatedScore = selectedQuestion.getScore();
+        } else {
+            try {
+                updatedScore = Integer.parseInt(editScoreField.getText());
+            } catch (NumberFormatException e) {
+                errorLabel.setText("Score must be a valid integer.");
                 errorLabel.setStyle("-fx-text-fill: red;");
                 return;
             }
-
-
-            try (Connection conn = DatabaseConnection.getConnection()) {
-                String sql = "UPDATE question SET text = ?, option_a = ?, option_b = ?, option_c = ?, option_d = ?, answer = ?, is_single_choice = ?, score = ? WHERE id = ?";
-                try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                    pstmt.setString(1, updatedQuestion);
-                    pstmt.setString(2, updatedOptionA);
-                    pstmt.setString(3, updatedOptionB);
-                    pstmt.setString(4, updatedOptionC);
-                    pstmt.setString(5, updatedOptionD);
-                    pstmt.setString(6, updatedAnswer);
-                    pstmt.setBoolean(7, "Single".equals(updatedType));
-                    pstmt.setInt(8, updatedScore);
-                    pstmt.setInt(9, selectedQuestion.getId());
-
-                    //int affectedRows =
-                    pstmt.executeUpdate();
-                    //if (affectedRows >0) {
-                    selectedQuestion.setText(updatedQuestion);
-                    selectedQuestion.setOptionA(updatedOptionA);
-                    selectedQuestion.setOptionB(updatedOptionB);
-                    selectedQuestion.setOptionC(updatedOptionC);
-                    selectedQuestion.setOptionD(updatedOptionD);
-                    selectedQuestion.setAnswer(updatedAnswer);
-                    selectedQuestion.setType(updatedType);
-                    selectedQuestion.setScore(updatedScore);
-                    questionTable.refresh();
-                    errorLabel.setText("Question updated successfully.");
-                    errorLabel.setStyle("-fx-text-fill: green;");
-
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-                errorLabel.setText("Error updating the question.");
-                errorLabel.setStyle("-fx-text-fill: red;");
-            }
-        } else {
-            errorLabel.setText("No question selected.");
-            errorLabel.setStyle("-fx-text-fill: red;");
         }
+
+        String checkSql = "SELECT COUNT(*) FROM question WHERE text = ? AND id != ?";
+        boolean isDup = executePreparedStatement(checkSql, checkStmt -> {
+            checkStmt.setString(1, updatedQuestion);
+            checkStmt.setInt(2, oldId);
+            try (ResultSet rs = checkStmt.executeQuery()) {
+                if (rs.next() && rs.getInt(1) > 0) {
+                    errorLabel.setText("The question already exists.");
+                    errorLabel.setStyle("-fx-text-fill: red;");
+                    return true;
+                }
+            }
+            return false;
+        });
+        if(isDup){
+            return;
+        }
+
+        String sql = "UPDATE question SET text = ?, option_a = ?, option_b = ?, option_c = ?, option_d = ?, answer = ?, is_single_choice = ?, score = ? WHERE id = ?";
+        executePreparedStatement(sql, pstmt -> {
+            pstmt.setString(1, updatedQuestion);
+            pstmt.setString(2, updatedOptionA);
+            pstmt.setString(3, updatedOptionB);
+            pstmt.setString(4, updatedOptionC);
+            pstmt.setString(5, updatedOptionD);
+            pstmt.setString(6, updatedAnswer);
+            pstmt.setBoolean(7, "Single".equals(updatedType));
+            pstmt.setInt(8, updatedScore);
+            pstmt.setInt(9, oldId);
+
+            pstmt.executeUpdate();
+            errorLabel.setText("Question updated successfully.");
+            errorLabel.setStyle("-fx-text-fill: green;");
+            loadQuestionsFromDatabase();
+
+            questionTable.refresh();
+            return true;
+        });
     }
 
     /**
@@ -368,12 +339,9 @@ public class TeacherQuestionController implements Initializable {
     public void handleRefresh() {
         String sql = "SELECT * FROM question";
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
-
+        executePreparedStatement(sql, pstmt -> {
+            ResultSet rs = pstmt.executeQuery();
             questionList.clear();
-
             while (rs.next()) {
                 Question q = new Question(
                         rs.getInt("id"),
@@ -388,10 +356,8 @@ public class TeacherQuestionController implements Initializable {
                 );
                 questionList.add(q);
             }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            return true;
+        });
     }
 
     /**
@@ -410,10 +376,10 @@ public class TeacherQuestionController implements Initializable {
         String Answer = editAnswerField.getText();
 
         if (editquestion.isEmpty() || type == null || scoreText.isEmpty() || optionA.isEmpty() || optionB.isEmpty() || optionC.isEmpty() || optionD.isEmpty() || Answer.isEmpty()) {
-            Platform.runLater(() -> {
+
                 errorLabel.setText("All fields must be filled out.");
                 errorLabel.setStyle("-fx-text-fill: red;");
-            });
+
             return;
         }
 
@@ -421,10 +387,10 @@ public class TeacherQuestionController implements Initializable {
         try {
             score = Integer.parseInt(scoreText);
         } catch (NumberFormatException e) {
-            Platform.runLater(() -> {
+
                 errorLabel.setText("Score must be a valid integer.");
                 errorLabel.setStyle("-fx-text-fill: red;");
-            });
+
             return;
         }
 
@@ -452,29 +418,22 @@ public class TeacherQuestionController implements Initializable {
         }
 
         String checkSql = "SELECT COUNT(*) FROM question WHERE text = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
-
+        boolean isDup = executePreparedStatement(checkSql, checkStmt -> {
             checkStmt.setString(1, editquestion);
             ResultSet rs = checkStmt.executeQuery();
-            if (rs.next() && rs.getInt(1) > 0) {
-                errorLabel.setText("The question already exists.");
-                errorLabel.setStyle("-fx-text-fill: red;");
-                return;
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            errorLabel.setText("Database error: " + e.getMessage());
-            errorLabel.setStyle("-fx-text-fill: red;");
+                if (rs.getInt(1) > 0) {
+                    errorLabel.setText("The question already exists.");
+                    errorLabel.setStyle("-fx-text-fill: red;");
+                    return true;
+                }
+                return false;
+        });
+        if(isDup){
             return;
         }
 
         String sql = "INSERT INTO question (text, option_a, option_b, option_c, option_d, answer, is_single_choice, score) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
-
+        executePreparedStatement(sql, pstmt -> {
             pstmt.setString(1, editquestion);
             pstmt.setString(2, optionA);
             pstmt.setString(3, optionB);
@@ -484,37 +443,28 @@ public class TeacherQuestionController implements Initializable {
             pstmt.setBoolean(7, type.equals("Single"));
             pstmt.setInt(8, score);
 
-            int affectedRows = pstmt.executeUpdate();
-            if (affectedRows > 0) {
-                errorLabel.setText("Question added successfully.");
-                errorLabel.setStyle("-fx-text-fill: green;");
-            } else {
-                errorLabel.setText("Failed to add the question.");
-                errorLabel.setStyle("-fx-text-fill: red;");
-            }
+            pstmt.executeUpdate();
+            errorLabel.setText("Question added successfully.");
+            errorLabel.setStyle("-fx-text-fill: green;");
+
 
             ResultSet generatedKeys = pstmt.getGeneratedKeys();
-            if (generatedKeys.next()) {
-                int id = generatedKeys.getInt(1);
-                Question newQuestion = new Question(id, editquestion, optionA, optionB, optionC, optionD, Answer, type, score);
-                questionList.add(newQuestion);
-                questionTable.setItems(questionList);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            errorLabel.setText("Database error: " + e.getMessage());
-            errorLabel.setStyle("-fx-text-fill: red;");
-        }
+            int id = generatedKeys.getInt(1);
+            Question newQuestion = new Question(id, editquestion, optionA, optionB, optionC, optionD, Answer, type, score);
+            questionList.add(newQuestion);
+            questionTable.setItems(questionList);
+
+            return true;
+        });
     }
 
     /**
      * Handles the delete action.
      * Deletes the selected question from the database.
      *
-     * @param event the action event triggered by the delete button
      */
     @FXML
-    public void handleDelete(ActionEvent event) {
+    public void handleDelete() {
         Question selectedQuestion = questionTable.getSelectionModel().getSelectedItem();
 
         if (selectedQuestion == null) {
@@ -523,9 +473,9 @@ public class TeacherQuestionController implements Initializable {
             return;
         }
 
-        try (Connection conn = DatabaseConnection.getConnection()) {
-            String sql = "DELETE FROM question WHERE id = ?";
-            PreparedStatement pstmt = conn.prepareStatement(sql);
+
+        String sql = "DELETE FROM question WHERE id = ?";
+        executePreparedStatement(sql, pstmt -> {
             pstmt.setInt(1, selectedQuestion.getId());
             pstmt.executeUpdate();
 
@@ -534,10 +484,49 @@ public class TeacherQuestionController implements Initializable {
 
             errorLabel.setText("Question deleted successfully.");
             errorLabel.setStyle("-fx-text-fill: green;");
+            return true;
+        });
+    }
+
+    private boolean executeDatabaseOperation(StudentRegisterController.DatabaseOperation operation) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            return operation.execute(conn);
         } catch (SQLException e) {
             e.printStackTrace();
-            errorLabel.setText("Error deleting question.");
+            setMessage(false, "Error connecting to the database.");
+            return false;
+        }
+    }
+
+    private boolean executePreparedStatement(String sql, StudentRegisterController.PreparedStatementOperation operation) {
+        return executeDatabaseOperation(conn -> {
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                return operation.execute(pstmt);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                setMessage(false, "Error connecting to the database.");
+                return false;
+            }
+        });
+    }
+
+    @FunctionalInterface
+    interface DatabaseOperation {
+        boolean execute(Connection conn) throws SQLException;
+    }
+
+    @FunctionalInterface
+    interface PreparedStatementOperation {
+        boolean execute(PreparedStatement pstmt) throws SQLException;
+    }
+
+    private void setMessage(boolean success, String message) {
+        errorLabel.setText(message);
+        if (success) {
+            errorLabel.setStyle("-fx-text-fill: green;");
+        } else {
             errorLabel.setStyle("-fx-text-fill: red;");
         }
+        errorLabel.setVisible(true);
     }
 }
