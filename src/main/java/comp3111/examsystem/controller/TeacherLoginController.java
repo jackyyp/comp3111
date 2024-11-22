@@ -107,7 +107,7 @@ public class TeacherLoginController implements Initializable {
      * Opens the registration page.
      */
     @FXML
-    public void register() {
+    public void register(ActionEvent e) {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("TeacherRegisterPageUI.fxml"));
             Stage stage = new Stage();

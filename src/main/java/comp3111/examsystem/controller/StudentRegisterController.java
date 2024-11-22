@@ -123,12 +123,12 @@ public class StudentRegisterController {
     }
 
     @FunctionalInterface
-    private interface DatabaseOperation {
+    interface DatabaseOperation {
         boolean execute(Connection conn) throws SQLException;
     }
 
     @FunctionalInterface
-    private interface PreparedStatementOperation {
+    interface PreparedStatementOperation {
         boolean execute(PreparedStatement pstmt) throws SQLException;
     }
 
