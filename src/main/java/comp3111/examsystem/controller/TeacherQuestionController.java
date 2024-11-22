@@ -276,29 +276,30 @@ public class TeacherQuestionController implements Initializable {
             }
             if (editAnswerField.getText().isEmpty()) {
                 updatedAnswer = prev_answer;
+            }
+            else{
+                updatedAnswer=editAnswerField.getText();
+            }
+            if ("Single".equals(updatedType)) {
+                if (!editAnswerField.getText().matches("[ABCD]")) {
+                    errorLabel.setText("Answer format incorrect");
+                    errorLabel.setStyle("-fx-text-fill: red;");
+                    return;
+                }
             } else {
-                if ("Single".equals(updatedType)) {
-                    if (!editAnswerField.getText().matches("[ABCD]")) {
-                        errorLabel.setText("Answer format incorrect");
-                        errorLabel.setStyle("-fx-text-fill: red;");
-                        return;
-                    }
-                } else {
-                    if (!editAnswerField.getText().matches("[ABCD]{2,4}")) {
-                        errorLabel.setText("Answer format incorrect");
-                        errorLabel.setStyle("-fx-text-fill: red;");
-                        return;
-                    }
+                if (!editAnswerField.getText().matches("[ABCD]{2,4}")) {
+                    errorLabel.setText("Answer format incorrect");
+                    errorLabel.setStyle("-fx-text-fill: red;");
+                    return;
                 }
-                Set<Character> charSet = new HashSet<>();
-                for (char c : editAnswerField.getText().toCharArray()) {
-                    if (!charSet.add(c)) {
-                        errorLabel.setText("Answer contains repeated choice.");
-                        errorLabel.setStyle("-fx-text-fill: red;");
-                        return;
-                    }
+            }
+            Set<Character> charSet = new HashSet<>();
+            for (char c : editAnswerField.getText().toCharArray()) {
+                if (!charSet.add(c)) {
+                    errorLabel.setText("Answer contains repeated choice.");
+                    errorLabel.setStyle("-fx-text-fill: red;");
+                    return;
                 }
-                updatedAnswer = editAnswerField.getText();
             }
             if (editScoreField.getText().isEmpty()) {
                 updatedScore = selectedQuestion.getScore();
