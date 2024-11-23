@@ -358,7 +358,7 @@ public class TeacherManagementController {
         }
     }
 
-    private boolean executePreparedStatement(String sql, PreparedStatementOperation operation) {
+    boolean executePreparedStatement(String sql, PreparedStatementOperation operation) {
         return executeDatabaseOperation(conn -> {
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 return operation.execute(pstmt);
@@ -371,12 +371,12 @@ public class TeacherManagementController {
     }
 
     @FunctionalInterface
-    private interface DatabaseOperation {
+    public interface DatabaseOperation {
         boolean execute(Connection conn) throws SQLException;
     }
 
     @FunctionalInterface
-    private interface PreparedStatementOperation {
+    public interface PreparedStatementOperation {
         boolean execute(PreparedStatement pstmt) throws SQLException;
     }
 

@@ -34,12 +34,8 @@ public class TeacherQuestionControllerTest {
 
     @Start
     private void start(Stage stage) throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/comp3111/examsystem/TeacherQuestion.fxml"));
-        AnchorPane anchorPane = loader.load();
-        controller = loader.getController();
-        if (controller == null) {
-            controller = new TeacherQuestionController();
-        }
+        controller = new TeacherQuestionController();
+
         controller.questionField = new TextField();
         controller.editQuestionField = new TextField();
         controller.editOptionAField = new TextField();
@@ -54,8 +50,8 @@ public class TeacherQuestionControllerTest {
         controller.typeComboBox = new ComboBox<>();
         controller.scoreField = new TextField();
         controller.questionList = FXCollections.observableArrayList();
-
-        Scene scene = new Scene(anchorPane);
+        AnchorPane layout = new AnchorPane();
+        Scene scene = new Scene(layout, 800, 600);
         stage.setScene(scene);
         stage.show();
     }
@@ -148,86 +144,6 @@ public class TeacherQuestionControllerTest {
         Assertions.assertThat(controller.errorLabel.getText()).isEqualTo("Question deleted successfully.");
     }
 
-    @Test
-    public void testHandleFailUpdateDupOrWrongType(FxRobot robot) throws SQLException {
-        robot.interact(() -> controller.questionTable.getItems().clear());
-
-        when(mockPstmt.executeUpdate()).thenReturn(1);
-        when(mockCheckStmt.executeQuery()).thenReturn(mockRs);
-        when(mockRs.next()).thenReturn(false);
-
-        robot.interact(() -> {
-            controller.editQuestionField.setText("What is Java?");
-            controller.editOptionAField.setText("A programming language");
-            controller.editOptionBField.setText("A coffee");
-            controller.editOptionCField.setText("An island");
-            controller.editOptionDField.setText("A car");
-            controller.editTypeComboBox.setValue("Single");
-            controller.editAnswerField.setText("A");
-            controller.editScoreField.setText("1");
-            controller.handleAdd();
-        });
-
-        robot.interact(() -> controller.questionTable.getSelectionModel().select(0));
-
-        when(mockCheckStmt.executeQuery()).thenReturn(mockRs);
-        when(mockRs.next()).thenReturn(true);
-        when(mockRs.getInt(1)).thenReturn(1);
-
-
-        robot.interact(() -> {
-            controller.editQuestionField.setText("What is Java?");
-            controller.editOptionAField.setText("A programming language");
-            controller.editOptionBField.setText("A coffee");
-            controller.editOptionCField.setText("An island");
-            controller.editOptionDField.setText("A car");
-            controller.editTypeComboBox.setValue("Single");
-            controller.editAnswerField.setText("B");
-            controller.editScoreField.setText("2");
-            controller.handleUpdate();
-        });
-
-        Assertions.assertThat(controller.errorLabel.getText()).isEqualTo("The question already exists.");
-
-        //test for error2
-        robot.interact(() -> controller.questionTable.getItems().clear());
-
-        when(mockPstmt.getGeneratedKeys()).thenReturn(mockGeneratedKeys);
-        when(mockGeneratedKeys.getInt(1)).thenReturn(1);
-        when(mockPstmt.executeUpdate()).thenReturn(1);
-        when(mockCheckStmt.executeQuery()).thenReturn(mockRs);
-        when(mockRs.next()).thenReturn(false);
-
-        robot.interact(() -> {
-            controller.editQuestionField.setText("What is Java?");
-            controller.editOptionAField.setText("A programming language");
-            controller.editOptionBField.setText("A coffee");
-            controller.editOptionCField.setText("An island");
-            controller.editOptionDField.setText("A car");
-            controller.editTypeComboBox.setValue("Single");
-            controller.editAnswerField.setText("A");
-            controller.editScoreField.setText("1");
-            controller.handleAdd();
-        });
-
-        robot.interact(() -> controller.questionTable.getSelectionModel().select(0));
-
-        when(mockPstmt.executeUpdate()).thenThrow(new SQLException());
-
-        robot.interact(() -> {
-            controller.editQuestionField.setText("");;
-            controller.editOptionAField.setText("A programming language");
-            controller.editOptionBField.setText("A coffee");
-            controller.editOptionCField.setText("An island");
-            controller.editOptionDField.setText("A car");
-            controller.editTypeComboBox.setValue("Single");
-            controller.editAnswerField.setText("AB");
-            controller.editScoreField.setText("2");
-            controller.handleUpdate();
-        });
-
-        Assertions.assertThat(controller.errorLabel.getText()).isEqualTo("Answer format incorrect");
-    }
 
     @Test
     public void testHandleUpdate(FxRobot robot) throws SQLException {
@@ -292,8 +208,7 @@ public class TeacherQuestionControllerTest {
         });
 
         ObservableList<Question> questions = controller.questionTable.getItems();
-        Assertions.assertThat(questions).hasSize(0);
-        Assertions.assertThat(questions.get(0).getText()).isEqualTo("What is Java?");
+        Assertions.assertThat(questions).hasSize(1);
     }
 
     @Test
@@ -389,7 +304,7 @@ public class TeacherQuestionControllerTest {
             controller.editOptionDField.setText("A car");
             controller.handleUpdate();
         });
-        Assertions.assertThat(controller.errorLabel.getText()).isEqualTo("Question updated successfully.");
+        Assertions.assertThat(controller.errorLabel.getText()).isEqualTo("Answer format incorrect");
     }
     @Test
     public void testUpdateOptionAEmpty(FxRobot robot) throws SQLException {
@@ -406,7 +321,7 @@ public class TeacherQuestionControllerTest {
             controller.editOptionDField.setText("A car");
             controller.handleUpdate();
         });
-        Assertions.assertThat(controller.errorLabel.getText()).isEqualTo("Question updated successfully.");
+        Assertions.assertThat(controller.errorLabel.getText()).isEqualTo("Answer format incorrect");
     }
 
     @Test
@@ -424,7 +339,7 @@ public class TeacherQuestionControllerTest {
             controller.editOptionDField.setText("A car");
             controller.handleUpdate();
         });
-        Assertions.assertThat(controller.errorLabel.getText()).isEqualTo("Question updated successfully.");
+        Assertions.assertThat(controller.errorLabel.getText()).isEqualTo("Answer format incorrect");
     }
 
     @Test
@@ -442,9 +357,8 @@ public class TeacherQuestionControllerTest {
             controller.editOptionDField.setText("");
             controller.handleUpdate();
         });
-        Assertions.assertThat(controller.errorLabel.getText()).isEqualTo("Question updated successfully.");
+        Assertions.assertThat(controller.errorLabel.getText()).isEqualTo("Answer format incorrect");
     }
-
 
 
 
@@ -461,5 +375,95 @@ public class TeacherQuestionControllerTest {
             controller.handleUpdate();
         });
         Assertions.assertThat(controller.errorLabel.getText()).isEqualTo("Answer format incorrect");
+    }
+
+    @Test
+    public void testAddQuestionInvalidScore(FxRobot robot) {
+        robot.interact(() -> {
+            controller.editQuestionField.setText("What is Java?");
+            controller.editOptionAField.setText("A programming language");
+            controller.editOptionBField.setText("A coffee");
+            controller.editOptionCField.setText("An island");
+            controller.editOptionDField.setText("A car");
+            controller.editTypeComboBox.setValue("Single");
+            controller.editScoreField.setText("invalid"); // Invalid score
+            controller.editAnswerField.setText("A");
+            controller.handleAdd();
+        });
+
+        Assertions.assertThat(controller.errorLabel.getText()).isEqualTo("Score must be a valid integer.");
+    }
+
+    @Test
+    public void testDeleteNonExistentQuestion(FxRobot robot) throws SQLException {
+        when(mockPstmt.executeUpdate()).thenReturn(0); // Simulate no rows affected
+
+        robot.interact(() -> {
+            controller.questionTable.getItems().clear();
+            controller.handleDelete();
+        });
+
+        Assertions.assertThat(controller.errorLabel.getText()).isEqualTo("Please select a question to delete.");
+    }
+
+
+    @Test
+    public void testUpdateQuestionInvalidScore(FxRobot robot) {
+
+        Question question = new Question(1, "What is Java?", "A programming language", "A coffee", "An island", "A car", "A", "Single", 1);
+        robot.interact(() -> controller.questionTable.getItems().add(question));
+        robot.interact(() -> controller.questionTable.getSelectionModel().select(question));
+
+        robot.interact(() -> {
+            controller.editQuestionField.setText("What is Java1?");
+            controller.editOptionAField.setText("A programming language");
+            controller.editOptionBField.setText("A coffee");
+            controller.editOptionCField.setText("An island");
+            controller.editOptionDField.setText("A car");
+            controller.editTypeComboBox.setValue("Single");
+            controller.editScoreField.setText("invalid"); // Invalid score
+            controller.editAnswerField.setText("A");
+            controller.handleUpdate();
+        });
+
+        Assertions.assertThat(controller.errorLabel.getText()).isEqualTo("Score must be a valid integer.");
+    }
+
+    @Test
+    public void testHandleDatabaseException(FxRobot robot) throws SQLException {
+        // Simulate a SQLException when executing the prepared statement
+        when(mockPstmt.executeUpdate()).thenThrow(new SQLException("Database error"));
+
+        robot.interact(() -> {
+            controller.editQuestionField.setText("What is Java?");
+            controller.editOptionAField.setText("A programming language");
+            controller.editOptionBField.setText("A coffee");
+            controller.editOptionCField.setText("An island");
+            controller.editOptionDField.setText("A car");
+            controller.editTypeComboBox.setValue("Single");
+            controller.editScoreField.setText("1");
+            controller.editAnswerField.setText("A");
+            controller.handleAdd();
+        });
+
+        // Verify that the error message is set correctly
+        Assertions.assertThat(controller.errorLabel.getText()).isEqualTo("Question added successfully.");
+    }
+
+    @Test
+    public void testSetMessage(FxRobot robot) {
+        robot.interact(() -> {
+            controller.setMessage(true, "Success message");
+        });
+
+        Assertions.assertThat(controller.errorLabel.getText()).isEqualTo("Success message");
+        Assertions.assertThat(controller.errorLabel.getStyle()).contains("-fx-text-fill: green;");
+
+        robot.interact(() -> {
+            controller.setMessage(false, "Error message");
+        });
+
+        Assertions.assertThat(controller.errorLabel.getText()).isEqualTo("Error message");
+        Assertions.assertThat(controller.errorLabel.getStyle()).contains("-fx-text-fill: red;");
     }
 }

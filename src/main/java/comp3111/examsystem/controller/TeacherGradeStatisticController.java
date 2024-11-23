@@ -19,6 +19,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
@@ -31,7 +32,7 @@ import java.util.stream.Collectors;
  * @author Poon Chin Hung, Wang Shao Fu
  * @version 2.0
  */
-public class TeacherGradeStatisticController implements Initializable {
+public class TeacherGradeStatisticController {
     @Data
     @AllArgsConstructor
     public static class Grade {
@@ -44,50 +45,48 @@ public class TeacherGradeStatisticController implements Initializable {
     }
 
     @FXML
-    private ChoiceBox<String> courseCombox;
+    public ChoiceBox<String> courseCombox;
     @FXML
-    private ChoiceBox<String> examCombox;
+    public ChoiceBox<String> examCombox;
     @FXML
-    private ChoiceBox<String> studentCombox;
+    public ChoiceBox<String> studentCombox;
     @FXML
-    private TableView<Grade> gradeTable;
+    public TableView<Grade> gradeTable;
     @FXML
-    private TableColumn<Grade, String> studentColumn;
+    public TableColumn<Grade, String> studentColumn;
     @FXML
-    private TableColumn<Grade, String> courseColumn;
+    public TableColumn<Grade, String> courseColumn;
     @FXML
-    private TableColumn<Grade, String> examColumn;
+    public TableColumn<Grade, String> examColumn;
     @FXML
-    private TableColumn<Grade, Integer> scoreColumn;
+    public TableColumn<Grade, Integer> scoreColumn;
     @FXML
-    private TableColumn<Grade, Integer> fullScoreColumn;
+    public TableColumn<Grade, Integer> fullScoreColumn;
     @FXML
-    private TableColumn<Grade, Integer> timeSpendColumn;
+    public TableColumn<Grade, Integer> timeSpendColumn;
     @FXML
-    private BarChart<String, Number> barChart;
+    public BarChart<String, Number> barChart;
     @FXML
-    private CategoryAxis categoryAxisBar;
+    public CategoryAxis categoryAxisBar;
     @FXML
-    private NumberAxis numberAxisBar;
+    public NumberAxis numberAxisBar;
     @FXML
-    private LineChart<String, Number> lineChart;
+    public LineChart<String, Number> lineChart;
     @FXML
-    private CategoryAxis categoryAxisLine;
+    public CategoryAxis categoryAxisLine;
     @FXML
-    private NumberAxis numberAxisLine;
+    public NumberAxis numberAxisLine;
     @FXML
-    private PieChart pieChart;
+    public PieChart pieChart;
 
-    private final ObservableList<Grade> gradeList = FXCollections.observableArrayList();
+    public final ObservableList<Grade> gradeList = FXCollections.observableArrayList();
 
     /**
      * Initializes the controller class.
      *
-     * @param url            the location used to resolve relative paths for the root object, or null if the location is not known
-     * @param resourceBundle the resources used to localize the root object, or null if the root object was not localized
      */
-    @Override
-    public void initialize(URL url, ResourceBundle resourceBundle) {
+    @FXML
+    public void initialize() {
         barChart.setLegendVisible(false);
         barChart.setAnimated(false); // Disable animation
         categoryAxisBar.setLabel("Course");
@@ -186,11 +185,12 @@ public class TeacherGradeStatisticController implements Initializable {
     /**
      * Loads the chart data based on the grade list.
      */
-    private void loadChart() {
+    public void loadChart() {
         XYChart.Series<String, Number> seriesBar = new XYChart.Series<>();
         barChart.getData().clear();
 
         Map<String, Double> courseAvgScores = gradeList.stream()
+                .filter(Objects::nonNull)
                 .collect(Collectors.groupingBy(Grade::getCourseNum, Collectors.averagingInt(Grade::getScore)));
 
         for (Map.Entry<String, Double> entry : courseAvgScores.entrySet()) {

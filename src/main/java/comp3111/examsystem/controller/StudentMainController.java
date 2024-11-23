@@ -24,6 +24,8 @@ import java.sql.SQLException;
 import java.util.*;
 
 import javafx.scene.control.Alert;
+import lombok.Data;
+
 /**
  * The controller for the student main page.
  *
@@ -31,6 +33,7 @@ import javafx.scene.control.Alert;
  *
  * @author WANG Shao Fu
  */
+@Data
 public class StudentMainController implements Initializable {
 
     /**
@@ -72,13 +75,17 @@ public class StudentMainController implements Initializable {
      */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        loadExams();
+        try {
+            loadExams();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
      * Loads the exams from the database.
      */
-    void loadExams() {
+    void loadExams() throws SQLException {
         String sql = "SELECT e.id, e.name, e.course " +
                 "FROM exam e " +
                 "JOIN exam_question_link eql ON e.id = eql.exam_id " +
@@ -86,11 +93,8 @@ public class StudentMainController implements Initializable {
                 "WHERE g.exam_id IS NULL AND e.is_published = 1 " +
                 "ORDER BY e.course ASC";
 
-        System.out.println("Executing SQL: " + sql);
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
+            Connection conn = DatabaseConnection.getConnection();
+            PreparedStatement pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, dataModel.getUsername()); // Set the student ID for filtering
             ResultSet rs = pstmt.executeQuery();
 
@@ -117,9 +121,7 @@ public class StudentMainController implements Initializable {
                 errorLabel.setStyle("-fx-text-fill: green;"); // Set the text color to green
             }
 
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+
     }
 
     /**
