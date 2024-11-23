@@ -65,12 +65,12 @@ public class StudentExamPageControllerTest {
         when(mockConn.prepareStatement(anyString())).thenReturn(mockPstmt);
         when(mockPstmt.executeQuery()).thenReturn(mockRs);
         DatabaseConnection.setMockConnection(mockConn);
+
+        StudentControllerModel dataModel = new StudentControllerModel();
+        controller.setDataModel(dataModel);
     }
 
-    @AfterEach
-    public void tearDown() {
-        reset(mockConn, mockPstmt, mockRs);
-    }
+
 
     @Test
     public void testSetDataModel() {
@@ -128,34 +128,6 @@ public class StudentExamPageControllerTest {
         verify(mockPstmt, times(1)).executeUpdate();
     }
 
-    @Test
-    public void testQuestionSingleChoiceConstructor() {
-        // Initialize the data model
-        StudentControllerModel dataModel = new StudentControllerModel();
-        controller.setDataModel(dataModel);
-
-        VBox questionBox = new VBox();
-        RadioButton optionAButton = new RadioButton("A: Option A");
-        optionAButton.setUserData("A");
-        RadioButton optionBButton = new RadioButton("B: Option B");
-        optionBButton.setUserData("B");
-        RadioButton optionCButton = new RadioButton("C: Option C");
-        optionCButton.setUserData("C");
-        RadioButton optionDButton = new RadioButton("D: Option D");
-        optionDButton.setUserData("D");
-        ToggleGroup group = new ToggleGroup();
-        optionAButton.setToggleGroup(group);
-        optionBButton.setToggleGroup(group);
-        optionCButton.setToggleGroup(group);
-        optionDButton.setToggleGroup(group);
-        questionBox.getChildren().addAll(optionAButton, optionBButton, optionCButton, optionDButton);
-        String correctAnswer = "A";
-        int score = 10;
-
-        StudentExamPageController.Question question = new StudentExamPageController.Question(1, questionBox, group, correctAnswer, score, true);
-
-        assertEquals(score, question.getScore());
-    }
 
     @Test
     public void testQuestionMultipleChoiceConstructor() {

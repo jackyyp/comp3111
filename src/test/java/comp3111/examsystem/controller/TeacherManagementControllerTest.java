@@ -365,4 +365,6 @@ public class TeacherManagementControllerTest {
 
         Assertions.assertThat(controller.errorMessageLbl.getText()).isEqualTo("Error: Duplicate username with other teacher.");
     }
+
+
 }

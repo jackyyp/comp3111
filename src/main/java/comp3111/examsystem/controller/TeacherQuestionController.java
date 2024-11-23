@@ -116,7 +116,7 @@ public class TeacherQuestionController implements Initializable {
         String sql = "SELECT * FROM question";
 
         executePreparedStatement(sql, pstmt -> {
-            try (ResultSet rs = pstmt.executeQuery()) {
+                ResultSet rs = pstmt.executeQuery();
                 questionList.clear();
                 while (rs.next()) {
                     Question q = new Question(
@@ -133,7 +133,6 @@ public class TeacherQuestionController implements Initializable {
                     questionList.add(q);
                 }
                 questionTable.setItems(questionList);
-            }
             return true;
         });
     }
@@ -487,7 +486,7 @@ public class TeacherQuestionController implements Initializable {
         });
     }
 
-    private boolean executeDatabaseOperation(StudentRegisterController.DatabaseOperation operation) {
+    private boolean executeDatabaseOperation(DatabaseOperation operation) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             return operation.execute(conn);
         } catch (SQLException e) {
@@ -497,7 +496,7 @@ public class TeacherQuestionController implements Initializable {
         }
     }
 
-    private boolean executePreparedStatement(String sql, StudentRegisterController.PreparedStatementOperation operation) {
+    private boolean executePreparedStatement(String sql, PreparedStatementOperation operation) {
         return executeDatabaseOperation(conn -> {
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 return operation.execute(pstmt);
@@ -519,7 +518,7 @@ public class TeacherQuestionController implements Initializable {
         boolean execute(PreparedStatement pstmt) throws SQLException;
     }
 
-    private void setMessage(boolean success, String message) {
+    void setMessage(boolean success, String message) {
         errorLabel.setText(message);
         if (success) {
             errorLabel.setStyle("-fx-text-fill: green;");
