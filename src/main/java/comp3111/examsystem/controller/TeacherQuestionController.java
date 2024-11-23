@@ -252,33 +252,32 @@ public class TeacherQuestionController implements Initializable {
         updatedOptionD = editOptionDField.getText().isEmpty() ? prev_option_d : editOptionDField.getText();
         updatedType = (editTypeComboBox.getValue() == null || editTypeComboBox.getValue().isEmpty()) ? selectedQuestion.getType() : editTypeComboBox.getValue();
 
-        if (editAnswerField.getText().isEmpty()) {
+        if (editAnswerField.getText().isEmpty()) {//if the answer field is empty, set the updated answer to be the same as the old one
             updatedAnswer = prev_answer;
         } else {
-            if ("Single".equals(updatedType)) {
-                if (!editAnswerField.getText().matches("[ABCD]")) {
-                    errorLabel.setText("Answer format incorrect");
-                    errorLabel.setStyle("-fx-text-fill: red;");
-                    return;
-                }
-            } else {
-                if (!editAnswerField.getText().matches("[ABCD]{2,4}")) {
-                    errorLabel.setText("Answer format incorrect");
-                    errorLabel.setStyle("-fx-text-fill: red;");
-                    return;
-                }
-            }
-            Set<Character> charSet = new HashSet<>();
-            for (char c : editAnswerField.getText().toCharArray()) {
-                if (!charSet.add(c)) {
-                    errorLabel.setText("Answer contains repeated choice.");
-                    errorLabel.setStyle("-fx-text-fill: red;");
-                    return;
-                }
-            }
-            updatedAnswer = editAnswerField.getText();
+            updatedAnswer = editAnswerField.getText();//otherwise, first get the answer and check if it is legal
         }
-
+        if ("Single".equals(updatedType)) {
+            if (!editAnswerField.getText().matches("[ABCD]")) {//if type is single, check whether updated answer is either A,B,C, or D, otherwise error
+                errorLabel.setText("Answer format incorrect");
+                errorLabel.setStyle("-fx-text-fill: red;");
+                return;
+            }
+        } else {
+            if (!editAnswerField.getText().matches("[ABCD]{2,4}")) {//otherwise, check if the answer is a of length 2-4 and does not contain chars outside ABCD
+                errorLabel.setText("Answer format incorrect");
+                errorLabel.setStyle("-fx-text-fill: red;");
+                return;
+            }
+        }
+        Set<Character> charSet = new HashSet<>();//check if the answer contains repeated choices like AA
+        for (char c : editAnswerField.getText().toCharArray()) {
+            if (!charSet.add(c)) {
+                errorLabel.setText("Answer contains repeated choice.");
+                errorLabel.setStyle("-fx-text-fill: red;");
+                return;
+            }
+        }
 
         if (editScoreField.getText().isEmpty()) {
             updatedScore = selectedQuestion.getScore();
