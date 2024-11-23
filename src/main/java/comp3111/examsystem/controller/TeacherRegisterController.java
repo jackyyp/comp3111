@@ -1,18 +1,11 @@
 package comp3111.examsystem.controller;
 
 import comp3111.examsystem.database.DatabaseConnection;
-import comp3111.examsystem.model.TeacherControllerModel;
-import javafx.animation.PauseTransition;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.stage.Stage;
-import javafx.util.Duration;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 
 import java.net.URL;
 import java.sql.Connection;
@@ -21,14 +14,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ResourceBundle;
 
-/**
- * Controller class for handling teacher registration.
- * This class is responsible for managing the UI interactions for teacher registration.
- *
- * @author Wong Cheuk Yuen
- * @version 1.0
- */
-public class TeacherRegisterController implements Initializable {
+public class TeacherRegisterController {
+
     @FXML
     public TextField usernameTxt;
     @FXML
@@ -48,33 +35,17 @@ public class TeacherRegisterController implements Initializable {
     @FXML
     public Label errorMessageLbl;
 
-    /**
-     * Initializes the controller class.
-     *
-     * @param location  the location used to resolve relative paths for the root object, or null if the location is not known
-     * @param resources the resources used to localize the root object, or null if the root object was not localized
-     */
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
+    @FXML
+    public void initialize() {
         genderComboBox.setItems(FXCollections.observableArrayList("Male", "Female", "Other"));
         positionComboBox.setItems(FXCollections.observableArrayList("Junior", "Senior", "Parttime"));
     }
 
-    /**
-     * Closes the registration window.
-     *
-     * @param e the action event triggered by the close button
-     */
     @FXML
     public void close(ActionEvent e) {
         ((Stage) ((Button) e.getSource()).getScene().getWindow()).close();
     }
 
-    /**
-     * Handles the register action.
-     * Validates the user input and performs registration if valid.
-     *
-     */
     @FXML
     public void register() {
         String username = usernameTxt.getText();
@@ -86,46 +57,38 @@ public class TeacherRegisterController implements Initializable {
         String password = passwordTxt.getText();
         String confirmPassword = confirmPasswordTxt.getText();
 
+        if (username.isEmpty() || name.isEmpty() || gender == null || age.isEmpty() || department.isEmpty() || password.isEmpty() || !password.equals(confirmPassword)) {
+            setMessage(false, "Error: Please check your inputs.");
+            return;
+        }
         try {
-            if (username.isEmpty() || name.isEmpty() || gender == null || age.isEmpty() || Integer.parseInt(age) < 0 || position == null || department.isEmpty() || password.isEmpty() || !password.equals(confirmPassword)) {
-                errorMessageLbl.setText("Error: Please check your inputs.");
-                errorMessageLbl.setStyle("-fx-text-fill: red;");
-                errorMessageLbl.setVisible(true);
+            if (Integer.parseInt(age) < 0) {
+                setMessage(false, "Error: Please check your inputs.");
                 return;
             }
-        } catch (NumberFormatException exception) {
-            errorMessageLbl.setText("Error: Please check your inputs.");
-            errorMessageLbl.setStyle("-fx-text-fill: red;");
-            errorMessageLbl.setVisible(true);
+        } catch (NumberFormatException e) {
+            setMessage(false, "Error: Please check your inputs.");
             return;
         }
 
-        String checkSql = "SELECT COUNT(*) FROM teacher WHERE username = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+        String checkUsernameSql = "SELECT COUNT(*) FROM teacher WHERE username = ?";
+        String insertSql = "INSERT INTO teacher (username, name, gender, age, position, department, password) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-            checkStmt.setString(1, username);
-            ResultSet rs = checkStmt.executeQuery();
-            if (rs.next() && rs.getInt(1) > 0) {
-                errorMessageLbl.setText("Error: Username already exists.");
-                errorMessageLbl.setStyle("-fx-text-fill: red;");
-                errorMessageLbl.setVisible(true);
-                return;
+        boolean isDup = executePreparedStatement(checkUsernameSql, checkPstmt -> {
+            checkPstmt.setString(1, username);
+            ResultSet rs = checkPstmt.executeQuery();
+
+            if (rs.getInt(1) > 0) {
+                setMessage(false, "Error: Username already exists.");
+                return true;
             }
-
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            errorMessageLbl.setText("Error connecting to the database.");
-            errorMessageLbl.setStyle("-fx-text-fill: red;");
-            errorMessageLbl.setVisible(true);
+            return false;
+        });
+        if (isDup) {
             return;
         }
 
-        String sql = "INSERT INTO teacher (username, name, gender, age, position, department, password) VALUES (?, ?, ?, ?, ?, ?, ?)";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
+        executePreparedStatement(insertSql, pstmt -> {
             pstmt.setString(1, username);
             pstmt.setString(2, name);
             pstmt.setString(3, gender);
@@ -133,23 +96,53 @@ public class TeacherRegisterController implements Initializable {
             pstmt.setString(5, position);
             pstmt.setString(6, department);
             pstmt.setString(7, password);
-            int rowsAffected = pstmt.executeUpdate();
 
-            if (rowsAffected > 0) {
-                errorMessageLbl.setText("Add Successful!");
-                errorMessageLbl.setStyle("-fx-text-fill: green;");
-                errorMessageLbl.setVisible(true);
-            } else {
-                errorMessageLbl.setText("Failed to add teacher.");
-                errorMessageLbl.setStyle("-fx-text-fill: red;");
-                errorMessageLbl.setVisible(true);
-            }
+            pstmt.executeUpdate();
+            setMessage(true, "Add Successful!");
 
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            errorMessageLbl.setText("Error connecting to the database.");
-            errorMessageLbl.setStyle("-fx-text-fill: red;");
-            errorMessageLbl.setVisible(true);
+            return true;
+        });
+    }
+
+    private boolean executeDatabaseOperation(DatabaseOperation operation) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            return operation.execute(conn);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            setMessage(false, "Error connecting to the database.");
+            return false;
         }
+    }
+
+    private boolean executePreparedStatement(String sql, PreparedStatementOperation operation) {
+        return executeDatabaseOperation(conn -> {
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                return operation.execute(pstmt);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                setMessage(false, "Error connecting to the database.");
+                return false;
+            }
+        });
+    }
+
+    @FunctionalInterface
+    private interface DatabaseOperation {
+        boolean execute(Connection conn) throws SQLException;
+    }
+
+    @FunctionalInterface
+    private interface PreparedStatementOperation {
+        boolean execute(PreparedStatement pstmt) throws SQLException;
+    }
+
+    private void setMessage(boolean success, String message) {
+        errorMessageLbl.setText(message);
+        if (success) {
+            errorMessageLbl.setStyle("-fx-text-fill: green;");
+        } else {
+            errorMessageLbl.setStyle("-fx-text-fill: red;");
+        }
+        errorMessageLbl.setVisible(true);
     }
 }

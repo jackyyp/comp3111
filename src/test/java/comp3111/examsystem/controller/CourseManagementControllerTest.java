@@ -1,7 +1,5 @@
 package comp3111.examsystem.controller;
 
-import comp3111.examsystem.controller.CourseManagementController;
-import comp3111.examsystem.controller.CourseManagementController.Course;
 import comp3111.examsystem.database.DatabaseConnection;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -39,15 +37,13 @@ public class CourseManagementControllerTest {
         controller.courseNameFilter = new TextField();
         controller.departmentFilter = new TextField();
         controller.courseTable = new TableView<>();
+        controller.courseIdColumn = new TableColumn<>("Course ID");
+        controller.courseNameColumn = new TableColumn<>("Course Name");
+        controller.departmentColumn = new TableColumn<>("Department");
         controller.courseIdField = new TextField();
         controller.courseNameField = new TextField();
         controller.departmentField = new TextField();
         controller.errorMessageLbl = new Label();
-
-        controller.courseIdColumn = new TableColumn<>("Course ID");
-        controller.courseNameColumn = new TableColumn<>("Course Name");
-        controller.departmentColumn = new TableColumn<>("Department");
-
 
         VBox vbox = new VBox(controller.courseIdFilter, controller.courseNameFilter, controller.departmentFilter, controller.courseTable, controller.courseIdField, controller.courseNameField, controller.departmentField, controller.errorMessageLbl);
         Scene scene = new Scene(vbox);
@@ -66,100 +62,225 @@ public class CourseManagementControllerTest {
     }
 
     @Test
-    public void testInitialize(FxRobot robot) {
-        // Call the initialize method
-        robot.interact(() -> controller.initialize());
-
-        // Verify that the TableColumns are set up correctly
-        Assertions.assertThat(controller.courseIdColumn.getText()).isEqualTo("Course ID");
-        Assertions.assertThat(controller.courseNameColumn.getText()).isEqualTo("Course Name");
-        Assertions.assertThat(controller.departmentColumn.getText()).isEqualTo("Department");
-
-        // Verify that the TableView is empty initially
-        Assertions.assertThat(controller.courseTable.getItems()).isEmpty();
-    }
-
-    @Test
-    public void testResetFilter(FxRobot robot) {
-        robot.clickOn(controller.courseIdFilter).write("CS101");
-        robot.clickOn(controller.courseNameFilter).write("Intro to CS");
-        robot.clickOn(controller.departmentFilter).write("CS");
-
-        robot.interact(() -> controller.resetFilter());
-
-        Assertions.assertThat(controller.courseIdFilter).hasText("");
-        Assertions.assertThat(controller.courseNameFilter).hasText("");
-        Assertions.assertThat(controller.departmentFilter).hasText("");
-    }
-
-    @Test
-    public void testFilterCourses(FxRobot robot) throws SQLException {
-        when(mockConn.prepareStatement(anyString())).thenReturn(mockPstmt);
-        when(mockPstmt.executeQuery()).thenReturn(mockRs);
-        when(mockRs.next()).thenReturn(true).thenReturn(false);
-        when(mockRs.getString("courseId")).thenReturn("CS101");
-        when(mockRs.getString("courseName")).thenReturn("Intro to CS");
-        when(mockRs.getString("department")).thenReturn("CS");
+    public void testFilterCoursesWithEmptyFilters(FxRobot robot) throws SQLException {
+        when(mockRs.next()).thenReturn(false);
 
         robot.interact(() -> controller.filterCourses());
 
-        ObservableList<Course> courses = controller.courseTable.getItems();
+        ObservableList<CourseManagementController.Course> courses = controller.courseTable.getItems();
+        Assertions.assertThat(courses).isEmpty();
+    }
+
+    @Test
+    public void testFilterCoursesWithNonEmptyFilters(FxRobot robot) throws SQLException {
+        when(mockRs.next()).thenReturn(true).thenReturn(false);
+        when(mockRs.getString("courseId")).thenReturn("C123");
+        when(mockRs.getString("courseName")).thenReturn("Algorithms");
+        when(mockRs.getString("department")).thenReturn("CS");
+
+        robot.interact(() -> {
+            controller.courseIdFilter.setText("C123");
+            controller.courseNameFilter.setText("Algorithms");
+            controller.departmentFilter.setText("CS");
+            controller.filterCourses();
+        });
+
+        ObservableList<CourseManagementController.Course> courses = controller.courseTable.getItems();
         Assertions.assertThat(courses).hasSize(1);
-        Assertions.assertThat(courses.get(0).getCourseId()).isEqualTo("CS101");
-        Assertions.assertThat(courses.get(0).getCourseName()).isEqualTo("Intro to CS");
-        Assertions.assertThat(courses.get(0).getDepartment()).isEqualTo("CS");
+        Assertions.assertThat(courses.get(0).getCourseId()).isEqualTo("C123");
+        Assertions.assertThat(courses.get(0).getCourseName()).isEqualTo("Algorithms");
     }
 
     @Test
-    public void testAddCourse(FxRobot robot) throws SQLException {
-        when(mockConn.prepareStatement(anyString())).thenReturn(mockPstmt);
+    public void testDeleteCourseWithSelection(FxRobot robot) throws SQLException {
         when(mockPstmt.executeUpdate()).thenReturn(1);
 
-        robot.clickOn(controller.courseIdField).write("CS102");
-        robot.clickOn(controller.courseNameField).write("Data Structures");
-        robot.clickOn(controller.departmentField).write("CS");
-
-        robot.interact(() -> controller.addCourse());
-
-        ObservableList<Course> courses = controller.courseTable.getItems();
-        Assertions.assertThat(courses).hasSize(1);
-        Assertions.assertThat(courses.get(0).getCourseId()).isEqualTo("CS102");
-        Assertions.assertThat(courses.get(0).getCourseName()).isEqualTo("Data Structures");
-        Assertions.assertThat(courses.get(0).getDepartment()).isEqualTo("CS");
-    }
-
-    @Test
-    public void testUpdateCourse(FxRobot robot) throws SQLException {
-        when(mockConn.prepareStatement(anyString())).thenReturn(mockPstmt);
-        when(mockPstmt.executeUpdate()).thenReturn(1);
-
-        Course course = new Course("CS101", "Intro to CS", "CS");
-        controller.courseTable.getItems().add(course);
-        controller.courseTable.getSelectionModel().select(course);
-
-        robot.clickOn(controller.courseIdField).write("CS101");
-        robot.clickOn(controller.courseNameField).write("Advanced CS");
-        robot.clickOn(controller.departmentField).write("CS");
-
-        robot.interact(() -> controller.updateCourse());
-
-        Assertions.assertThat(course.getCourseId()).isEqualTo("CS101");
-        Assertions.assertThat(course.getCourseName()).isEqualTo("Advanced CS");
-        Assertions.assertThat(course.getDepartment()).isEqualTo("CS");
-    }
-
-    @Test
-    public void testDeleteCourse(FxRobot robot) throws SQLException {
-        when(mockConn.prepareStatement(anyString())).thenReturn(mockPstmt);
-        when(mockPstmt.executeUpdate()).thenReturn(1);
-
-        Course course = new Course("CS101", "Intro to CS", "CS");
+        CourseManagementController.Course course = new CourseManagementController.Course("C123", "Algorithms", "CS");
         controller.courseTable.getItems().add(course);
         controller.courseTable.getSelectionModel().select(course);
 
         robot.interact(() -> controller.deleteCourse());
 
-        ObservableList<Course> courses = controller.courseTable.getItems();
+        ObservableList<CourseManagementController.Course> courses = controller.courseTable.getItems();
         Assertions.assertThat(courses).isEmpty();
+    }
+
+    @Test
+    public void testDeleteCourseWithNoSelection(FxRobot robot) {
+        robot.interact(() -> controller.deleteCourse());
+
+        Assertions.assertThat(controller.errorMessageLbl.getText()).isEqualTo("No course selected.");
+    }
+
+    @Test
+    public void testAddCourseWithAllFieldsFilled(FxRobot robot) throws SQLException {
+        when(mockPstmt.executeUpdate()).thenReturn(1);
+
+        robot.interact(() -> {
+            controller.courseIdField.setText("C123");
+            controller.courseNameField.setText("Algorithms");
+            controller.departmentField.setText("CS");
+            controller.addCourse();
+        });
+
+        ObservableList<CourseManagementController.Course> courses = controller.courseTable.getItems();
+        Assertions.assertThat(courses).hasSize(1);
+        Assertions.assertThat(courses.get(0).getCourseId()).isEqualTo("C123");
+        Assertions.assertThat(courses.get(0).getCourseName()).isEqualTo("Algorithms");
+    }
+
+    @Test
+    public void testAddCourseWithEmptyFields(FxRobot robot) {
+        robot.interact(() -> {
+            controller.courseIdField.setText("");
+            controller.courseNameField.setText("Algorithms");
+            controller.departmentField.setText("CS");
+            controller.addCourse();
+        });
+
+        Assertions.assertThat(controller.errorMessageLbl.getText()).isEqualTo("Error: Please check your inputs.");
+    }
+
+    @Test
+    public void testAddCourseWithExistingCourseId(FxRobot robot) throws SQLException {
+        when(mockRs.next()).thenReturn(true);
+        when(mockRs.getInt(1)).thenReturn(1);
+
+        robot.interact(() -> {
+            controller.courseIdField.setText("C123");
+            controller.courseNameField.setText("Algorithms");
+            controller.departmentField.setText("CS");
+            controller.addCourse();
+        });
+
+        Assertions.assertThat(controller.errorMessageLbl.getText()).isEqualTo("Error: Course ID already exists.");
+    }
+
+    @Test
+    public void testUpdateCourseWithSelectionAndAllFieldsUpdated(FxRobot robot) throws SQLException {
+        when(mockPstmt.executeUpdate()).thenReturn(1);
+
+        CourseManagementController.Course course = new CourseManagementController.Course("C123", "Algorithms", "CS");
+        controller.courseTable.getItems().add(course);
+        controller.courseTable.getSelectionModel().select(course);
+
+        robot.interact(() -> {
+            controller.courseIdField.setText("C123");
+            controller.courseNameField.setText("Advanced Algorithms");
+            controller.departmentField.setText("CS");
+            controller.updateCourse();
+        });
+
+        Assertions.assertThat(course.getCourseId()).isEqualTo("C123");
+        Assertions.assertThat(course.getCourseName()).isEqualTo("Advanced Algorithms");
+        Assertions.assertThat(course.getDepartment()).isEqualTo("CS");
+    }
+
+    @Test
+    public void testUpdateCourseWithSelectionAndNoFieldsUpdated(FxRobot robot) {
+        CourseManagementController.Course course = new CourseManagementController.Course("C123", "Algorithms", "CS");
+        controller.courseTable.getItems().add(course);
+        controller.courseTable.getSelectionModel().select(course);
+
+        robot.interact(() -> controller.updateCourse());
+
+        Assertions.assertThat(controller.errorMessageLbl.getText()).isEqualTo("Error: No fields to update.");
+    }
+
+    @Test
+    public void testUpdateCourseWithNoSelection(FxRobot robot) {
+        robot.interact(() -> controller.updateCourse());
+
+        Assertions.assertThat(controller.errorMessageLbl.getText()).isEqualTo("No course selected.");
+    }
+
+    @Test
+    public void testLoadCoursesFromDatabase(FxRobot robot) throws SQLException {
+        when(mockRs.next()).thenReturn(true).thenReturn(false);
+        when(mockRs.getString("courseId")).thenReturn("C123");
+        when(mockRs.getString("courseName")).thenReturn("Algorithms");
+        when(mockRs.getString("department")).thenReturn("CS");
+
+        robot.interact(() -> controller.loadCoursesFromDatabase());
+
+        ObservableList<CourseManagementController.Course> courses = controller.courseTable.getItems();
+        Assertions.assertThat(courses).hasSize(1);
+        Assertions.assertThat(courses.get(0).getCourseId()).isEqualTo("C123");
+        Assertions.assertThat(courses.get(0).getCourseName()).isEqualTo("Algorithms");
+    }
+
+    @Test
+    public void testFilterCoursesDatabaseError(FxRobot robot) throws SQLException {
+        when(mockConn.prepareStatement(anyString())).thenThrow(new SQLException("Database error"));
+
+        robot.interact(() -> controller.filterCourses());
+
+        Assertions.assertThat(controller.errorMessageLbl.getText()).isEqualTo("Error connecting to the database.");
+    }
+
+    @Test
+    public void testDeleteCourseDatabaseError(FxRobot robot) throws SQLException {
+        when(mockConn.prepareStatement(anyString())).thenThrow(new SQLException("Database error"));
+
+        CourseManagementController.Course course = new CourseManagementController.Course("C123", "Algorithms", "CS");
+        controller.courseTable.getItems().add(course);
+        controller.courseTable.getSelectionModel().select(course);
+
+        robot.interact(() -> controller.deleteCourse());
+
+        Assertions.assertThat(controller.errorMessageLbl.getText()).isEqualTo("Error connecting to the database.");
+    }
+
+    @Test
+    public void testAddCourseDatabaseError(FxRobot robot) throws SQLException {
+        when(mockConn.prepareStatement(anyString())).thenThrow(new SQLException("Database error"));
+
+        robot.interact(() -> {
+            controller.courseIdField.setText("C123");
+            controller.courseNameField.setText("Algorithms");
+            controller.departmentField.setText("CS");
+            controller.addCourse();
+        });
+
+        Assertions.assertThat(controller.errorMessageLbl.getText()).isEqualTo("Error connecting to the database.");
+    }
+
+    @Test
+    public void testUpdateCourseDatabaseError(FxRobot robot) throws SQLException {
+        when(mockConn.prepareStatement(anyString())).thenThrow(new SQLException("Database error"));
+
+        CourseManagementController.Course course = new CourseManagementController.Course("C123", "Algorithms", "CS");
+        controller.courseTable.getItems().add(course);
+        controller.courseTable.getSelectionModel().select(course);
+
+        robot.interact(() -> {
+            controller.courseIdField.setText("C123");
+            controller.courseNameField.setText("Advanced Algorithms");
+            controller.departmentField.setText("CS");
+            controller.updateCourse();
+        });
+
+        Assertions.assertThat(controller.errorMessageLbl.getText()).isEqualTo("Error connecting to the database.");
+    }
+
+    @Test
+    public void testInitialize(FxRobot robot) {
+        robot.interact(() -> controller.initialize());
+
+        Assertions.assertThat(controller.courseTable.getItems()).isEmpty();
+    }
+
+    @Test
+    public void testResetFilter(FxRobot robot) {
+        robot.interact(() -> {
+            controller.courseIdFilter.setText("C123");
+            controller.courseNameFilter.setText("Algorithms");
+            controller.departmentFilter.setText("CS");
+            controller.resetFilter();
+        });
+
+        Assertions.assertThat(controller.courseIdFilter).hasText("");
+        Assertions.assertThat(controller.courseNameFilter).hasText("");
+        Assertions.assertThat(controller.departmentFilter).hasText("");
     }
 }
