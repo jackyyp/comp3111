@@ -424,6 +424,7 @@ public class TeacherExamManageController {
 
             setMessage(true, "Exam updated successfully.");
             examTable.refresh();
+            loadExams();
             return true;
         });
     }
@@ -535,7 +536,12 @@ public class TeacherExamManageController {
             return true;
         });
     }
-
+    /**
+     * Executes a database operation using a connection from the database connection pool.
+     *
+     * @param operation the database operation to be executed
+     * @return true if the operation was successful, false otherwise
+     */
     private boolean executeDatabaseOperation(StudentRegisterController.DatabaseOperation operation) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             return operation.execute(conn);
@@ -545,7 +551,13 @@ public class TeacherExamManageController {
             return false;
         }
     }
-
+    /**
+     * Executes a prepared statement operation using a connection from the database connection pool.
+     *
+     * @param sql the SQL query to be executed
+     * @param operation the prepared statement operation to be executed
+     * @return true if the operation was successful, false otherwise
+     */
     private boolean executePreparedStatement(String sql, StudentRegisterController.PreparedStatementOperation operation) {
         return executeDatabaseOperation(conn -> {
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -558,16 +570,42 @@ public class TeacherExamManageController {
         });
     }
 
+    /**
+     * Functional interface for database operations.
+     */
     @FunctionalInterface
     private interface DatabaseOperation {
+        /**
+         * Executes a database operation.
+         *
+         * @param conn the database connection
+         * @return true if the operation was successful, false otherwise
+         * @throws SQLException if a database access error occurs
+         */
         boolean execute(Connection conn) throws SQLException;
     }
 
+    /**
+     * Functional interface for prepared statement operations.
+     */
     @FunctionalInterface
     private interface PreparedStatementOperation {
+        /**
+         * Executes a prepared statement operation.
+         *
+         * @param pstmt the prepared statement
+         * @return true if the operation was successful, false otherwise
+         * @throws SQLException if a database access error occurs
+         */
         boolean execute(PreparedStatement pstmt) throws SQLException;
     }
 
+    /**
+     * Sets the error message label with the specified message and style.
+     *
+     * @param success true if the operation was successful, false otherwise
+     * @param message the message to be displayed
+     */
     private void setMessage(boolean success, String message) {
         errorLabel.setText(message);
         if (success) {
