@@ -21,4 +21,12 @@ public class StudentControllerModel {
      * The ID of the exam.
      */
     private Integer examId;
+
+    public int getId(){
+        if (examId==null){
+            return 0;
+        }
+        return examId;
+    }
 }
+

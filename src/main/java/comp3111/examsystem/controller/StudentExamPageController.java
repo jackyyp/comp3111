@@ -183,17 +183,17 @@ public class StudentExamPageController {
         String questionSql = "SELECT q.id, q.text, q.option_a, q.option_b, q.option_c, q.option_d, q.is_single_choice, q.answer, q.score " +
                 "FROM question q JOIN exam_question_link eql ON q.id = eql.question_id WHERE eql.exam_id = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement examStmt = conn.prepareStatement(examSql);
-             PreparedStatement pstmt = conn.prepareStatement(questionSql)) {
-
+        executePreparedStatement(examSql, examStmt -> {
             examStmt.setInt(1, examId);
             ResultSet examRs = examStmt.executeQuery();
             if (examRs.next()) {
                 timeAllowedSeconds = examRs.getLong("time_limit");
                 timeRemainingSeconds = timeAllowedSeconds;
             }
+            return true;
+        });
 
+        executePreparedStatement(questionSql, pstmt -> {
             pstmt.setInt(1, examId);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
@@ -236,10 +236,8 @@ public class StudentExamPageController {
 
             updateNavigationButtons();
             questionListView.setItems(FXCollections.observableArrayList(getQuestionListItems()));
-
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
+            return true;
+        });
 
         timeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
             timeRemainingSeconds--;
@@ -387,7 +385,7 @@ public class StudentExamPageController {
         int finalCorrectAnswers = correctAnswers;
         int finalTotalScore = totalScore;
 
-        saveGradeToDatabase(dataModel.getUsername(), dataModel.getExamId(), totalScore, (int) timeSpent);
+        saveGradeToDatabase(dataModel.getUsername(), dataModel.getId(), totalScore, (int) timeSpent);
 
         Platform.runLater(() -> {
             Alert alert = new Alert(AlertType.INFORMATION);
@@ -398,6 +396,7 @@ public class StudentExamPageController {
             alert.setOnCloseRequest(event -> loadStudentMainPage(stage));
             alert.showAndWait().ifPresent(alertResponse -> loadStudentMainPage(stage));
         });
+
         if (stage != null) {
             stage.setOnCloseRequest(null); // re-enable the close button
         }
@@ -414,15 +413,14 @@ public class StudentExamPageController {
     void saveGradeToDatabase(String studentId, int examId, int score, int timeSpent) {
         String sql = "INSERT INTO grade (student_id, exam_id, score, time_spent) VALUES (?, ?, ?, ?)";
 
-        try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        executePreparedStatement(sql, pstmt -> {
             pstmt.setString(1, studentId);
             pstmt.setInt(2, examId);
             pstmt.setInt(3, score);
             pstmt.setInt(4, timeSpent);
             pstmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            return true;
+        });
     }
 
     /**
@@ -581,4 +579,64 @@ public class StudentExamPageController {
             updateNavigationButtons();
         }
     }
+    /**
+     * Executes a database operation using a connection from the database connection pool.
+     *
+     * @param operation the database operation to be executed
+     * @return true if the operation was successful, false otherwise
+     */
+    private boolean executeDatabaseOperation(DatabaseOperation operation) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            return operation.execute(conn);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    /**
+     * Executes a prepared statement operation using a connection from the database connection pool.
+     *
+     * @param sql the SQL query to be executed
+     * @param operation the prepared statement operation to be executed
+     * @return true if the operation was successful, false otherwise
+     */
+    private boolean executePreparedStatement(String sql, PreparedStatementOperation operation) {
+        return executeDatabaseOperation(conn -> {
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                return operation.execute(pstmt);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return false;
+            }
+        });
+    }
+    /**
+     * Functional interface for database operations.
+     */
+    @FunctionalInterface
+    private interface DatabaseOperation {
+        /**
+         * Executes a database operation.
+         *
+         * @param conn the database connection
+         * @return true if the operation was successful, false otherwise
+         * @throws SQLException if a database access error occurs
+         */
+        boolean execute(Connection conn) throws SQLException;
+    }
+    /**
+     * Functional interface for prepared statement operations.
+     */
+    @FunctionalInterface
+    private interface PreparedStatementOperation {
+        /**
+         * Executes a prepared statement operation.
+         *
+         * @param pstmt the prepared statement
+         * @return true if the operation was successful, false otherwise
+         * @throws SQLException if a database access error occurs
+         */
+        boolean execute(PreparedStatement pstmt) throws SQLException;
+    }
+
 }

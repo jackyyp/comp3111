@@ -12,7 +12,15 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-
+/**
+ * Controller class for managing the student functionality.
+ *
+ * This class handles the UI and operations for managing students.
+ * It includes methods for navigating to different sections and performing various tasks.
+ *
+ * @author Poon Chin Hung
+ * @version 1.0
+ */
 public class StudentManagementController {
 
     @Data
@@ -61,7 +69,9 @@ public class StudentManagementController {
     public TextField passwordField;
     @FXML
     public Label errorMessageLbl;
-
+    /**
+     * Initializes the controller class.
+     */
     @FXML
     public void initialize() {
         ageField.setTextFormatter(new TextFormatter<>(change -> {
@@ -93,7 +103,9 @@ public class StudentManagementController {
 
         loadStudentsFromDatabase();
     }
-
+    /**
+     * Resets the filter fields and reloads the students from the database.
+     */
     @FXML
     public void resetFilter() {
         usernameFilter.clear();
@@ -102,7 +114,9 @@ public class StudentManagementController {
         loadStudentsFromDatabase();
         studentTable.refresh();
     }
-
+    /**
+     * Filters the students based on the filter fields.
+     */
     @FXML
     public void filterStudents() {
         String username = usernameFilter.getText();
@@ -149,7 +163,9 @@ public class StudentManagementController {
             return true;
         });
     }
-
+    /**
+     * Deletes the selected student from the database.
+     */
     @FXML
     public void deleteStudent() {
         Student selectedStudent = studentTable.getSelectionModel().getSelectedItem();
@@ -171,7 +187,9 @@ public class StudentManagementController {
         });
 
     }
-
+    /**
+     * Adds a new student to the database.
+     */
     @FXML
     public void addStudent() {
         String username = usernameField.getText();
@@ -222,7 +240,9 @@ public class StudentManagementController {
         });
 
     }
-
+    /**
+     * Updates the selected student in the database.
+     */
     @FXML
     public void updateStudent() {
         Student selectedStudent = studentTable.getSelectionModel().getSelectedItem();
@@ -313,7 +333,9 @@ public class StudentManagementController {
             return true;
         });
     }
-
+    /**
+     * Loads the students from the database and populates the table.
+     */
     void loadStudentsFromDatabase() {
         String sql = "SELECT username, name, age, gender, department, password FROM student";
         executePreparedStatement(sql, pstmt -> {
@@ -334,7 +356,12 @@ public class StudentManagementController {
 
         studentTable.refresh();
     }
-
+    /**
+     * Executes a database operation using a connection from the database connection pool.
+     *
+     * @param operation the database operation to be executed
+     * @return true if the operation was successful, false otherwise
+     */
     private boolean executeDatabaseOperation(DatabaseOperation operation) {
         try (Connection conn = DatabaseConnection.getConnection()) {
            return operation.execute(conn);
@@ -344,7 +371,13 @@ public class StudentManagementController {
             return false;
         }
     }
-
+    /**
+     * Executes a prepared statement operation using a connection from the database connection pool.
+     *
+     * @param sql the SQL query to be executed
+     * @param operation the prepared statement operation to be executed
+     * @return true if the operation was successful, false otherwise
+     */
     private boolean executePreparedStatement(String sql, PreparedStatementOperation operation) {
         return executeDatabaseOperation(conn -> {
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -356,17 +389,40 @@ public class StudentManagementController {
             }
         });
     }
-
+    /**
+     * Functional interface for database operations.
+     */
     @FunctionalInterface
     private interface DatabaseOperation {
+        /**
+         * Executes a database operation.
+         *
+         * @param conn the database connection
+         * @return true if the operation was successful, false otherwise
+         * @throws SQLException if a database access error occurs
+         */
         boolean execute(Connection conn) throws SQLException;
     }
-
+    /**
+     * Functional interface for prepared statement operations.
+     */
     @FunctionalInterface
     private interface PreparedStatementOperation {
+        /**
+         * Executes a prepared statement operation.
+         *
+         * @param pstmt the prepared statement
+         * @return true if the operation was successful, false otherwise
+         * @throws SQLException if a database access error occurs
+         */
         boolean execute(PreparedStatement pstmt) throws SQLException;
     }
-
+    /**
+     * Sets the error message label with the specified message and style.
+     *
+     * @param success true if the operation was successful, false otherwise
+     * @param message the message to be displayed
+     */
     void setMessage(boolean success, String message){
         errorMessageLbl.setText(message);
         if(success){

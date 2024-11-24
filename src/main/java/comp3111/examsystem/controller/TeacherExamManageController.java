@@ -14,6 +14,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Controller class for handling the exam management interface for teachers.
@@ -117,15 +119,12 @@ public class TeacherExamManageController {
         String sql = "SELECT q.* FROM question q " +
                 "JOIN exam_question_link eq ON q.id = eq.question_id " +
                 "WHERE eq.exam_id = ?";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
+        executePreparedStatement(sql, pstmt -> {
             pstmt.setInt(1, examId);
             ResultSet rs = pstmt.executeQuery();
-
             examQuestionList.clear();
             while (rs.next()) {
+                // Assuming you have a Question class and a method to create a Question object from ResultSet
                 Question question = new Question(
                         rs.getInt("id"),
                         rs.getString("text"),
@@ -140,10 +139,8 @@ public class TeacherExamManageController {
                 examQuestionList.add(question);
             }
             examQuestionTable.setItems(examQuestionList);
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            return true;
+        });
     }
 
     /**
@@ -151,11 +148,9 @@ public class TeacherExamManageController {
      */
     public void loadExams() {
         String sql = "SELECT * FROM exam";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
-
-            examList.clear();
+        executePreparedStatement(sql, pstmt -> {
+            ResultSet rs = pstmt.executeQuery();
+            ObservableList<Exam> examList = FXCollections.observableArrayList();
             while (rs.next()) {
                 Exam exam = new Exam(
                         rs.getInt("id"),
@@ -166,10 +161,11 @@ public class TeacherExamManageController {
                 );
                 examList.add(exam);
             }
+
             examTable.setItems(examList);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            examTable.refresh();
+            return true;
+        });
     }
 
     /**
@@ -177,10 +173,8 @@ public class TeacherExamManageController {
      */
     public void loadQuestions() {
         String sql = "SELECT * FROM question";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);
-             ResultSet rs = pstmt.executeQuery()) {
-
+        executePreparedStatement(sql, pstmt -> {
+            ResultSet rs = pstmt.executeQuery();
             questionList.clear();
             while (rs.next()) {
                 Question question = new Question(
@@ -197,9 +191,9 @@ public class TeacherExamManageController {
                 questionList.add(question);
             }
             questionTable.setItems(questionList);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            questionTable.refresh();
+            return true;
+        });
     }
 
     /**
@@ -209,26 +203,34 @@ public class TeacherExamManageController {
     public void handleFilterQuestion() {
         String question = questionField.getText();
         String type = typeComboBox.getValue();
-        int score;
-        try {
-            score = scoreField.getText().isEmpty() ? -1 : Integer.parseInt(scoreField.getText());
-        } catch (NumberFormatException e) {
-            errorLabel.setText("Score must be a valid integer.");
-            errorLabel.setStyle("-fx-text-fill: red;");
-            return;
+        String scoreText = scoreField.getText();
+
+        StringBuilder sql = new StringBuilder("SELECT * FROM question WHERE 1=1");
+        List<Object> parameters = new ArrayList<>();
+
+        if (!question.isEmpty()) {
+            sql.append(" AND text LIKE ?");
+            parameters.add("%" + question + "%");
+        }
+        if (type != null) {
+            sql.append(" AND is_single_choice = ?");
+            parameters.add(type.equals("Single"));
+        }
+        if (!scoreText.isEmpty()) {
+            try {
+                int score = Integer.parseInt(scoreText);
+                sql.append(" AND score = ?");
+                parameters.add(score);
+            } catch (NumberFormatException e) {
+                setMessage(false, "Score must be a valid integer.");
+                return;
+            }
         }
 
-        String sql = "SELECT * FROM question WHERE text LIKE ? AND (is_single_choice = ? OR ? IS NULL) AND (score = ? OR ? = -1)";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, "%" + question + "%");
-            pstmt.setBoolean(2, type != null && type.equals("Single"));
-            pstmt.setString(3, type);
-            pstmt.setInt(4, score);
-            pstmt.setInt(5, score);
-
+        executePreparedStatement(sql.toString(), pstmt -> {
+            for (int i = 0; i < parameters.size(); i++) {
+                pstmt.setObject(i + 1, parameters.get(i));
+            }
             ResultSet rs = pstmt.executeQuery();
             questionList.clear();
 
@@ -247,9 +249,11 @@ public class TeacherExamManageController {
                 questionList.add(q);
             }
 
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            questionTable.setItems(questionList);
+            questionTable.refresh();
+            return true;
+        });
+
     }
 
     /**
@@ -273,9 +277,7 @@ public class TeacherExamManageController {
 
         String sql = "SELECT * FROM exam WHERE name LIKE ? AND course LIKE ? AND (is_published = ? OR ? IS NULL)";
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
+        executePreparedStatement(sql, pstmt -> {
             pstmt.setString(1, "%" + examName + "%");
             pstmt.setString(2, "%" + courseId + "%");
             pstmt.setBoolean(3, "Yes".equals(published));
@@ -295,10 +297,9 @@ public class TeacherExamManageController {
                 examList.add(exam);
             }
             examTable.setItems(examList);
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            examTable.refresh();
+            return true;
+        });
     }
 
     /**
@@ -312,8 +313,7 @@ public class TeacherExamManageController {
         String timeLimitText = timelimitField.getText();
 
         if (examName.isEmpty() || courseId.isEmpty() || published == null || timeLimitText.isEmpty()) {
-            errorLabel.setText("All fields must be filled out.");
-            errorLabel.setStyle("-fx-text-fill: red;");
+            setMessage(false, "All fields must be filled out.");
             return;
         }
 
@@ -321,56 +321,39 @@ public class TeacherExamManageController {
         try {
             timeLimit = Integer.parseInt(timeLimitText);
         } catch (NumberFormatException e) {
-            errorLabel.setText("Time limit must be a valid integer.");
-            errorLabel.setStyle("-fx-text-fill: red;");
+            setMessage(false, "Time limit must be a valid integer.");
             return;
         }
 
         String checkSql = "SELECT COUNT(*) FROM exam WHERE name = ? AND course = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
-
+        boolean isDuplicate = executePreparedStatement(checkSql, checkStmt -> {
             checkStmt.setString(1, examName);
             checkStmt.setString(2, courseId);
 
             ResultSet rs = checkStmt.executeQuery();
-            if (rs.next() && rs.getInt(1) > 0) {
-                errorLabel.setText("The exam already exists.");
-                errorLabel.setStyle("-fx-text-fill: red;");
-                return;
+            if (rs.getInt(1) > 0) {
+                setMessage(false, "The exam already exists.");
+                return true;
             }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            errorLabel.setText("Database error: " + e.getMessage());
-            errorLabel.setStyle("-fx-text-fill: red;");
+            return false;
+        });
+        if (isDuplicate) {
             return;
         }
 
         String sql = "INSERT INTO exam (name, course, is_published, time_limit) VALUES (?, ?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
+        executePreparedStatement(sql, pstmt -> {
             pstmt.setString(1, examName);
             pstmt.setString(2, courseId);
             pstmt.setBoolean(3, "Yes".equals(published));
             pstmt.setInt(4, timeLimit);
 
-            int affectedRows =pstmt.executeUpdate();
-            if (affectedRows > 0) {
-                errorLabel.setText("Exam added successfully.");
-                errorLabel.setStyle("-fx-text-fill: green;");
-                loadExams();
-            } else {
-                errorLabel.setText("Failed to add the exam.");
-                errorLabel.setStyle("-fx-text-fill: red;");
-            }
+            pstmt.executeUpdate();
+            setMessage(true, "Exam added successfully.");
+            loadExams();
 
-        } catch (SQLException e) {
-            e.printStackTrace();
-            errorLabel.setText("Database error: " + e.getMessage());
-            errorLabel.setStyle("-fx-text-fill: red;");
-        }
+            return true;
+        });
     }
 
     /**
@@ -381,8 +364,7 @@ public class TeacherExamManageController {
         Exam selectedExam = examTable.getSelectionModel().getSelectedItem();
 
         if (selectedExam == null) {
-            errorLabel.setText("Please select an exam to update.");
-            errorLabel.setStyle("-fx-text-fill: red;");
+            setMessage(false, "Please select an exam to update.");
             return;
         }
 
@@ -394,8 +376,7 @@ public class TeacherExamManageController {
         int prev_timeLimit = selectedExam.getTimeLimit();
 
         if (examName.isEmpty() && courseId.isEmpty() && published == null && timeLimitText.isEmpty()) {
-            errorLabel.setText("Some fields must be filled out.");
-            errorLabel.setStyle("-fx-text-fill: red;");
+            setMessage(false, "Some fields must be filled out.");
             return;
         }
         examName = examName.isEmpty() ? prev_examName : examName;
@@ -405,58 +386,47 @@ public class TeacherExamManageController {
         try {
             timeLimit = timelimitField.getText().isEmpty() ? prev_timeLimit : Integer.parseInt(timelimitField.getText());
         } catch (NumberFormatException e) {
-            errorLabel.setText("Time limit must be a valid integer.");
-            errorLabel.setStyle("-fx-text-fill: red;");
+            setMessage(false, "Time limit must be a valid integer.");
             return;
         }
 
         String checkSql = "SELECT COUNT(*) FROM exam WHERE name = ? AND course = ? AND id != ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement checkStmt = conn.prepareStatement(checkSql)) {
+        String finalCourseId = courseId;
+        String finalExamName = examName;
 
-            checkStmt.setString(1, examName);
-            checkStmt.setString(2, courseId);
+        boolean isDuplicate = executePreparedStatement(checkSql, checkStmt -> {
+            checkStmt.setString(1, finalExamName);
+            checkStmt.setString(2, finalCourseId);
             checkStmt.setInt(3, selectedExam.getId());
 
             ResultSet rs = checkStmt.executeQuery();
             if (rs.next() && rs.getInt(1) > 0) {
-                errorLabel.setText("Updating the exam will result in a duplicate entry.");
-                errorLabel.setStyle("-fx-text-fill: red;");
-                return;
+                setMessage(false, "Updating the exam will result in a duplicate entry.");
+                return true;
             }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            errorLabel.setText("Database error: " + e.getMessage());
-            errorLabel.setStyle("-fx-text-fill: red;");
+            return false;
+        });
+        if (isDuplicate) {
             return;
         }
 
         String sql = "UPDATE exam SET name = ?, course = ?, is_published = ?, time_limit = ? WHERE id = ?";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, examName);
-            pstmt.setString(2, courseId);
-            pstmt.setBoolean(3, "Yes".equals(published));
+        String finalPublished = published;
+        String finalCourseId1 = courseId;
+        String finalExamName1 = examName;
+        executePreparedStatement(sql, pstmt -> {
+            pstmt.setString(1, finalExamName1);
+            pstmt.setString(2, finalCourseId1);
+            pstmt.setBoolean(3, "Yes".equals(finalPublished));
             pstmt.setInt(4, timeLimit);
             pstmt.setInt(5, selectedExam.getId());
+            pstmt.executeUpdate();
 
-            int affectedRows = pstmt.executeUpdate();
-            if (affectedRows > 0) {
-                errorLabel.setText("Exam updated successfully.");
-                errorLabel.setStyle("-fx-text-fill: green;");
-                loadExams();
-            } else {
-                errorLabel.setText("Failed to update the exam.");
-                errorLabel.setStyle("-fx-text-fill: red;");
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            errorLabel.setText("Database error: " + e.getMessage());
-            errorLabel.setStyle("-fx-text-fill: red;");
-        }
+            setMessage(true, "Exam updated successfully.");
+            examTable.refresh();
+            loadExams();
+            return true;
+        });
     }
 
     /**
@@ -467,32 +437,21 @@ public class TeacherExamManageController {
         Exam selectedExam = examTable.getSelectionModel().getSelectedItem();
 
         if (selectedExam == null) {
-            errorLabel.setText("Please select an exam to delete.");
-            errorLabel.setStyle("-fx-text-fill: red;");
+            setMessage(false, "Please select an exam to delete.");
             return;
         }
 
         String sql = "DELETE FROM exam WHERE id = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
+        executePreparedStatement(sql, pstmt -> {
             pstmt.setInt(1, selectedExam.getId());
-            int affectedRows = pstmt.executeUpdate();
-            if (affectedRows > 0) {
-                errorLabel.setText("Exam deleted successfully.");
-                errorLabel.setStyle("-fx-text-fill: green;");
-                loadExams();
-            } else {
-                errorLabel.setText("Failed to delete the exam.");
-                errorLabel.setStyle("-fx-text-fill: red;");
-            }
+            pstmt.executeUpdate();
+            setMessage(true, "Exam deleted successfully.");
 
-        } catch (SQLException e) {
-            e.printStackTrace();
-            errorLabel.setText("Database error: " + e.getMessage());
-            errorLabel.setStyle("-fx-text-fill: red;");
-        }
+            examTable.getItems().remove(selectedExam);
+            examTable.refresh();
+            return true;
+        });
     }
 
     /**
@@ -522,25 +481,23 @@ public class TeacherExamManageController {
     @FXML
     public void handleDeleteFromExam() {
         Question selectedQuestion = examQuestionTable.getSelectionModel().getSelectedItem();
-        if (selectedQuestion != null) {
-            try (Connection conn = DatabaseConnection.getConnection();
-                 PreparedStatement pstmt = conn.prepareStatement("DELETE FROM exam_question_link WHERE exam_id = ? AND question_id = ?")) {
-                pstmt.setInt(1, currentExamId);
-                pstmt.setInt(2, selectedQuestion.getId());
-                pstmt.executeUpdate();
-                loadExamQuestions(currentExamId); // Refresh the table after deletion
-                errorLabel.setText("Question deleted from exam successfully.");
-                errorLabel.setStyle("-fx-text-fill: green;");
-            } catch (SQLException e) {
-                e.printStackTrace();
-                errorLabel.setText("Error deleting question from exam: " + e.getMessage());
-                errorLabel.setStyle("-fx-text-fill: red;");
-            }
-        } else {
-            errorLabel.setText("No question selected for deletion.");
-            errorLabel.setStyle("-fx-text-fill: red;");
+        if (selectedQuestion == null) {
+            setMessage(false, "No question selected for deletion.");
+            return;
         }
+
+        String sql = "DELETE FROM exam_question_link WHERE exam_id = ? AND question_id = ?";
+        executePreparedStatement(sql, pstmt -> {
+            pstmt.setInt(1, currentExamId);
+            pstmt.setInt(2, selectedQuestion.getId());
+            pstmt.executeUpdate();
+            loadExamQuestions(currentExamId); // Refresh the table after deletion
+            setMessage(true, "Question deleted from exam successfully.");
+            return true;
+        });
+
     }
+
 
     /**
      * Handles the add question to exam action.
@@ -549,41 +506,114 @@ public class TeacherExamManageController {
     @FXML
     public void handleAddToExam() {
         Question selectedQuestion = questionTable.getSelectionModel().getSelectedItem();
-        if (selectedQuestion != null) {
-            String checkSql = "SELECT COUNT(*) FROM exam_question_link WHERE exam_id = ? AND question_id = ?";
-            String insertSql = "INSERT INTO exam_question_link (exam_id, question_id) VALUES (?, ?)";
+        if (selectedQuestion == null) {
+            setMessage(false, "No question selected for adding.");
+            return;
+        }
+        String checkSql = "SELECT COUNT(*) FROM exam_question_link WHERE exam_id = ? AND question_id = ?";
+        String insertSql = "INSERT INTO exam_question_link (exam_id, question_id) VALUES (?, ?)";
 
-            try (Connection conn = DatabaseConnection.getConnection();
-                 PreparedStatement checkStmt = conn.prepareStatement(checkSql);
-                 PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
-
-                // Check if the question already exists in the exam
-                checkStmt.setInt(1, currentExamId);
-                checkStmt.setInt(2, selectedQuestion.getId());
-                ResultSet rs = checkStmt.executeQuery();
-                rs.next();
-                if (rs.getInt(1) > 0) {
-                    errorLabel.setText("This question has already been added to the exam.");
-                    errorLabel.setStyle("-fx-text-fill: red;");
-                    return;
-                }
-
-                // Insert the question into the exam
-                insertStmt.setInt(1, currentExamId);
-                insertStmt.setInt(2, selectedQuestion.getId());
-                insertStmt.executeUpdate();
-                loadExamQuestions(currentExamId); // Refresh the table after adding
-                errorLabel.setText("Question added to exam successfully.");
-                errorLabel.setStyle("-fx-text-fill: green;");
-
-            } catch (SQLException e) {
-                e.printStackTrace();
-                errorLabel.setText("Error adding question to exam: " + e.getMessage());
-                errorLabel.setStyle("-fx-text-fill: red;");
+        boolean isDuplicate = executePreparedStatement(checkSql, checkStmt -> {
+            checkStmt.setInt(1, currentExamId);
+            checkStmt.setInt(2, selectedQuestion.getId());
+            ResultSet rs = checkStmt.executeQuery();
+            rs.next();
+            if (rs.getInt(1) > 0) {
+                setMessage(false, "This question has already been added to the exam.");
+                return true;
             }
-        } else {
-            errorLabel.setText("No question selected for adding.");
-            errorLabel.setStyle("-fx-text-fill: red;");
+            return false;
+        });
+        if (isDuplicate) {
+            return;
+        }
+        executePreparedStatement(insertSql, insertStmt -> {
+            insertStmt.setInt(1, currentExamId);
+            insertStmt.setInt(2, selectedQuestion.getId());
+            insertStmt.executeUpdate();
+            loadExamQuestions(currentExamId); // Refresh the table after adding
+            setMessage(true, "Question added to exam successfully.");
+            return true;
+        });
+    }
+    /**
+     * Executes a database operation using a connection from the database connection pool.
+     *
+     * @param operation the database operation to be executed
+     * @return true if the operation was successful, false otherwise
+     */
+    private boolean executeDatabaseOperation(StudentRegisterController.DatabaseOperation operation) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            return operation.execute(conn);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            setMessage(false, "Error connecting to the database.");
+            return false;
         }
     }
+    /**
+     * Executes a prepared statement operation using a connection from the database connection pool.
+     *
+     * @param sql the SQL query to be executed
+     * @param operation the prepared statement operation to be executed
+     * @return true if the operation was successful, false otherwise
+     */
+    private boolean executePreparedStatement(String sql, StudentRegisterController.PreparedStatementOperation operation) {
+        return executeDatabaseOperation(conn -> {
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                return operation.execute(pstmt);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                setMessage(false, "Error connecting to the database.");
+                return false;
+            }
+        });
+    }
+
+    /**
+     * Functional interface for database operations.
+     */
+    @FunctionalInterface
+    private interface DatabaseOperation {
+        /**
+         * Executes a database operation.
+         *
+         * @param conn the database connection
+         * @return true if the operation was successful, false otherwise
+         * @throws SQLException if a database access error occurs
+         */
+        boolean execute(Connection conn) throws SQLException;
+    }
+
+    /**
+     * Functional interface for prepared statement operations.
+     */
+    @FunctionalInterface
+    private interface PreparedStatementOperation {
+        /**
+         * Executes a prepared statement operation.
+         *
+         * @param pstmt the prepared statement
+         * @return true if the operation was successful, false otherwise
+         * @throws SQLException if a database access error occurs
+         */
+        boolean execute(PreparedStatement pstmt) throws SQLException;
+    }
+
+    /**
+     * Sets the error message label with the specified message and style.
+     *
+     * @param success true if the operation was successful, false otherwise
+     * @param message the message to be displayed
+     */
+    private void setMessage(boolean success, String message) {
+        errorLabel.setText(message);
+        if (success) {
+            errorLabel.setStyle("-fx-text-fill: green;");
+        } else {
+            errorLabel.setStyle("-fx-text-fill: red;");
+        }
+        errorLabel.setVisible(true);
+    }
+
 }

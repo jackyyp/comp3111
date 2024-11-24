@@ -136,9 +136,7 @@ public class StudentGradeStatisticController implements Initializable {
                 "JOIN grade g ON e.id = g.exam_id " +
                 "WHERE g.student_id = ?";
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
+        executePreparedStatement(sql, pstmt -> {
             pstmt.setString(1, dataModel.getUsername()); // Set the student ID for filtering
             ResultSet rs = pstmt.executeQuery();
 
@@ -147,10 +145,8 @@ public class StudentGradeStatisticController implements Initializable {
                 String course = rs.getString("course");
                 courseComboBox.getItems().add(course);
             }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            return true;
+        });
     }
 
     /**
@@ -174,9 +170,7 @@ public class StudentGradeStatisticController implements Initializable {
 
         System.out.println("Executing SQL: " + sql);
 
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
+        executePreparedStatement(sql, pstmt -> {
             pstmt.setString(1, dataModel.getUsername()); // Set the student ID for filtering
             if (courseFilter != null && !courseFilter.equals("All Courses")) {
                 pstmt.setString(2, courseFilter); // Set the course filter
@@ -211,9 +205,10 @@ public class StudentGradeStatisticController implements Initializable {
             gradeChart.getData().add(series);
             System.out.println("BarChart Data: " + gradeChart.getData());
 
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+            return true;
+        });
+
+
     }
 
     /**
@@ -225,6 +220,66 @@ public class StudentGradeStatisticController implements Initializable {
     public void filterGrades(ActionEvent event) {
         String selectedCourse = courseComboBox.getSelectionModel().getSelectedItem();
         loadGradesFromDatabase(selectedCourse);
+    }
+    /**
+     * Executes a database operation using a connection from the database connection pool.
+     *
+     * @param operation the database operation to be executed
+     * @return true if the operation was successful, false otherwise
+     */
+    private boolean executeDatabaseOperation(DatabaseOperation operation) {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            return operation.execute(conn);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    /**
+     * Executes a prepared statement operation using a connection from the database connection pool.
+     *
+     * @param sql the SQL query to be executed
+     * @param operation the prepared statement operation to be executed
+     * @return true if the operation was successful, false otherwise
+     */
+    private boolean executePreparedStatement(String sql, PreparedStatementOperation operation) {
+        return executeDatabaseOperation(conn -> {
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                return operation.execute(pstmt);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return false;
+            }
+        });
+    }
+
+    /**
+     * Functional interface for database operations.
+     */
+    @FunctionalInterface
+    private interface DatabaseOperation {
+        /**
+         * Executes a database operation.
+         *
+         * @param conn the database connection
+         * @return true if the operation was successful, false otherwise
+         * @throws SQLException if a database access error occurs
+         */
+        boolean execute(Connection conn) throws SQLException;
+    }
+    /**
+     * Functional interface for prepared statement operations.
+     */
+    @FunctionalInterface
+    private interface PreparedStatementOperation {
+        /**
+         * Executes a prepared statement operation.
+         *
+         * @param pstmt the prepared statement
+         * @return true if the operation was successful, false otherwise
+         * @throws SQLException if a database access error occurs
+         */
+        boolean execute(PreparedStatement pstmt) throws SQLException;
     }
 
     /**

@@ -8,7 +8,6 @@ import javafx.scene.Scene;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -44,6 +43,8 @@ public class StudentGradeStatisticControllerTest extends ApplicationTest {
     @Override
     public void start(Stage stage) {
         controller = new StudentGradeStatisticController();
+
+
         dataModel = mock(StudentControllerModel.class);
         when(dataModel.getUsername()).thenReturn("testUser");
 
@@ -70,22 +71,24 @@ public class StudentGradeStatisticControllerTest extends ApplicationTest {
         controller.timeColumn = timeColumn;
         controller.setDataModel(dataModel);
 
+
+
         Scene scene = new Scene(gradeTable);
         stage.setScene(scene);
         stage.show();
     }
 
     @BeforeEach
-    public void setUp() {
-        // No need to initialize JFXPanel
+    public void setUp()  throws SQLException{
+
+
     }
 
     @Test
     public void testInitialize() {
         ResourceBundle resources = mock(ResourceBundle.class);
         controller.initialize(null, resources);
-
-//        assertNotNull(controller.courseComboBox.getOnAction());
+        assertNotNull(controller.courseComboBox.getOnAction());
     }
 
     @Test
@@ -94,35 +97,76 @@ public class StudentGradeStatisticControllerTest extends ApplicationTest {
         PreparedStatement pstmt = mock(PreparedStatement.class);
         ResultSet rs = mock(ResultSet.class);
 
-        when(conn.prepareStatement(anyString())).thenReturn(pstmt);
-        when(pstmt.executeQuery()).thenReturn(rs);
-        when(rs.next()).thenReturn(true, false);
+        DatabaseConnection.setMockConnection(conn);
+        when(rs.next()).thenReturn(true).thenReturn(false); // Ensure rs.next() returns true once, then false
         when(rs.getString("course")).thenReturn("Course1");
+        when(pstmt.executeQuery()).thenReturn(rs);
+
+        DatabaseConnection.setMockConnection(conn);
+        when(conn.prepareStatement(anyString())).thenReturn(pstmt);
 
         controller.loadCourses();
 
-//        assertEquals(1, controller.courseComboBox.getItems().size());
+        assertEquals(2, controller.courseComboBox.getItems().size()); // Expecting "All Courses" and "Course1"
+        assertEquals("All Courses", controller.courseComboBox.getItems().get(0));
+        assertEquals("Course1", controller.courseComboBox.getItems().get(1));
     }
 
     @Test
-    public void testLoadGradesFromDatabase() throws SQLException {
+    public void testLoadGradesFromDatabaseWithFilter() throws SQLException {
+        // Mock the Connection, PreparedStatement, and ResultSet
         Connection conn = mock(Connection.class);
         PreparedStatement pstmt = mock(PreparedStatement.class);
         ResultSet rs = mock(ResultSet.class);
 
+        // Set up the DatabaseConnection to return the mocked Connection
+        when(pstmt.executeQuery()).thenReturn(rs);
+        DatabaseConnection.setMockConnection(conn);
+        when(conn.prepareStatement(anyString())).thenReturn(pstmt);
+        when(rs.getString("course")).thenReturn("Course1");
+        when(rs.getString("exam")).thenReturn("Exam1");
+        when(rs.getInt("score")).thenReturn(85);
+        when(rs.getInt("full_score")).thenReturn(100);
+        when(rs.getInt("time_spent")).thenReturn(60);
+        DatabaseConnection.setMockConnection(conn);
+
+        doNothing().when(pstmt).setString(anyInt(), anyString());
+        controller.loadGradesFromDatabase("Course1");
+        when(rs.next()).thenReturn(true).thenReturn(false); // Ensure rs.next() returns true once, then false
+
+        assertEquals(0, controller.gradeTable.getItems().size());
+
+    }
+
+    @Test
+    public void testLoadGradesFromDatabaseWithoutFilter() throws SQLException {
+        // Mock the Connection, PreparedStatement, and ResultSet
+        Connection conn = mock(Connection.class);
+        PreparedStatement pstmt = mock(PreparedStatement.class);
+        ResultSet rs = mock(ResultSet.class);
+
+        // Set up the DatabaseConnection to return the mocked Connection
+        DatabaseConnection.setMockConnection(conn);
+        // Mock the behavior of the Connection, PreparedStatement, and ResultSet
         when(conn.prepareStatement(anyString())).thenReturn(pstmt);
         when(pstmt.executeQuery()).thenReturn(rs);
-        when(rs.next()).thenReturn(true, false);
+        when(rs.next()).thenReturn(true).thenReturn(false); // Ensure rs.next() returns true once, then false
         when(rs.getString("course")).thenReturn("Course1");
         when(rs.getString("exam")).thenReturn("Exam1");
         when(rs.getInt("score")).thenReturn(85);
         when(rs.getInt("full_score")).thenReturn(100);
         when(rs.getInt("time_spent")).thenReturn(60);
 
+        // Mock the setString method
+        doNothing().when(pstmt).setString(anyInt(), anyString());
         controller.loadGradesFromDatabase(null);
 
-//        assertEquals(0, controller.gradeTable.getItems().size());
-
+        assertEquals(1, controller.gradeTable.getItems().size());
+        assertEquals("Course1", controller.gradeTable.getItems().get(0).getCourse());
+        assertEquals("Exam1", controller.gradeTable.getItems().get(0).getExam());
+        assertEquals(85, controller.gradeTable.getItems().get(0).getScore());
+        assertEquals(100, controller.gradeTable.getItems().get(0).getFullScore());
+        assertEquals(60, controller.gradeTable.getItems().get(0).getTime());
     }
 
     @Test
@@ -133,6 +177,6 @@ public class StudentGradeStatisticControllerTest extends ApplicationTest {
         ActionEvent event = mock(ActionEvent.class);
         controller.filterGrades(event);
 
-//        assertEquals("Course1", controller.courseComboBox.getSelectionModel().getSelectedItem());
+        assertEquals("Course1", controller.courseComboBox.getSelectionModel().getSelectedItem());
     }
 }
