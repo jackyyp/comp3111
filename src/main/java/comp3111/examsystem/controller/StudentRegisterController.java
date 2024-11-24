@@ -13,36 +13,73 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ResourceBundle;
-
+/**
+ * The controller for the student registration page.
+ *
+ * This controller is responsible for handling the student's registration.
+ *
+ * @author WANG Shao Fu
+ */
 public class StudentRegisterController {
-
+    /**
+     * The text field for the username.
+     */
     @FXML
     public TextField usernameTxt;
+    /**
+     * The text field for the name.
+     */
     @FXML
     public TextField nameTxt;
+    /**
+     * The combo box for selecting the gender.
+     */
     @FXML
     public ComboBox<String> genderComboBox;
+    /**
+     * The text field for the age.
+     */
     @FXML
     public TextField ageTxt;
+    /**
+     * The text field for the department.
+     */
     @FXML
     public TextField departmentTxt;
+    /**
+     * The password field for the password.
+     */
     @FXML
     public PasswordField passwordTxt;
+    /**
+     * The password field for the confirm password.
+     */
     @FXML
     public PasswordField confirmPasswordTxt;
+    /**
+     * The label for displaying the error message.
+     */
     @FXML
     public Label errorMessageLbl;
-
+    /**
+     * Initializes the controller class.
+     */
     @FXML
     public void initialize() {
         genderComboBox.setItems(FXCollections.observableArrayList("Male", "Female", "Other"));
     }
-
+    /**
+     * Closes the registration window.
+     *
+     * @param e the event that triggered the close
+     */
     @FXML
     public void close(ActionEvent e) {
         ((Stage) ((Button) e.getSource()).getScene().getWindow()).close();
     }
-
+    /**
+     * Registers the student.
+     */
     @FXML
     public void register() {
         String username = usernameTxt.getText();
@@ -99,7 +136,12 @@ public class StudentRegisterController {
             return true;
         });
     }
-
+    /**
+     * Executes a database operation using a connection from the database connection pool.
+     *
+     * @param operation the database operation to be executed
+     * @return true if the operation was successful, false otherwise
+     */
     private boolean executeDatabaseOperation(DatabaseOperation operation) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             return operation.execute(conn);
@@ -109,7 +151,13 @@ public class StudentRegisterController {
             return false;
         }
     }
-
+    /**
+     * Executes a prepared statement operation using a connection from the database connection pool.
+     *
+     * @param sql the SQL query to be executed
+     * @param operation the prepared statement operation to be executed
+     * @return true if the operation was successful, false otherwise
+     */
     private boolean executePreparedStatement(String sql, PreparedStatementOperation operation) {
         return executeDatabaseOperation(conn -> {
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -121,17 +169,40 @@ public class StudentRegisterController {
             }
         });
     }
-
+    /**
+     * Functional interface for database operations.
+     */
     @FunctionalInterface
     interface DatabaseOperation {
+        /**
+         * Executes a database operation.
+         *
+         * @param conn the database connection
+         * @return true if the operation was successful, false otherwise
+         * @throws SQLException if a database access error occurs
+         */
         boolean execute(Connection conn) throws SQLException;
     }
-
+    /**
+     * Functional interface for prepared statement operations.
+     */
     @FunctionalInterface
     interface PreparedStatementOperation {
+        /**
+         * Executes a prepared statement operation.
+         *
+         * @param pstmt the prepared statement
+         * @return true if the operation was successful, false otherwise
+         * @throws SQLException if a database access error occurs
+         */
         boolean execute(PreparedStatement pstmt) throws SQLException;
     }
-
+    /**
+     * Sets the error message label with the specified message and style.
+     *
+     * @param success true if the operation was successful, false otherwise
+     * @param message the message to be displayed
+     */
     private void setMessage(boolean success, String message) {
         errorMessageLbl.setText(message);
         if (success) {

@@ -19,6 +19,9 @@ import java.sql.SQLException;
  *
  * This class handles the UI and operations for managing courses.
  * It includes methods for navigating to different sections and performing various tasks.
+ *
+ * @author Poon Chin Hung
+ * @version 1.0
  */
 public class CourseManagementController {
 
@@ -55,6 +58,9 @@ public class CourseManagementController {
 
     private ObservableList<Course> courseList = FXCollections.observableArrayList();
 
+    /**
+     * Initializes the controller class.
+     */
     @FXML
     public void initialize() {
         courseTable.widthProperty().addListener((obs, oldWidth, newWidth) -> {
@@ -73,7 +79,9 @@ public class CourseManagementController {
         courseTable.setItems(courseList);
         loadCoursesFromDatabase();
     }
-
+    /**
+     * Resets the filter fields and reloads the courses from the database.
+     */
     @FXML
     public void resetFilter() {
         courseIdFilter.clear();
@@ -81,7 +89,9 @@ public class CourseManagementController {
         departmentFilter.clear();
         loadCoursesFromDatabase();
     }
-
+    /**
+     * Filters the courses based on the filter fields.
+     */
     @FXML
     public void filterCourses() {
         String courseId = courseIdFilter.getText();
@@ -124,7 +134,9 @@ public class CourseManagementController {
             return true;
         });
     }
-
+    /**
+     * Deletes the selected course from the database.
+     */
     @FXML
     public void deleteCourse() {
         Course selectedCourse = courseTable.getSelectionModel().getSelectedItem();
@@ -144,7 +156,9 @@ public class CourseManagementController {
             return true;
         });
     }
-
+    /**
+     * Adds a new course to the database.
+     */
     @FXML
     public void addCourse() {
         String courseId = courseIdField.getText();
@@ -183,7 +197,9 @@ public class CourseManagementController {
             return true;
         });
     }
-
+    /**
+     * Updates the selected course in the database.
+     */
     @FXML
     public void updateCourse() {
         Course selectedCourse = courseTable.getSelectionModel().getSelectedItem();
@@ -246,7 +262,9 @@ public class CourseManagementController {
             return true;
         });
     }
-
+    /**
+     * Loads the courses from the database and populates the table.
+     */
     void loadCoursesFromDatabase() {
         String sql = "SELECT courseId, courseName, department FROM course";
         executePreparedStatement(sql, pstmt -> {
@@ -262,7 +280,12 @@ public class CourseManagementController {
             return true;
         });
     }
-
+    /**
+     * Executes a database operation using a connection from the database connection pool.
+     *
+     * @param operation the database operation to be executed
+     * @return true if the operation was successful, false otherwise
+     */
     private boolean executeDatabaseOperation(DatabaseOperation operation) {
         try (Connection conn = DatabaseConnection.getConnection()) {
             return operation.execute(conn);
@@ -272,7 +295,13 @@ public class CourseManagementController {
             return false;
         }
     }
-
+    /**
+     * Executes a prepared statement operation using a connection from the database connection pool.
+     *
+     * @param sql the SQL query to be executed
+     * @param operation the prepared statement operation to be executed
+     * @return true if the operation was successful, false otherwise
+     */
     private boolean executePreparedStatement(String sql, PreparedStatementOperation operation) {
         return executeDatabaseOperation(conn -> {
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -284,17 +313,40 @@ public class CourseManagementController {
             }
         });
     }
-
+    /**
+     * Functional interface for database operations.
+     */
     @FunctionalInterface
     private interface DatabaseOperation {
+        /**
+         * Executes a database operation.
+         *
+         * @param conn the database connection
+         * @return true if the operation was successful, false otherwise
+         * @throws SQLException if a database access error occurs
+         */
         boolean execute(Connection conn) throws SQLException;
     }
-
+    /**
+     * Functional interface for prepared statement operations.
+     */
     @FunctionalInterface
     private interface PreparedStatementOperation {
+        /**
+         * Executes a prepared statement operation.
+         *
+         * @param pstmt the prepared statement
+         * @return true if the operation was successful, false otherwise
+         * @throws SQLException if a database access error occurs
+         */
         boolean execute(PreparedStatement pstmt) throws SQLException;
     }
-
+    /**
+     * Sets the error message label with the specified message and style.
+     *
+     * @param success true if the operation was successful, false otherwise
+     * @param message the message to be displayed
+     */
     void setMessage(boolean success, String message) {
         errorMessageLbl.setText(message);
         if (success) {
