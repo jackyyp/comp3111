@@ -5,7 +5,7 @@ This subfolder contains various resources related to the main project, including
 The subfolder includes the following:
 
 1. **Screenshots and Descriptions**: Sample inputs and outputs of the program.
-2. **Javadoc Website**: Detailed documentation of the code.
+2. **Javadoc Website**: Detailed documentation of the code. Please clone the whole repository, cd into supplementaries/Javadoc Website, then click on index.html to see the Javadoc webpage.
 3. **Testing Report**: Report on the testing carried out for the project.
 4. **Coverage Report**: Coverage analysis of the project's code.
 5. **Usage Video**: Video demonstrating the actual usage of the program.
