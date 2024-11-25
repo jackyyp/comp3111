@@ -2,7 +2,6 @@ package comp3111.examsystem.model;
 
 import lombok.Data;
 
-@Data
 /**
  * The model for the student's information.
  *
@@ -10,6 +9,7 @@ import lombok.Data;
  *
  * @author WANG Shao Fu
  */
+@Data
 public class StudentControllerModel {
 
     /**
@@ -22,6 +22,11 @@ public class StudentControllerModel {
      */
     private Integer examId;
 
+    /**
+     * The ID of the question.
+     *
+     * @return the ID of the exam
+     */
     public int getId(){
         if (examId==null){
             return 0;

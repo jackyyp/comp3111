@@ -25,6 +25,9 @@ import java.sql.SQLException;
  */
 public class CourseManagementController {
 
+    /**
+     * Represents a course.
+     */
     @Data
     @AllArgsConstructor
     public static class Course {

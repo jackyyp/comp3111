@@ -22,7 +22,9 @@ import java.sql.SQLException;
  * @version 1.0
  */
 public class StudentManagementController {
-
+    /**
+     * Represents the student.
+     */
     @Data
     @AllArgsConstructor
     public static class Student {
