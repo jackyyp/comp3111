@@ -33,6 +33,10 @@ import java.util.stream.Collectors;
  * @version 2.0
  */
 public class TeacherGradeStatisticController {
+
+    /**
+     * Represents the grade statistics for a student.
+     */
     @Data
     @AllArgsConstructor
     public static class Grade {

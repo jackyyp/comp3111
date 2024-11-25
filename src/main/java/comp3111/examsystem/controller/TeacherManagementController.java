@@ -23,7 +23,9 @@ import java.sql.SQLException;
  * @version 1.0
  */
 public class TeacherManagementController {
-
+    /**
+     * Represents the teacher information.
+     */
     @Data
     @AllArgsConstructor
     public static class Teacher {

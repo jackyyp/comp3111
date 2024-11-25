@@ -5,7 +5,7 @@ import lombok.Setter;
 
 /**
  * Represents a question in the exam system.
- * author:Wong Cheuk Yuen
+ * @author: Wong Cheuk Yuen
  */
 @Getter
 @Setter
